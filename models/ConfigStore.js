@@ -13,7 +13,8 @@ class ConfigStore extends Store {
   }
 
   getValue(key) {
-    return this.get(key);
+    if (this.has(key)) return this.get(key);
+    return null;
   }
 
   setStockFile(stockFile) {

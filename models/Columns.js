@@ -32,6 +32,8 @@ Columns.setIds = (fileType, firstRow) => {
         firstRow.eachCell((cell, colNumber) => {
           if (
             Columns[fileType][key].id < 1 &&
+            cell.value &&
+            typeof cell.value === 'string' &&
             ((pass === 0 && cell.value.trim().toLowerCase() === name) || // try to find exact match on initial pass
               (pass === 1 &&
                 cell.value
@@ -40,6 +42,9 @@ Columns.setIds = (fileType, firstRow) => {
                   .indexOf(name) !== -1))
           ) {
             Columns[fileType][key].id = colNumber; // eslint-disable-line no-param-reassign
+            // console.log(
+            //   `Seeting id ${fileType} : ${key} - column #${colNumber}`
+            // );
           }
         });
       });
@@ -53,6 +58,9 @@ Columns.setData = (fileType, row) => {
       row.eachCell((cell, colNumber) => {
         if (Columns[fileType][key].id === colNumber) {
           Columns[fileType][key].data.push(cell.value);
+          //   console.log(
+          //     `Adding value id ${fileType} : ${key} - value: ${cell.value}`
+          //   );
         }
       });
     }
