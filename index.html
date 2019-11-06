@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://kit.fontawesome.com/2b78d59932.js" crossorigin="anonymous"></script>
+    <title></title>
+</head>
+<body>
+    
+    <div class="d-flex justify-content-center p-2" id="appTitle">
+        <h1>Sophela Stock Planning Utility</h1>
+    </div>
+    
+    <div class="container">
+        
+        <div class="row">
+            <div class="col-12 col-lg-10 file-select-block">
+            
+            <div class="row align-items-center mb-4">
+                <div class="col-md-3">
+                    <button class="btn btn-danger" id="stockFileButton" onclick="openFile('stockFile')"><i class="fas fa-file-excel"></i>  Stock </button>
+                </div>
+                <div class="col-md-9">
+                    <div class="d-flex align-items-center justify-content-between">
+                    <a class="p-2" href="#" onclick="openFile('stockFile')" id="stockFilePath"> Select Stock File</a>
+                    <button type="button" class="btn btn-outline-dark btn-sm" id="stockFileClear" style="display: none;" onclick="clearFile('stockFile')">x</button>
+                    <div id="stockFileInfo">- <i class="fas fa-table"></i></div>
+                </div>
+                </div>
+            </div>
+
+            <div class="row align-items-center mb-4">
+                <div class="col-md-3">
+                    <button class="btn btn-danger" id="salesDataFileButton" onclick="openFile('salesDataFile')"><i class="fas fa-file-excel"></i>  Sales Data </button>
+                </div>
+                <div class="col-md-9">
+                    <div class="d-flex align-items-center justify-content-between">
+                    <a class="p-2" href="#" onclick="openFile('salesDataFile')" id="salesDataFilePath"> Select Sales Data File</a>
+                    <button type="button" class="btn btn-outline-dark btn-sm" id="salesDataFileClear" style="display: none;" onclick="clearFile('salesDataFile')">x</button>
+                    <div id="salesDataFileInfo">- <i class="fas fa-table"></i></div>
+                </div>
+                </div>
+            </div>
+             
+            <div class="row align-items-center mb-4">
+                <div class="col-md-3">
+                   <button class="btn btn-warning" id="priceFileButton" onclick="openFile('priceFile')"><i class="fas fa-file-excel"></i>  Part Price </button>
+                </div>
+                <div class="col-md-9">
+                    <div class="d-flex align-items-center justify-content-between">
+                    <a class="p-2" href="#" onclick="openFile('priceFile')" id="priceFilePath"> Select Part Price File</a>
+                    <button type="button" class="btn btn-outline-dark btn-sm" id="priceFileClear" style="display: none;" onclick="clearFile('priceFile')">x</button>   
+                    <div id="priceFileInfo">- <i class="fas fa-table"></i></div>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="d-flex justify-content-center p-2">
+                <button class="btn btn-primary px-5 py-2" onclick="importFiles()"><i class="fas fa-file-import"></i>   Import </button>
+            </div>
+
+        </div>
+    </div>
+
+    <hr>
+   
+    <script src="renderer.js"></script>
+</body>
+
+</html>

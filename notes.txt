@@ -1,0 +1,6 @@
+Main tasks:
+
+Create app configuration with electron-store
+Data will be saved into SQLITE database using Sequelize 
+Github repository
+Auto-update feature

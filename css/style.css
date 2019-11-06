@@ -1,0 +1,47 @@
+#appTitle {
+  background-color: black;
+  color: white;
+}
+
+.custom-file {
+  margin: 1rem 0 1rem 0;
+}
+
+#stockFileInput ~ .custom-file-label::after {
+  content: 'Stock File';
+  color: #fff;
+  background-color: #0275d8;
+  border-color: #0275d8;
+}
+
+.file-select-block {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.file-selection {
+  margin-bottom: 1rem;
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0),
+    rgba(0, 0, 0, 0.75),
+    rgba(0, 0, 0, 0)
+  );
+}
+
+body {
+  background-color: #f4f4f4;
+}
+
+a {
+  font-size: 125%;
+}
+
+.clear-file {
+  border-radius: 40%;
+}
