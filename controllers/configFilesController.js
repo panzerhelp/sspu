@@ -34,3 +34,13 @@ exports.selectAllFilesFromConfig = () => {
 exports.clearFileFromConfig = (fileName, fileType) => {
   configStore.removeDataFile(fileName, fileType);
 };
+
+exports.getFileById = id => {
+  let fileById;
+  configStore.get('dataFiles').forEach(file => {
+    if (file.id === id) {
+      fileById = file;
+    }
+  });
+  return fileById;
+};

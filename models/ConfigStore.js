@@ -4,9 +4,11 @@ const path = require('path');
 class ConfigStore extends Store {
   constructor() {
     super({});
+    debugger;
     // super({encryptionKey: "FLGoxz7uQwQJbqNkZpN8"})
     // this.stockFile = this.get('stockFile') || null;
-    this.dataFiles = this.get('dataFiles');
+    this.dataFiles = this.get('dataFiles') || [];
+    this.set('dataFiles', this.dataFiles);
   }
 
   addDataFile(dataFile) {

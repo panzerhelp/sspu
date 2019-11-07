@@ -1,4 +1,5 @@
 // const { remote } = require('electron');
+const { shell } = require('electron');
 
 document.title = `SSPU v.${process.env.npm_package_version}`;
 const configFileController = require('./controllers/configFilesController');
@@ -6,10 +7,9 @@ const dataFileController = require('./controllers/dataFileController');
 const FileImport = require('./frontend-js/modules/FileImport');
 
 // eslint-disable-next-line no-unused-vars
-const openFile = fileType => {
-  console.log('Send command to open file');
-  // const file = configFileController.selectFile(`${fileType}`);
-  // if (file) updateHtml(file);
+const openFile = id => {
+  const file = configFileController.getFileById(id);
+  shell.openItem(file.filePath);
 };
 
 const init = () => {
@@ -36,5 +36,6 @@ const importFiles = () => {
 };
 
 if (document.getElementById('file-import-block')) {
+  debugger;
   init();
 }
