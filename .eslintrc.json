@@ -10,7 +10,7 @@
     "object-shorthand": "off",
     "class-methods-use-this": "off",
     "no-underscore-dangle": "off",
-    "no-debugger": "off",
+    "no-debugger": "warn",
     "no-plusplus": "off"
   },
   "env": {

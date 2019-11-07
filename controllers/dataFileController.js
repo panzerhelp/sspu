@@ -98,7 +98,6 @@ exports.loadFileXLSX = (filePath, processRowCallBack) => {
 exports.importFiles = async () => {
   // const filesToLoad = ['stockFile', 'salesDataFile'];
   const filesToLoad = configFilesController.selectAllFilesFromConfig();
-  debugger;
   filesToLoad.forEach(file => {
     this.loadFile(file, row => {
       if (row._number === 1) {

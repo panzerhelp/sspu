@@ -19,6 +19,11 @@
   margin-bottom: 2rem;
 }
 
+#countrySelect {
+  margin-left: 1.2rem;
+  margin-bottom: 0.65rem;
+}
+
 .file-selection {
   margin-bottom: 1rem;
 }
@@ -43,7 +48,7 @@ li.list-group-item {
 }
 
 a {
-  font-size: 125%;
+  font-size: 115%;
 }
 
 .clear-file {

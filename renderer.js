@@ -36,6 +36,5 @@ const importFiles = () => {
 };
 
 if (document.getElementById('file-import-block')) {
-  debugger;
   init();
 }

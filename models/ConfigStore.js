@@ -4,11 +4,11 @@ const path = require('path');
 class ConfigStore extends Store {
   constructor() {
     super({});
-    debugger;
     // super({encryptionKey: "FLGoxz7uQwQJbqNkZpN8"})
-    // this.stockFile = this.get('stockFile') || null;
     this.dataFiles = this.get('dataFiles') || [];
     this.set('dataFiles', this.dataFiles);
+    this.importCountry = this.get('importCountry') || 'Lithuania';
+    this.set('importCountry', this.importCountry);
   }
 
   addDataFile(dataFile) {
@@ -46,6 +46,11 @@ class ConfigStore extends Store {
       this.dataFiles.splice(index, 1);
       this.set('dataFiles', this.dataFiles);
     }
+  }
+
+  setImportCountry(importCountry) {
+    this.importCountry = importCountry;
+    this.set('importCountry', this.importCountry);
   }
 }
 

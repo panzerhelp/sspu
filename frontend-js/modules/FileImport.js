@@ -10,29 +10,55 @@ class FileImport {
         title: 'stock file'
       },
       salesDataFile: {
-        title: 'sales data file'
+        title: 'sales data file(s)'
       },
       priceFile: {
         title: 'part price file'
       }
     };
     this.injectHTML();
+    this.countryOptions = document.getElementsByClassName('country-option');
+    this.countryDropDown = document.querySelector('.countrySelect');
+    this.events();
   }
 
   // events
   events() {
-    console.log('File Import Events');
+    Array.from(this.countryOptions).forEach(country => {
+      country.addEventListener('click', e => {
+        configFileController.setImportCountry(e.target.innerHTML);
+        this.countryDropDown.innerHTML = e.target.innerHTML;
+      });
+    });
   }
 
   // methods
+  addCountrySelect(fileType) {
+    const importCountry = configFileController.getImportCountry();
+    return fileType === 'stockFile'
+      ? `
+    <div class="dropdown" id="countrySelect">
+    <button class="btn btn-outline-dark btn-sm dropdown-toggle countrySelect" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    ${importCountry}
+    </button>
+    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+        <a class="dropdown-item country-option" href="#">Lithuania</a>
+        <a class="dropdown-item country-option" href="#">Belarus</a>
+        <a class="dropdown-item country-option" href="#">Ukraine</a>
+    </div>
+    </div>
+    `
+      : '';
+  }
+
   addButtonHTML(file, fileType, secondary) {
     const btnClass =
       fileType === 'priceFile' || typeof secondary !== 'undefined'
         ? 'btn-outline-warning'
         : 'btn-outline-danger';
     return file
-      ? `<button type="button" class="btn btn-outline-dark btn-sm" id="'${fileType}'Clear" onclick="clearFile('${fileType}')"><i class="fas fa-minus-circle"></i> remove</button>`
-      : `<button class="btn ${btnClass} btn-sm" id="${fileType}Button" onclick="selectFile('${fileType}')"><i class="fas fa-plus-circle"></i> add </button>`;
+      ? `<button type="button" class="btn btn-outline-dark btn-sm" id="'${fileType}'Clear" onclick="clearFile('${fileType}')"><i class="fas fa-minus-circle"></i></button>`
+      : `<button class="btn ${btnClass} btn-sm" id="${fileType}Button" onclick="selectFile('${fileType}')"><i class="fas fa-plus-circle"></i></button>`;
   }
 
   addItemHTML(file, fileType) {
@@ -55,10 +81,10 @@ class FileImport {
     return `
     <li class="list-group-item m-0">
       <div class="row align-items-center">
-        <div class="col-md-3">
+        <div class="col-sm-1">
           ${buttonHtml}
         </div>
-        <div class="col-md-9">
+        <div class="col-sm-11">
           <div class="d-flex align-items-center justify-content-between">
            ${itemHtml}
           </div>
@@ -81,8 +107,13 @@ class FileImport {
       }
     }
 
+    const countrySelect = this.addCountrySelect(fileType);
+
     return `
-      <ul class="list-group mb-5" id="${fileType}Section"> <h5> ${this.sections[fileType].title}</h5>
+      <div class="row d-flex align-items-center">
+        <h5> ${this.sections[fileType].title} </h5> ${countrySelect}
+      </div>
+      <ul class="list-group mb-5" id="${fileType}Section"> 
           ${fileSectionHtml}
       </ul>
     `;

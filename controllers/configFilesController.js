@@ -44,3 +44,11 @@ exports.getFileById = id => {
   });
   return fileById;
 };
+
+exports.getImportCountry = () => {
+  return configStore.get('importCountry');
+};
+
+exports.setImportCountry = importCountry => {
+  return configStore.setImportCountry(importCountry);
+};
