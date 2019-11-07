@@ -1,33 +1,26 @@
 const fs = require('fs');
 const Excel = require('exceljs');
 const path = require('path');
-const ConfigStore = require('../models/ConfigStore');
 const Columns = require('../models/Columns');
+const configFilesController = require('./configFilesController');
 
-const configStore = new ConfigStore();
-
-exports.loadFile = (fileType, processRowCallBack) => {
+exports.loadFile = (file, processRowCallBack) => {
   return new Promise((resolve, reject) => {
-    const fileStoreObject = configStore.getValue(fileType);
-    if (fileStoreObject) {
-      const { filePath } = fileStoreObject;
-      if (fs.existsSync(filePath)) {
-        if (path.parse(filePath).ext === '.xlsx') {
-          this.loadFileXLSX(filePath, processRowCallBack)
-            .then(() => resolve())
-            .catch(error => reject(error));
-        } else if (path.parse(filePath).ext === '.csv') {
-          this.loadFileCSV(filePath, processRowCallBack)
-            .then(() => resolve())
-            .catch(error => reject(error));
-        } else {
-          reject(new Error(`${filePath}: wrong file type`));
-        }
+    const { filePath } = file;
+    if (fs.existsSync(filePath)) {
+      if (path.parse(filePath).ext === '.xlsx') {
+        this.loadFileXLSX(filePath, processRowCallBack)
+          .then(() => resolve())
+          .catch(error => reject(error));
+      } else if (path.parse(filePath).ext === '.csv') {
+        this.loadFileCSV(filePath, processRowCallBack)
+          .then(() => resolve())
+          .catch(error => reject(error));
       } else {
-        reject(new Error(`${fileType}: file does not exist`));
+        reject(new Error(`${filePath}: wrong file type`));
       }
     } else {
-      reject(new Error(`${fileType}: not defined in configuration`));
+      reject(new Error(`${file.name}: file does not exist`));
     }
   });
 };
@@ -102,31 +95,24 @@ exports.loadFileXLSX = (filePath, processRowCallBack) => {
   });
 };
 
-// eslint-disable-next-line no-unused-vars
-const stockFileText = document.getElementById(`stockFileInfo`);
-// eslint-disable-next-line no-unused-vars
-const salesDataFileText = document.getElementById(`salesDataFileInfo`);
-
 exports.importFiles = async () => {
-  const filesToLoad = ['stockFile', 'salesDataFile'];
-
+  // const filesToLoad = ['stockFile', 'salesDataFile'];
+  const filesToLoad = configFilesController.selectAllFilesFromConfig();
+  debugger;
   filesToLoad.forEach(file => {
-    console.log(file);
-
     this.loadFile(file, row => {
       if (row._number === 1) {
-        Columns.setIds(file, row);
+        Columns.setIds(file.type, row);
       } else {
-        Columns.setData(file, row);
+        Columns.setData(file.type, row);
       }
 
-      document.getElementById(
-        `${file}Info`
-      ).innerHTML = `loading ${row._number} <i class="fas fa-table"></i>`;
+      // document.getElementById(
+      //  `${file.type}Info`
+      // ).innerHTML = `loading ${row._number} <i class="fas fa-table"></i>`;
     })
       .then(() => {
-        console.log(`${file} : loaded succesfully`);
-        debugger;
+        console.log(`${file.name} : loaded succesfully`);
       })
       .catch(err => console.log(err));
   });

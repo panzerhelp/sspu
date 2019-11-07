@@ -18,28 +18,17 @@
     <div class="container">
         
         <div class="row">
-            <div class="col-12 col-lg-10 file-select-block">
-            
-            <div class="row align-items-center mb-4">
-                <div class="col-md-3">
-                    <button class="btn btn-danger" id="stockFileButton" onclick="openFile('stockFile')"><i class="fas fa-file-excel"></i>  Stock </button>
-                </div>
-                <div class="col-md-9">
-                    <div class="d-flex align-items-center justify-content-between">
-                    <a class="p-2" href="#" onclick="openFile('stockFile')" id="stockFilePath"> Select Stock File</a>
-                    <button type="button" class="btn btn-outline-dark btn-sm" id="stockFileClear" style="display: none;" onclick="clearFile('stockFile')">x</button>
-                    <div id="stockFileInfo">- <i class="fas fa-table"></i></div>
-                </div>
-                </div>
-            </div>
+            <div class="col-12 col-lg-10" id="file-import-block">
+                      
+           
 
-            <div class="row align-items-center mb-4">
+            <!-- <div class="row align-items-center mb-4">
                 <div class="col-md-3">
-                    <button class="btn btn-danger" id="salesDataFileButton" onclick="openFile('salesDataFile')"><i class="fas fa-file-excel"></i>  Sales Data </button>
+                    <button class="btn btn-danger" id="salesDataFileButton" onclick="selectFile('salesDataFile')"><i class="fas fa-file-excel"></i>  Sales Data </button>
                 </div>
                 <div class="col-md-9">
                     <div class="d-flex align-items-center justify-content-between">
-                    <a class="p-2" href="#" onclick="openFile('salesDataFile')" id="salesDataFilePath"> Select Sales Data File</a>
+                    <a class="p-2" href="#" onclick="selectFile('salesDataFile')" id="salesDataFilePath"> Select Sales Data File</a>
                     <button type="button" class="btn btn-outline-dark btn-sm" id="salesDataFileClear" style="display: none;" onclick="clearFile('salesDataFile')">x</button>
                     <div id="salesDataFileInfo">- <i class="fas fa-table"></i></div>
                 </div>
@@ -48,27 +37,25 @@
              
             <div class="row align-items-center mb-4">
                 <div class="col-md-3">
-                   <button class="btn btn-warning" id="priceFileButton" onclick="openFile('priceFile')"><i class="fas fa-file-excel"></i>  Part Price </button>
+                   <button class="btn btn-warning" id="priceFileButton" onclick="selectFile('priceFile')"><i class="fas fa-file-excel"></i>  Part Price </button>
                 </div>
                 <div class="col-md-9">
                     <div class="d-flex align-items-center justify-content-between">
-                    <a class="p-2" href="#" onclick="openFile('priceFile')" id="priceFilePath"> Select Part Price File</a>
+                    <a class="p-2" href="#" onclick="selectFile('priceFile')" id="priceFilePath"> Select Part Price File</a>
                     <button type="button" class="btn btn-outline-dark btn-sm" id="priceFileClear" style="display: none;" onclick="clearFile('priceFile')">x</button>   
                     <div id="priceFileInfo">- <i class="fas fa-table"></i></div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         
-            <div class="d-flex justify-content-center p-2">
-                <button class="btn btn-primary px-5 py-2" onclick="importFiles()"><i class="fas fa-file-import"></i>   Import </button>
-            </div>
-
+          
         </div>
     </div>
 
     <hr>
    
     <script src="renderer.js"></script>
+    <!-- <script src="./frontend-js/main.js"></script> -->
 </body>
 
 </html>

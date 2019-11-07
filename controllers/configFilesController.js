@@ -11,7 +11,7 @@ exports.selectFile = fileType => {
     title: `Select ${fileType} File`,
     properties: ['openFile'],
     filters: [
-      { name: 'Excel Files', extensions: ['xlsx', 'xls'] },
+      { name: 'Excel Files', extensions: ['xlsx'] },
       { name: 'CSV Files', extensions: ['csv'] },
       { name: 'All Files', extensions: ['*'] }
     ]
@@ -21,21 +21,16 @@ exports.selectFile = fileType => {
 
   if (filePath && filePath.length > 0) {
     dataFile = new DataFile(filePath[0], fileType);
-    configStore.setValue(fileType, dataFile);
+    configStore.addDataFile(dataFile);
   }
 
   return dataFile;
 };
 
 exports.selectAllFilesFromConfig = () => {
-  const selection = {};
-  const files = ['stockFile', 'salesDataFile', 'priceFile'];
-  files.forEach(file => {
-    selection[file] = configStore.getValue(file);
-  });
-  return selection;
+  return configStore.get('dataFiles');
 };
 
-exports.clearFileFromConfig = fileType => {
-  configStore.clearKey(fileType);
+exports.clearFileFromConfig = (fileName, fileType) => {
+  configStore.removeDataFile(fileName, fileType);
 };

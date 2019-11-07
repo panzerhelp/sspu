@@ -14,7 +14,7 @@
   border-color: #0275d8;
 }
 
-.file-select-block {
+#file-import-block {
   margin-top: 2rem;
   margin-bottom: 2rem;
 }
@@ -35,6 +35,10 @@ hr {
 }
 
 body {
+  background-color: #f4f4f4;
+}
+
+li.list-group-item {
   background-color: #f4f4f4;
 }
 
