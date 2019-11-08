@@ -35,6 +35,11 @@ const importFiles = () => {
   dataFileController.importFiles();
 };
 
+// eslint-disable-next-line no-unused-vars
+const selectDataDir = () => {
+  if (configFileController.setDataDir()) init();
+};
+
 if (document.getElementById('file-import-block')) {
   init();
 }

@@ -50,5 +50,26 @@ exports.getImportCountry = () => {
 };
 
 exports.setImportCountry = importCountry => {
-  return configStore.setImportCountry(importCountry);
+  configStore.setValue('importCountry', importCountry);
+};
+
+exports.getDataDir = () => {
+  return configStore.get('dataDir');
+};
+
+exports.setDataDir = () => {
+  const win = remote.getCurrentWindow();
+
+  const dir = remote.dialog.showOpenDialogSync(win, {
+    title: `Select Output Folder`,
+    defaultPath: configStore.get('dataDir'),
+    properties: ['openDirectory', 'promptToCreate']
+  });
+
+  if (dir && dir.length > 0) {
+    configStore.setValue('dataDir', dir[0]);
+    return dir[0];
+  }
+
+  return null;
 };

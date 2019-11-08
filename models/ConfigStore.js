@@ -1,5 +1,7 @@
 const Store = require('electron-store');
 const path = require('path');
+const fs = require('fs');
+const { remote } = require('electron');
 
 class ConfigStore extends Store {
   constructor() {
@@ -7,8 +9,12 @@ class ConfigStore extends Store {
     // super({encryptionKey: "FLGoxz7uQwQJbqNkZpN8"})
     this.dataFiles = this.get('dataFiles') || [];
     this.set('dataFiles', this.dataFiles);
+
     this.importCountry = this.get('importCountry') || 'Lithuania';
     this.set('importCountry', this.importCountry);
+
+    this.dataDir = this.get('dataDir') || this.getDefaulDataDir();
+    this.set('dataDir', this.dataDir);
   }
 
   addDataFile(dataFile) {
@@ -48,9 +54,15 @@ class ConfigStore extends Store {
     }
   }
 
-  setImportCountry(importCountry) {
-    this.importCountry = importCountry;
-    this.set('importCountry', this.importCountry);
+  getDefaulDataDir() {
+    const dir = path.join(remote.app.getPath('documents'), 'sspu');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+    return dir;
+  }
+
+  setValue(key, value) {
+    this.key = value;
+    this.set(key, this.key);
   }
 }
 

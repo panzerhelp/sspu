@@ -5,6 +5,7 @@ class FileImport {
   constructor() {
     this.fileImport = document.querySelector('#file-import-block') || [];
     this.files = configFileController.selectAllFilesFromConfig();
+    this.dataDir = configFileController.getDataDir();
     this.sections = {
       stockFile: {
         title: 'stock file'
@@ -120,7 +121,7 @@ class FileImport {
   }
 
   importButtonHTML() {
-    return `<div class="d-flex justify-content-center p-2">
+    return `<div class="d-flex justify-content-center p-2 mb-2">
         <button class="btn btn-primary px-5 py-2" onclick="importFiles()"><i class="fas fa-file-import"></i>   Import </button>
         </div>`;
   }
@@ -146,6 +147,35 @@ class FileImport {
     return false;
   }
 
+  addDirButtonHTML() {
+    const btnColor = this.dataDir ? 'btn-outline-dark' : 'btn-outline-danger';
+    return `
+      <button class="btn ${btnColor} btn-sm"  onclick="selectDataDir()"><i class="fas fa-folder"></i></i></button>
+    `;
+  }
+
+  dataDirHTML() {
+    const dataDirText = this.dataDir ? this.dataDir : 'add data folder';
+    const buttonHtml = this.addDirButtonHTML();
+    return `
+      <div class="row d-flex align-items-center">
+        <h5>output folder</h5>
+      </div>
+      <li class="list-group-item m-0">
+        <div class="row align-items-center">
+          <div class="col-sm-1">
+           ${buttonHtml}
+          </div>
+          <div class="col-sm-11">
+            <ul class="list-group"> 
+              <a href="#" onclick="selectDataDir()">${dataDirText}</a>
+            </ul>
+          </div>
+        </div>
+      </li>
+    `;
+  }
+
   injectHTML() {
     this.fileImport.innerHTML = '';
     if (this.files) {
@@ -159,9 +189,11 @@ class FileImport {
         this.fileImport.innerHTML += this.dataFileBlockHTML(fileArr, section);
       });
 
-      if (this.checkIfEnoughFiles()) {
+      if (this.dataDir && this.checkIfEnoughFiles()) {
         this.fileImport.innerHTML += this.importButtonHTML();
       }
+
+      this.fileImport.innerHTML += this.dataDirHTML();
     }
   }
 }
