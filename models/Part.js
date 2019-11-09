@@ -9,8 +9,8 @@ const Part = db.define(
     category: { type: sequelize.STRING },
     mostUsed: { type: sequelize.INTEGER },
     csr: { type: sequelize.STRING },
-    price: { type: sequelize.REAL },
-    exchangePrice: { type: sequelize.REAL }
+    price: { type: sequelize.STRING },
+    exchangePrice: { type: sequelize.STRING }
   },
   {
     // options

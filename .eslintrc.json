@@ -11,7 +11,8 @@
     "class-methods-use-this": "off",
     "no-underscore-dangle": "off",
     "no-debugger": "warn",
-    "no-plusplus": "off"
+    "no-plusplus": "off",
+    "no-await-in-loop": "off"
   },
   "env": {
     "browser": true,

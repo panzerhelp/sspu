@@ -58,7 +58,7 @@ class FileImport {
         ? 'btn-outline-warning'
         : 'btn-outline-danger';
     return file
-      ? `<button type="button" class="btn btn-outline-dark btn-sm" id="'${fileType}'Clear" onclick="clearFile('${fileType}')"><i class="fas fa-minus-circle"></i></button>`
+      ? `<button type="button" class="btn btn-outline-dark btn-sm" id="'${fileType}'Clear" onclick="clearFile('${fileType}')"><i class="fas fa-times-circle"></i></i></button>`
       : `<button class="btn ${btnClass} btn-sm" id="${fileType}Button" onclick="selectFile('${fileType}')"><i class="fas fa-plus-circle"></i></button>`;
   }
 

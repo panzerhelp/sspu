@@ -8,6 +8,9 @@ const Columns = {
     },
     description: {
       names: ['description']
+    },
+    price: {
+      names: ['unit price', 'price']
     }
   },
   salesDataFile: {
@@ -42,9 +45,6 @@ Columns.setIds = (fileType, firstRow) => {
                   .indexOf(name) !== -1))
           ) {
             Columns[fileType][key].id = colNumber; // eslint-disable-line no-param-reassign
-            // console.log(
-            //   `Seeting id ${fileType} : ${key} - column #${colNumber}`
-            // );
           }
         });
       });
@@ -58,18 +58,13 @@ Columns.getData = (fileType, row) => {
     if (Columns[fileType][key].id > 0) {
       row.eachCell((cell, colNumber) => {
         if (Columns[fileType][key].id === colNumber) {
-          // Columns[fileType][key].data.push(cell.value);
-          obj[key] = cell.value;
+          obj[key] = typeof cell.value === 'object' ? '' : cell.value;
         }
       });
     }
   });
 
   return obj;
-
-  // if (fileType === 'stockFile' && typeof obj.partNumber !== 'undefined') {
-  //   partController.addPart(obj);
-  // }
 };
 
 module.exports = Columns;
