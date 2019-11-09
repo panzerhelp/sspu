@@ -189,7 +189,8 @@ class FileImport {
         this.fileImport.innerHTML += this.dataFileBlockHTML(fileArr, section);
       });
 
-      if (this.dataDir && this.checkIfEnoughFiles()) {
+      if (this.dataDir) {
+        // && this.checkIfEnoughFiles()) {
         this.fileImport.innerHTML += this.importButtonHTML();
       }
 

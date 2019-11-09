@@ -1,5 +1,8 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const dbConnect = require('./dbConnect');
+
+process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
 let mainWindow;
 
@@ -26,14 +29,28 @@ function createWindow() {
   // });
 }
 
-app.on('ready', createWindow);
+app.on('ready', async () => {
+  try {
+    await dbConnect();
+    createWindow();
+  } catch (err) {
+    app.exit(-1);
+  }
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-app.on('activate', () => {
-  if (mainWindow === null) createWindow();
+app.on('activate', async () => {
+  if (mainWindow === null) {
+    try {
+      await dbConnect();
+      createWindow();
+    } catch (err) {
+      app.exit(-1);
+    }
+  }
 });
 
 // ipcMain.on('loginForm:submit', (e, data) => {

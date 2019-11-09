@@ -6,6 +6,7 @@
   "scripts": {
     "start": "electron .",
     "watch": "nodemon --exec electron .",
+    "rebuild": "electron-rebuild -f -w sqlite3",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -23,6 +24,7 @@
     "uuid": "^3.3.3"
   },
   "devDependencies": {
+    "electron-rebuild": "^1.8.6",
     "eslint": "^6.1.0",
     "eslint-config-airbnb": "^18.0.1",
     "eslint-config-node": "^4.0.0",

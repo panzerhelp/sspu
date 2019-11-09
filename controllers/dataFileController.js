@@ -3,6 +3,7 @@ const Excel = require('exceljs');
 const path = require('path');
 const Columns = require('../models/Columns');
 const configFilesController = require('./configFilesController');
+const partController = require('../controllers/partController');
 
 exports.loadFile = (file, processRowCallBack) => {
   return new Promise((resolve, reject) => {
@@ -96,22 +97,25 @@ exports.loadFileXLSX = (filePath, processRowCallBack) => {
 };
 
 exports.importFiles = async () => {
-  // const filesToLoad = ['stockFile', 'salesDataFile'];
   const filesToLoad = configFilesController.selectAllFilesFromConfig();
   filesToLoad.forEach(file => {
-    this.loadFile(file, row => {
+    const partArray = [];
+    this.loadFile(file, async row => {
       if (row._number === 1) {
         Columns.setIds(file.type, row);
       } else {
-        Columns.setData(file.type, row);
+        const data = Columns.getData(file.type, row);
+        if (
+          file.type === 'stockFile' &&
+          typeof data.partNumber !== 'undefined'
+        ) {
+          partArray.push(data);
+        }
       }
-
-      // document.getElementById(
-      //  `${file.type}Info`
-      // ).innerHTML = `loading ${row._number} <i class="fas fa-table"></i>`;
     })
       .then(() => {
         console.log(`${file.name} : loaded succesfully`);
+        partController.addStockParts(partArray);
       })
       .catch(err => console.log(err));
   });

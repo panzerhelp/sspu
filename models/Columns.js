@@ -4,9 +4,9 @@ const Columns = {
       names: ['part number', 'part', 'p/n']
     },
     qty: {
-      names: ['qty']
+      names: ['qty', 'material left']
     },
-    desc: {
+    description: {
       names: ['description']
     }
   },
@@ -52,19 +52,24 @@ Columns.setIds = (fileType, firstRow) => {
   });
 };
 
-Columns.setData = (fileType, row) => {
+Columns.getData = (fileType, row) => {
+  const obj = {};
   Object.keys(Columns[fileType]).forEach(key => {
     if (Columns[fileType][key].id > 0) {
       row.eachCell((cell, colNumber) => {
         if (Columns[fileType][key].id === colNumber) {
-          Columns[fileType][key].data.push(cell.value);
-          //   console.log(
-          //     `Adding value id ${fileType} : ${key} - value: ${cell.value}`
-          //   );
+          // Columns[fileType][key].data.push(cell.value);
+          obj[key] = cell.value;
         }
       });
     }
   });
+
+  return obj;
+
+  // if (fileType === 'stockFile' && typeof obj.partNumber !== 'undefined') {
+  //   partController.addPart(obj);
+  // }
 };
 
 module.exports = Columns;
