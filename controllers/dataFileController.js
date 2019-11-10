@@ -5,6 +5,9 @@ const Columns = require('../models/Columns');
 const configFilesController = require('./configFilesController');
 const partController = require('../controllers/partController');
 const stockController = require('../controllers/stockController');
+const productController = require('../controllers/productController');
+const contractController = require('../controllers/contractController');
+const systemController = require('../controllers/systemController');
 
 exports.loadFile = (file, processRowCallBack) => {
   return new Promise((resolve, reject) => {
@@ -17,7 +20,7 @@ exports.loadFile = (file, processRowCallBack) => {
       } else if (path.parse(filePath).ext === '.csv') {
         this.loadFileCSV(file, processRowCallBack)
           .then(() => {
-            resolve();
+            resolve(file.type);
           })
           .catch(error => reject(error));
       } else {
@@ -46,8 +49,8 @@ exports.loadFileCSV = (file, processRowCallBack) => {
         });
 
         Promise.all(promiseArray).then(
-          value => {
-            resolve(value);
+          fileTypes => {
+            resolve(fileTypes);
           },
           reason => {
             reject(reason);
@@ -101,6 +104,7 @@ exports.loadFileXLSX = (file, processRowCallBack) => {
     });
 
     workbook.on('finished', function() {
+      console.log('Finised workbook');
       Promise.all(promiseArray).then(
         value => {
           resolve(value);
@@ -120,6 +124,95 @@ exports.loadFileXLSX = (file, processRowCallBack) => {
   });
 };
 
+let productsData = {};
+let systemsData = {};
+let contractsData = {};
+
+const validResposes = ['ctr6hr', 'ctr24hr', 'ons4hr', 'onsncd'];
+
+exports.cleanUpAfterImport = () => {
+  productsData = {};
+  systemsData = {};
+  contractsData = {};
+};
+
+exports.validateSalesData = data => {
+  if (
+    !data ||
+    typeof data.response === 'undefined' ||
+    typeof data.response !== 'string' ||
+    data.response === '' ||
+    typeof data.serial === 'undefined' ||
+    typeof data.serial !== 'string' ||
+    data.serial === '' ||
+    data.serial.length < 5 ||
+    validResposes.indexOf(data.response.trim().toLowerCase()) === -1
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
+const importSalesDataFileRow = data => {
+  return new Promise((resolve, reject) => {
+    if (this.validateSalesData(data)) {
+      if (typeof productsData[data.productNumber] === 'undefined') {
+        productsData[data.productNumber] = {
+          description: data.productDesc
+        };
+        console.log(`Queued product ${data.productNumber}`);
+      }
+
+      if (typeof systemsData[data.serial] === 'undefined') {
+        systemsData[data.serial] = {
+          product: data.productNumber,
+          contract: data.said
+        };
+
+        console.log(`Queued system ${data.serial}`);
+      }
+
+      if (typeof contractsData[data.said] === 'undefined') {
+        contractsData[data.said] = {
+          startDate: data.startDate,
+          endDate: data.endDate,
+          response: data.response,
+          customer: data.customer,
+          country: data.country,
+          city: data.city
+        };
+
+        console.log(`Queued contract ${data.said}`);
+      }
+
+      resolve('Resolved');
+
+      // productController
+      //   .addOneProduct({
+      //     productNumber: data.productNumber,
+      //     description: data.productDesc
+      //   })
+      //   .then(productId => {
+      //     console.log(`Added product to database id: ${productId}`);
+      //     resolve(productId);
+      //   })
+      //   .catch(err => reject(err));
+      //   this.importProduct(data)
+      //     .then(productId => {
+      //       debugger;
+      //       resolve(productId);
+      //     })
+      //     .catch(err => reject(err));
+      // } else {
+      //   resolve(data);
+      // }
+    } else {
+      resolve('Invalid data');
+    }
+  });
+};
+
 exports.processDataRow = (fileType, row) => {
   return new Promise((resolve, reject) => {
     if (row._number === 1) {
@@ -134,6 +227,14 @@ exports.processDataRow = (fileType, row) => {
             resolve(part);
           })
           .catch(err => reject(err));
+      } else if (fileType === 'salesDataFile') {
+        importSalesDataFileRow(data)
+          .then(() => {
+            resolve(data);
+          })
+          .catch(err => {
+            reject(err);
+          });
       } else {
         resolve();
       }
@@ -152,47 +253,44 @@ exports.importFiles = async () => {
 
   filesToLoad.forEach(file => {
     promiseArray.push(this.loadFile(file, this.processDataRow));
-    // // file promise
-    // const promise = new Promise((resolve, reject) => {
-    //   const partArray = [];
-    //   this.loadFile(file, async row => {
-    //     if (row._number === 1) {
-    //       Columns.setIds(file.type, row);
-    //     } else {
-    //       const data = Columns.getData(file.type, row);
-    //       if (
-    //         file.type === 'stockFile' &&
-    //         typeof data.partNumber !== 'undefined'
-    //       ) {
-    //         partArray.push(data);
-    //       }
-    //     }
-    //   })
-    //     .then(() => {
-    //       console.log(`${file.name} : loaded succesfully`);
-    //       partController
-    //         .addStockParts(partArray)
-    //         .then(resolve(file.name))
-    //         .catch(reject(file.name));
-    //     })
-    //     .catch(err => console.log(err));
-    // });
-
-    // promiseArray.push(promise);
   });
   Promise.all(promiseArray).then(
     // eslint-disable-next-line no-unused-vars
-    _value => {
-      const t1 = performance.now();
-      // eslint-disable-next-line prefer-template
+    fileTypes => {
+      // console.log('Finished reading data files. Starting data import');
+      // console.log(systemsData);
+      // console.log(contractsData);
       // debugger;
-      const time = t1 - t0;
-      console.log(`Data file import complete in ${time} milliseconds`);
-      debugger;
+      productController
+        .addProducts(productsData)
+        .then(productIds => {
+          contractController
+            .addContracts(contractsData)
+            .then(contractIds => {
+              systemController
+                .addSystems(systemsData, productIds, contractIds)
+                .then(systemIds => {
+                  const t1 = performance.now();
+                  const time = t1 - t0;
+                  console.log(
+                    `Data file import complete in ${time} milliseconds`
+                  );
+                  // console.log(productIds);
+                  // console.log(contractIds);
+                  // console.log(systemIds);
+                  this.cleanUpAfterImport();
+                  // debugger;
+                })
+                .catch(err => console.log(err));
+            })
+            .catch(err => console.log(err));
+        })
+        .catch(err => console.log(err));
     },
     reason => {
       console.log(reason);
       debugger;
+      this.cleanUpAfterImport();
     }
   );
 };

@@ -28,8 +28,6 @@ exports.addOnePartFromStock = part => {
           .catch(err => reject(err));
       })
       .catch(err => {
-        console.log(part);
-        debugger;
         reject(err);
       });
   });

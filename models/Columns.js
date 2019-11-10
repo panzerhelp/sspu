@@ -15,13 +15,37 @@ const Columns = {
   },
   salesDataFile: {
     country: {
-      names: ['country', 'country name']
+      names: ['hwst country cd']
+    },
+    city: {
+      names: ['hwst city']
     },
     customer: {
       names: ['hwst name']
     },
+    productNumber: {
+      names: ['product nbr']
+    },
+    productDesc: {
+      names: ['product desc']
+    },
+    response: {
+      names: ['response']
+    },
+    serial: {
+      names: ['serial nbr']
+    },
+    said: {
+      names: ['service agreement id']
+    },
     funcLoc: {
       names: ['functional location']
+    },
+    startDate: {
+      names: ['contract start date']
+    },
+    endDate: {
+      names: ['contract end date']
     }
   }
 };
@@ -35,7 +59,7 @@ Columns.setIds = (fileType, firstRow) => {
         firstRow.eachCell((cell, colNumber) => {
           if (
             Columns[fileType][key].id < 1 &&
-            cell.value &&
+            // cell.value &&
             typeof cell.value === 'string' &&
             ((pass === 0 && cell.value.trim().toLowerCase() === name) || // try to find exact match on initial pass
               (pass === 1 &&
@@ -52,15 +76,27 @@ Columns.setIds = (fileType, firstRow) => {
   });
 };
 
+const removeNonAscii = str => {
+  if (str === null || str === '') return '';
+  return str.replace(/[^0-9a-zA-Z- ]/g, '');
+};
+
 Columns.getData = (fileType, row) => {
   const obj = {};
   Object.keys(Columns[fileType]).forEach(key => {
     if (Columns[fileType][key].id > 0) {
-      row.eachCell((cell, colNumber) => {
-        if (Columns[fileType][key].id === colNumber) {
-          obj[key] = typeof cell.value === 'object' ? '' : cell.value;
-        }
-      });
+      let { value } = row.getCell(Columns[fileType][key].id);
+
+      // if (key === 'country') {
+      //   debugger;
+      // }
+
+      if (typeof value === 'object') {
+        value = '';
+      } else if (typeof value === 'string') {
+        value = removeNonAscii(value.trim());
+      }
+      obj[key] = value;
     }
   });
 

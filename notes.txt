@@ -1,6 +1,9 @@
 Main tasks:
 
-Create app configuration with electron-store
-Data will be saved into SQLITE database using Sequelize 
-Github repository
++ Create app configuration with electron-store
++ Data will be saved into SQLITE database using Sequelize 
++ Github repository
+
+create data structures for the Customer, System, Product models
+create interface to show progress of import
 Auto-update feature
