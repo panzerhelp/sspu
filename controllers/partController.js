@@ -33,70 +33,38 @@ exports.addOnePartFromStock = part => {
   });
 };
 
-// exports.addStockParts = async partArray => {
-//   return new Promise((resolve, reject) => {
-//     // clear stock
-//     Stock.sync({ force: true })
-//       .then(() => {
-//         const promiseArray = [];
-//         partArray.forEach(part => {
-//           promiseArray.push(this.addOnePartFromStock(part));
-//         });
+exports.addOnePart = part => {
+  return new Promise((resolve, reject) => {
+    Part.findCreateFind({
+      where: { partNumber: part.partNumber },
+      defaults: {
+        description: part.description,
+        csr: part.csr,
+        category: part.category,
+        mostUsed: part.mostUsed
+      }
+    })
+      .then(([partdb, created]) => {
+        resolve(partdb.dataValues);
+      })
+      .catch(err => reject(err));
+  });
+};
 
-//         Promise.all(promiseArray).then(
-//           value => {
-//             debugger;
-//             resolve(value);
-//           },
-//           reason => {
-//             reject(reason);
-//           }
-//         );
-//       })
-//       .catch(err => reject(err));
-//   });
-
-// await Stock.sync({ force: true });
-// const promiseArray = [];
-
-// partArray.forEach(part => {
-//   const promise = new Promise((resolve, reject) => {
-//     Part.findCreateFind({
-//       where: { partNumber: part.partNumber },
-//       defaults: {
-//         description: part.description,
-//         price: part.price
-//       }
-//     })
-//       // eslint-disable-next-line no-unused-vars
-//       .then(([partdb, created]) => {
-//         if (!created) {
-//           // update price
-//           partdb.update({
-//             price: part.price
-//           });
-//         }
-//         Stock.create({
-//           qty: part.qty,
-//           partId: partdb.id
-//         })
-//           .then(resolve())
-//           .catch(err => reject(err));
-//       })
-//       .catch(err => {
-//         console.log(err);
-//         reject(err);
-//       });
-//   });
-//   promiseArray.push(promise);
-// });
-
-// Promise.all(promiseArray).then(
-//   value => {
-//     console.log(value);
-//   },
-//   reason => {
-//     console.log(reason);
-//   }
-// );
-// };
+exports.addPartsFromPartSurfer = partObject => {
+  return new Promise((resolve, reject) => {
+    const promiseArray = [];
+    Object.keys(partObject).forEach(key => {
+      promiseArray.push(this.addOnePart(partObject[key]));
+    });
+    // partArray.forEach(part => promiseArray.push(this.addOnePartGenTab(part)));
+    Promise.all(promiseArray).then(
+      parts => {
+        resolve(parts);
+      },
+      reason => {
+        reject(reason);
+      }
+    );
+  });
+};

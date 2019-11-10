@@ -4,6 +4,7 @@ const { shell } = require('electron');
 document.title = `SSPU v.${process.env.npm_package_version}`;
 const configFileController = require('./controllers/configFilesController');
 const dataFileController = require('./controllers/dataFileController');
+const productController = require('./controllers/productController');
 const FileImport = require('./frontend-js/modules/FileImport');
 
 // eslint-disable-next-line no-unused-vars
@@ -38,6 +39,14 @@ const importFiles = () => {
 // eslint-disable-next-line no-unused-vars
 const selectDataDir = () => {
   if (configFileController.setDataDir()) init();
+};
+
+// eslint-disable-next-line no-unused-vars
+const getPartSurferData = async () => {
+  productController
+    .getProductDataFromPartSurfer()
+    .then()
+    .catch();
 };
 
 if (document.getElementById('file-import-block')) {

@@ -7,11 +7,6 @@ const getChromiumExecPath = () => {
 class Browser {
   constructor() {
     this.instance = null;
-    this.cookies = {
-      name: 'country',
-      value: 'Eastern Europe',
-      domain: 'partsurfer.hpe.com'
-    };
   }
 
   async init() {
@@ -33,9 +28,14 @@ class Browser {
 
   async openNewPage(url) {
     if (this.instance) {
+      const cookies = {
+        name: 'country',
+        value: 'Eastern Europe',
+        domain: 'partsurfer.hpe.com'
+      };
       const page = await this.instance.newPage();
       await page.setViewport({ width: 1366, height: 1080 });
-      await page.setCookie(...this.cookies);
+      await page.setCookie(cookies);
       await page.goto(url);
       return page;
     }
