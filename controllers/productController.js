@@ -1,4 +1,4 @@
-const Sequelize = require('sequelize');
+// const Sequelize = require('sequelize');
 const db = require('../db');
 const Product = require('../models/Product');
 const ProductPart = require('../models/ProductPart');
@@ -55,125 +55,148 @@ exports.addProducts = productsData => {
 exports.browser = null;
 
 exports.getSingleProductDataFromPartSurfer = async product => {
-  const page = await this.browser.openNewPage(
-    `https://partsurfer.hpe.com/Search.aspx?SearchText=${product.productNumber}`
-  );
+  try {
+    const page = await this.browser.openNewPage(
+      `https://partsurfer.hpe.com/Search.aspx?type=PROD&SearchText=${product.productNumber}`
+    );
 
-  const isValidProduct = await page.evaluate(() =>
-    document.getElementById('ctl00_BodyContentPlaceHolder_aGeneral')
-  );
+    const isValidProduct = await page.evaluate(() =>
+      document.getElementById('ctl00_BodyContentPlaceHolder_aGeneral')
+    );
 
-  if (!isValidProduct) {
-    await product.update({ scanStatus: 'NOT_VALID_PRODUCT' });
-  } else {
-    await page.waitForSelector('#ctl00_BodyContentPlaceHolder_aAdvanced');
+    if (!isValidProduct) {
+      await product.update({ scanStatus: 'NOT_VALID_PRODUCT' });
+    } else {
+      await page.waitForSelector('#ctl00_BodyContentPlaceHolder_aAdvanced');
 
-    // grab general tab
-    const partsGenTab = await page.evaluate(() => {
-      const partNumber = Array.from(
-        document.querySelectorAll('a[id*="lnkPartno"]')
-      ).map(el => {
-        return el.textContent;
-      });
-      const description = Array.from(
-        document.querySelectorAll('span[id*="lbldesc"]')
-      ).map(el => {
-        return el.textContent;
-      });
-      const csr = Array.from(
-        document.querySelectorAll('span[id*="lblcsr"]')
-      ).map(el => {
-        return el.textContent;
-      });
+      // grab general tab
+      const partsGenTab = await page.evaluate(() => {
+        const partNumber = Array.from(
+          document.querySelectorAll('a[id*="lnkPartno"]')
+        ).map(el => {
+          return el.textContent;
+        });
+        const description = Array.from(
+          document.querySelectorAll('span[id*="lbldesc"]')
+        ).map(el => {
+          return el.textContent;
+        });
+        const csr = Array.from(
+          document.querySelectorAll('span[id*="lblcsr"]')
+        ).map(el => {
+          return el.textContent;
+        });
 
-      return partNumber
-        .map((pn, i) => ({
-          key: pn,
-          value: {
-            partNumber: pn,
-            description: description[i],
-            category: '',
-            mostUsed: '',
-            csr: csr[i]
-          }
-        }))
-        .reduce((map, obj) => {
-          // eslint-disable-next-line no-param-reassign
-          map[obj.key] = obj.value;
-          return map;
-        }, {});
-    });
-
-    // navigate to advance tab
-    await Promise.all([
-      page.click('#ctl00_BodyContentPlaceHolder_aAdvanced'),
-      page.waitForNavigation({ timeout: 120000 })
-    ]);
-
-    await page.waitForSelector('#ctl00_BodyContentPlaceHolder_tdSpareBOM');
-
-    // grab advanced tab
-    const partsAdvTab = await page.evaluate(() => {
-      const partNumber = Array.from(
-        document.querySelectorAll('span[id$="spart1"]')
-      ).map(el => {
-        return el.textContent;
-      });
-      const description = Array.from(
-        document.querySelectorAll('span[id$="lblspartdesc1"]')
-      ).map(el => {
-        return el.textContent;
-      });
-      // const descE = Array.from(document.querySelectorAll('span[id$="lblspartdesc1_Enhanced"]')).map((el) => { return el.textContent; });
-      const category = Array.from(
-        document.querySelectorAll('span[id$="lblCategory1"]')
-      ).map(el => {
-        return el.textContent;
-      });
-      const mostUsed = Array.from(
-        document.querySelectorAll('span[id$="lblMostUsed"]')
-      ).map(el => {
-        return el.textContent;
-      });
-      const csr = Array.from(
-        document.querySelectorAll('span[id$="lblCSR1"]')
-      ).map(el => {
-        return el.textContent;
+        return partNumber
+          .map((pn, i) => ({
+            key: pn,
+            value: {
+              partNumber: pn,
+              description: description[i],
+              descriptionShort: '',
+              category: '',
+              mostUsed: '',
+              csr: csr[i]
+            }
+          }))
+          .reduce((map, obj) => {
+            // eslint-disable-next-line no-param-reassign
+            map[obj.key] = obj.value;
+            return map;
+          }, {});
       });
 
-      return partNumber
-        .map((pn, i) => ({
-          key: pn,
-          value: {
-            partNumber: pn,
-            description: description[i],
-            category: category[i],
-            mostUsed: mostUsed[i],
-            csr: csr[i]
-          }
-        }))
-        .reduce((map, obj) => {
-          // eslint-disable-next-line no-param-reassign
-          map[obj.key] = obj.value;
-          return map;
-        }, {});
-    });
+      // navigate to advance tab
+      await Promise.all([
+        page.click('#ctl00_BodyContentPlaceHolder_aAdvanced'),
+        page.waitForNavigation({ timeout: 120000 })
+      ]);
 
-    // const merged = { ...partsGenTab, ...partsAdvTab };
-    // console.log(partsGenTab);
-    // console.log(partsAdvTab);
-    // console.log(merged);
+      await page.waitForSelector('#ctl00_BodyContentPlaceHolder_tdSpareBOM');
 
-    const partsAdded = await partController.addPartsFromPartSurfer({
-      ...partsGenTab,
-      ...partsAdvTab
-    });
-    console.log(partsAdded);
+      // grab advanced tab
+      const partsAdvTab = await page.evaluate(() => {
+        const partNumber = Array.from(
+          document.querySelectorAll('span[id$="spart1"]')
+        ).map(el => {
+          return el.textContent;
+        });
+        const descriptionShort = Array.from(
+          document.querySelectorAll('span[id$="lblspartdesc1"]')
+        ).map(el => {
+          return el.textContent;
+        });
+        // const descE = Array.from(document.querySelectorAll('span[id$="lblspartdesc1_Enhanced"]')).map((el) => { return el.textContent; });
+        const category = Array.from(
+          document.querySelectorAll('span[id$="lblCategory1"]')
+        ).map(el => {
+          return el.textContent;
+        });
+        const mostUsed = Array.from(
+          document.querySelectorAll('span[id$="lblMostUsed"]')
+        ).map(el => {
+          return el.textContent;
+        });
+        const csr = Array.from(
+          document.querySelectorAll('span[id$="lblCSR1"]')
+        ).map(el => {
+          return el.textContent;
+        });
 
-    debugger;
+        return partNumber
+          .map((pn, i) => ({
+            key: pn,
+            value: {
+              partNumber: pn,
+              description: '',
+              descriptionShort: descriptionShort[i],
+              category: category[i],
+              mostUsed: mostUsed[i],
+              csr: csr[i]
+            }
+          }))
+          .reduce((map, obj) => {
+            // eslint-disable-next-line no-param-reassign
+            map[obj.key] = obj.value;
+            return map;
+          }, {});
+      });
+
+      // const merged = { ...partsGenTab, ...partsAdvTab };
+      // console.log(partsGenTab);
+      // console.log(partsAdvTab);
+      // console.log(merged);
+
+      // copy description to the items in the advance tab
+      Object.keys(partsAdvTab).forEach(key => {
+        if (typeof partsGenTab[key] !== 'undefined') {
+          partsAdvTab[key].description = partsGenTab[key].description;
+        }
+      });
+      // console.log(partsAdvTab);
+      //  console.log({ ...partsGenTab, ...partsAdvTab });
+
+      const partsAdded = await partController.addPartsFromPartSurfer({
+        ...partsGenTab,
+        ...partsAdvTab
+      });
+      console.log(partsAdded);
+
+      // debugger;
+
+      const productParts = [];
+      partsAdded.forEach(part =>
+        productParts.push({ productId: product.id, partId: part.id })
+      );
+
+      await ProductPart.bulkCreate(productParts);
+      await product.update({ scanStatus: 'SCANNED' });
+    }
+
+    await page.close();
+  } catch (error) {
+    console.log(error);
   }
-
-  await page.close();
 };
 
 exports.getProductDataFromPartSurfer = async () => {

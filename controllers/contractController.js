@@ -50,7 +50,6 @@ exports.addContracts = contractsData => {
       },
       reason => {
         reject(reason);
-        debugger;
       }
     );
   });

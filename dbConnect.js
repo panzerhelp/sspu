@@ -7,7 +7,8 @@ const SystemPart = require('./models/SystemPart');
 const Contract = require('./models/Contract');
 
 const dbConnect = async () => {
-  const force = {}; // { force: true };
+  // const force = {}; // { force: true };
+  const force = { force: true };
 
   await Part.sync(force);
   await Product.sync(force);

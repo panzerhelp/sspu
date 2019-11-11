@@ -6,11 +6,13 @@ const Part = db.define(
   {
     partNumber: { type: sequelize.STRING, allowNull: false, unique: true },
     description: { type: sequelize.TEXT },
+    descriptionShort: { type: sequelize.TEXT },
     category: { type: sequelize.STRING },
     mostUsed: { type: sequelize.INTEGER },
     csr: { type: sequelize.STRING },
     price: { type: sequelize.STRING },
-    exchangePrice: { type: sequelize.STRING }
+    exchangePrice: { type: sequelize.STRING },
+    feScanStatus: { type: sequelize.STRING }
   },
   {
     // options

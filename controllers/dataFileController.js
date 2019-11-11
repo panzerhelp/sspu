@@ -187,26 +187,6 @@ const importSalesDataFileRow = data => {
       }
 
       resolve('Resolved');
-
-      // productController
-      //   .addOneProduct({
-      //     productNumber: data.productNumber,
-      //     description: data.productDesc
-      //   })
-      //   .then(productId => {
-      //     console.log(`Added product to database id: ${productId}`);
-      //     resolve(productId);
-      //   })
-      //   .catch(err => reject(err));
-      //   this.importProduct(data)
-      //     .then(productId => {
-      //       debugger;
-      //       resolve(productId);
-      //     })
-      //     .catch(err => reject(err));
-      // } else {
-      //   resolve(data);
-      // }
     } else {
       resolve('Invalid data');
     }
@@ -220,7 +200,11 @@ exports.processDataRow = (fileType, row) => {
       resolve();
     } else {
       const data = Columns.getData(fileType, row);
-      if (fileType === 'stockFile' && typeof data.partNumber !== 'undefined') {
+      if (
+        fileType === 'stockFile' &&
+        typeof data.partNumber !== 'undefined' &&
+        data.partNumber
+      ) {
         partController
           .addOnePartFromStock(data)
           .then(part => {

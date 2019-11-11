@@ -39,6 +39,7 @@ exports.addOnePart = part => {
       where: { partNumber: part.partNumber },
       defaults: {
         description: part.description,
+        descriptionShort: part.descriptionShort,
         csr: part.csr,
         category: part.category,
         mostUsed: part.mostUsed
