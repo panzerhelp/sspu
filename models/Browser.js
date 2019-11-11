@@ -13,7 +13,7 @@ class Browser {
     if (!this.instance) {
       this.instance = await puppeteer.launch({
         headless: false,
-        devtools: true,
+        // devtools: true,
         executablePath: getChromiumExecPath()
       });
     }
@@ -26,21 +26,42 @@ class Browser {
     }
   }
 
-  async openNewPage(url) {
-    if (this.instance) {
-      const cookies = {
-        name: 'country',
-        value: 'Eastern Europe',
-        domain: 'partsurfer.hpe.com'
-      };
-      const page = await this.instance.newPage();
-      await page.setViewport({ width: 1366, height: 1080 });
-      await page.setCookie(cookies);
-      await page.goto(url);
-      return page;
-    }
-    return null;
+  openNewPage(url) {
+    return new Promise((resolve, reject) => {
+      if (this.instance) {
+        const cookies = [
+          {
+            name: 'country',
+            value: 'Eastern Europe',
+            domain: 'partsurfer.hpe.com'
+          }
+        ];
+        // const page = await
+        this.instance
+          .newPage()
+          .then(page => {
+            page
+              .setViewport({ width: 1366, height: 1080 })
+              .then(() => {
+                page
+                  .setCookie(...cookies)
+                  .then(() => {
+                    page
+                      .goto(url, { waitUntil: 'load', timeout: 0 })
+                      .then(() => {
+                        resolve(page);
+                      })
+                      .catch(err => reject(err));
+                  })
+                  .catch(err => reject(err));
+              })
+              .catch(err => reject(err));
+          })
+          .catch(err => reject(err));
+      } else {
+        reject(new Error('Browser instance is not defined'));
+      }
+    });
   }
 }
-
 module.exports = Browser;

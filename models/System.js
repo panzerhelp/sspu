@@ -15,8 +15,11 @@ const System = db.define(
   }
 );
 
-Product.hasOne(System);
-Contract.hasOne(System);
+Product.hasMany(System);
+System.belongsTo(Product);
+
+Contract.hasMany(System);
+System.belongsTo(Contract);
 
 module.exports = System;
 
