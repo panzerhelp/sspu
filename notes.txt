@@ -4,8 +4,8 @@ Main tasks:
 + Data will be saved into SQLITE database using Sequelize 
 + Github repository
 + Create data structures for the Customer, System, Product models
++ Cookies are not set all the time!!!
 
-Cookies are not set all the time!!!
 
 create interface to show progress of import
 Auto-update feature

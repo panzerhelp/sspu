@@ -1,51 +1,51 @@
 const Columns = {
   stockFile: {
     partNumber: {
-      names: ['part number', 'part', 'p/n']
+      names: ["part number", "part", "p/n"]
     },
     qty: {
-      names: ['qty', 'material left']
+      names: ["qty", "material left"]
     },
     description: {
-      names: ['description']
+      names: ["description"]
     },
     price: {
-      names: ['unit price', 'price']
+      names: ["unit price", "price"]
     }
   },
   salesDataFile: {
     country: {
-      names: ['hwst country cd']
+      names: ["hwst country cd"]
     },
     city: {
-      names: ['hwst city']
+      names: ["hwst city"]
     },
     customer: {
-      names: ['hwst name']
+      names: ["hwst name"]
     },
     productNumber: {
-      names: ['product nbr']
+      names: ["product nbr"]
     },
     productDesc: {
-      names: ['product desc']
+      names: ["product desc"]
     },
     response: {
-      names: ['response']
+      names: ["response"]
     },
     serial: {
-      names: ['serial nbr']
+      names: ["serial nbr"]
     },
     said: {
-      names: ['service agreement id']
+      names: ["service agreement id"]
     },
     funcLoc: {
-      names: ['functional location']
+      names: ["functional location"]
     },
     startDate: {
-      names: ['contract start date']
+      names: ["contract start date"]
     },
     endDate: {
-      names: ['contract end date']
+      names: ["contract end date"]
     }
   }
 };
@@ -60,7 +60,7 @@ Columns.setIds = (fileType, firstRow) => {
           if (
             Columns[fileType][key].id < 1 &&
             // cell.value &&
-            typeof cell.value === 'string' &&
+            typeof cell.value === "string" &&
             ((pass === 0 && cell.value.trim().toLowerCase() === name) || // try to find exact match on initial pass
               (pass === 1 &&
                 cell.value
@@ -77,8 +77,8 @@ Columns.setIds = (fileType, firstRow) => {
 };
 
 const removeNonAscii = str => {
-  if (str === null || str === '') return '';
-  return str.replace(/[^0-9a-zA-Z- ]/g, '');
+  if (str === null || str === "") return "";
+  return str.replace(/[^0-9a-zA-Z- ]/g, "");
 };
 
 Columns.getData = (fileType, row) => {
@@ -91,9 +91,9 @@ Columns.getData = (fileType, row) => {
       //   debugger;
       // }
 
-      if (typeof value === 'object') {
-        value = '';
-      } else if (typeof value === 'string') {
+      if (typeof value === "object") {
+        value = "";
+      } else if (typeof value === "string") {
         value = removeNonAscii(value.trim());
       }
       obj[key] = value;

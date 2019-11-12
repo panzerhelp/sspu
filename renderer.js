@@ -4,7 +4,7 @@ const { shell } = require('electron');
 document.title = `SSPU v.${process.env.npm_package_version}`;
 const configFileController = require('./controllers/configFilesController');
 const dataFileController = require('./controllers/dataFileController');
-// const productController = require('./controllers/productController');
+const productController = require('./controllers/productController');
 const systemController = require('./controllers/systemController');
 const FileImport = require('./frontend-js/modules/FileImport');
 
@@ -44,8 +44,7 @@ const selectDataDir = () => {
 
 // eslint-disable-next-line no-unused-vars
 const getPartSurferData = async () => {
-  // await productController.getProductDataFromPartSurfer();
-
+  await productController.getProductDataFromPartSurfer();
   await systemController.getSystemDataFromPartSurfer();
 };
 

@@ -118,47 +118,34 @@ const getSystemAdvancedTab = page => {
   });
 };
 
-const getDataFromSystemPage = (system, page) => {
-  return new Promise((resolve, reject) => {
-    page
-      .evaluate(() =>
-        document.getElementById('ctl00_BodyContentPlaceHolder_tdSpareBOM')
-      )
-      .then(spareBom => {
-        if (!spareBom) {
-          system
-            .update({ scanStatus: 'NO_DATA' })
-            .then(resolve('NO_DATA'))
-            .catch(err => reject(err));
-        } else {
-          getSystemAdvancedTab(page)
-            .then(partsAdvTab => {
-              partController
-                .addPartsFromPartSurfer(partsAdvTab)
-                .then(partsAdded => {
-                  const systemParts = [];
-                  partsAdded.forEach(part =>
-                    systemParts.push({
-                      systemId: system.id,
-                      partId: part.id
-                    })
-                  );
-                  SystemPart.bulkCreate(systemParts)
-                    .then(() => {
-                      system
-                        .update({ scanStatus: 'SCANNED' })
-                        .then(resolve('SCANNED')) // RESOLVED WITH STATUS SCANNED
-                        .catch(err => reject(err));
-                    })
-                    .catch(err => reject(err));
-                })
-                .catch(err => reject(err));
-            })
-            .catch(err => reject(err));
-        }
+const getDataFromSystemPage = async (system, page) => {
+  try {
+    const spareBom = await page.evaluate(() =>
+      document.getElementById('ctl00_BodyContentPlaceHolder_tdSpareBOM')
+    );
+    if (!spareBom) {
+      await system.update({ scanStatus: 'NO_DATA' });
+      return Promise.resolve('NO_DATA');
+    }
+
+    const partsAdvTab = await getSystemAdvancedTab(page);
+    const partsAdded = await partController.addPartsFromPartSurfer(partsAdvTab);
+
+    const systemParts = [];
+    partsAdded.forEach(part =>
+      systemParts.push({
+        systemId: system.id,
+        partId: part.id
       })
-      .catch(err => reject(err));
-  });
+    );
+
+    await SystemPart.bulkCreate(systemParts);
+
+    await system.update({ scanStatus: 'SCANNED' });
+    return Promise.resolve('SCANNED');
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
 
 const checkForProductSelection = (system, page) => {
@@ -201,170 +188,124 @@ const checkForProductSelection = (system, page) => {
   });
 };
 
-const processSystemPage = (system, page) => {
-  return new Promise((resolve, reject) => {
-    checkForProductSelection(system, page)
-      .then(select => {
-        if (select.length > 0) {
-          const itemFound = select.filter(obj => obj.clicked === true);
-          if (!itemFound) {
-            system
-              .update({ scanStatus: 'NO_DATA' })
-              .then(resolve('NO_DATA'))
-              .catch(err => reject(err));
-          } else {
-            Promise.all([
-              page.click('#ctl00_BodyContentPlaceHolder_btnProdSubmit'),
-              page.waitForNavigation({ timeout: 300000 })
-            ]).then(
-              () => {
-                getDataFromSystemPage(system, page)
-                  .then(result => resolve(result))
-                  .catch(err => reject(err));
-              },
-              reason => {
-                reject(reason); // failes to navigate to advanced tab
-              }
-            );
-          }
-        } else {
-          getDataFromSystemPage(system, page)
-            .then(result => resolve(result))
-            .catch(err => reject(err));
-        }
-      })
-      .catch(err => reject(err));
-  });
+const processSystemPage = async (system, page) => {
+  try {
+    const select = await checkForProductSelection(system, page);
+    let result;
+    if (select.length > 0) {
+      const itemFound = select.filter(obj => obj.clicked === true);
+
+      if (!itemFound) {
+        await system.update({ scanStatus: 'NO_DATA' });
+        return Promise.resolve('NO_DATA');
+      }
+
+      await Promise.all([
+        page.click('#ctl00_BodyContentPlaceHolder_btnProdSubmit'),
+        page.waitForNavigation({ timeout: 300000 })
+      ]);
+
+      result = await getDataFromSystemPage(system, page);
+    } else {
+      result = await getDataFromSystemPage(system, page);
+    }
+
+    return Promise.resolve(result);
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
 
-const inputSystemSerial = (system, page) => {
-  return new Promise((resolve, reject) => {
-    page
-      .$('#ctl00_BodyContentPlaceHolder_SearchText_TextBox1')
-      .then(input => {
-        input
-          .click({ clickCount: 3 })
-          .then(() => {
-            input
-              .type(system.serial)
-              .then(() => {
-                resolve();
-              })
-              .catch(err => reject(err));
-          })
-          .catch(err => reject(err));
-      })
-      .catch(err => reject(err));
-  });
+const inputSystemSerial = async (serial, page) => {
+  try {
+    const input = await page.$(
+      '#ctl00_BodyContentPlaceHolder_SearchText_TextBox1'
+    );
+    await input.click({ clickCount: 3 });
+    await input.type(serial);
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
 
-exports.getSingleSystemDataFromPartSurfer = system => {
-  return new Promise((resolve, reject) => {
-    this.browser
-      .openNewPage(`https://partsurfer.hpe.com/Search.aspx?SearchText`)
-      .then(page => {
-        inputSystemSerial(system, page)
-          .then(() => {
-            Promise.all([
-              page.click('#ctl00_BodyContentPlaceHolder_SearchText_btnSubmit'),
-              page.waitForNavigation({ timeout: 300000 })
-            ]).then(
-              () => {
-                page
-                  .evaluate(() =>
-                    document.getElementById(
-                      'ctl00_BodyContentPlaceHolder_lblNoDataFound'
-                    )
-                  )
-                  .then(noData => {
-                    if (noData) {
-                      system
-                        .update({ scanStatus: 'NO_DATA' })
-                        .then(() => {
-                          page
-                            .close()
-                            .then(resolve('NO_DATA')) // resolved with NOT_VALID_PRODUCT
-                            .catch(err => reject(err));
-                        })
-                        .catch(err => reject(err));
-                    } else {
-                      processSystemPage(system, page)
-                        .then(() => {
-                          page
-                            .close()
-                            .then(resolve('SCANNED')) // resolved with SCANNED_PRODUCT
-                            .catch(err => reject(err));
-                        })
-                        .catch(err => reject(err));
-                    }
-                  })
-                  .catch(err => reject(err));
-              },
-              reason => {
-                reject(reason); // failes to navigate to advanced tab
-              }
-            );
-          })
-          .catch(err => reject(err));
-      })
-      .catch(err => reject(err));
-  });
+exports.getSingleSystemDataFromPartSurfer = async system => {
+  try {
+    const page = await this.browser.openNewPage(
+      `https://partsurfer.hpe.com/Search.aspx?SearchText`
+    );
+
+    await inputSystemSerial(system.serial, page);
+
+    await Promise.all([
+      page.click('#ctl00_BodyContentPlaceHolder_SearchText_btnSubmit'),
+      page.waitForNavigation({ timeout: 300000 })
+    ]);
+
+    const noData = await page.evaluate(() =>
+      document.getElementById('ctl00_BodyContentPlaceHolder_lblNoDataFound')
+    );
+
+    if (noData) {
+      await system.update({ scanStatus: 'NO_DATA' });
+      await page.close();
+      return Promise.resolve('NO_DATA');
+    }
+
+    await processSystemPage(system, page);
+    await page.close();
+    return Promise.resolve('SCANNED');
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
 
-const getSystemArrayParts = systemArr => {
-  return new Promise((resolve, reject) => {
-    this.getSingleSystemDataFromPartSurfer(systemArr[0])
-      .then(result => {
-        systemArr.forEach(system => {
-          if (system.id !== systemArr[0].id) {
-            system.update({
-              scanStatus: result,
-              partSystemId: systemArr[0].id
-            });
-          }
+const getSystemArrayParts = async systemArr => {
+  try {
+    const result = await this.getSingleSystemDataFromPartSurfer(systemArr[0]);
+    systemArr.forEach(system => {
+      if (system.id !== systemArr[0].id) {
+        system.update({
+          scanStatus: result,
+          partSystemId: systemArr[0].id
         });
-        resolve();
-      })
-      .catch(err => reject(err));
-  });
+      }
+    });
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
 
-exports.getContractParts = contract => {
-  return new Promise((resolve, reject) => {
-    System.findAll({
+exports.getContractParts = async contract => {
+  try {
+    const systems = await System.findAll({
       where: { scanStatus: null, contractId: contract.id },
       include: [{ model: Product }],
       order: [[sequelize.literal('contractId, productId'), 'asc']]
-    })
-      .then(systems => {
-        if (systems.length > 0) {
-          const productSystemMap = {};
-          systems.forEach(system => {
-            if (typeof productSystemMap[system.product.id] === 'undefined') {
-              productSystemMap[system.product.id] = [];
-            }
-            productSystemMap[system.product.id].push(system);
-          });
-          const promiseArray = [];
+    });
 
-          Object.keys(productSystemMap).forEach(product => {
-            promiseArray.push(getSystemArrayParts(productSystemMap[product]));
-          });
-
-          Promise.all(promiseArray).then(
-            () => {
-              resolve();
-            },
-            reason => {
-              reject(reason); // failes to navigate to advanced tab
-            }
-          );
-        } else {
-          resolve();
+    if (systems.length > 0) {
+      const productSystemMap = {};
+      systems.forEach(system => {
+        if (typeof productSystemMap[system.product.id] === 'undefined') {
+          productSystemMap[system.product.id] = [];
         }
-      })
-      .catch(err => reject(err));
-  });
+        productSystemMap[system.product.id].push(system);
+      });
+      const promiseArray = [];
+      Object.keys(productSystemMap).forEach(product => {
+        promiseArray.push(getSystemArrayParts(productSystemMap[product]));
+      });
+
+      await Promise.all(promiseArray);
+      return Promise.resolve(`${systems.length} systems added`);
+    }
+
+    return Promise.resolve('No Systems Found');
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
 
 exports.getSystemDataFromPartSurfer = async () => {
@@ -395,35 +336,4 @@ exports.getSystemDataFromPartSurfer = async () => {
   for (const contract of contracts) {
     await this.getContractParts(contract);
   }
-  // for (const c of contracts) {
-  //   const systemsToScan = await System.findAll({
-  //     where: { scanStatus: null, contractId: c.id },
-  //     include: [{ model: Product }],
-  //     order: [[sequelize.literal('contractId, productId'), 'asc']]
-  //   });
-
-  //   const scannedProducts = {};
-  //   for (const system of systemsToScan) {
-  //     try {
-  //       // set system part id from the previously scanned system with the same product id
-  //       if (typeof scannedProducts[system.product.id] !== 'undefined') {
-  //         await system.update({
-  //           scanStatus: scannedProducts[system.product.id].result,
-  //           partSystemId: scannedProducts[system.product.id].systemId
-  //         });
-  //       } else {
-  //         const result = await this.getSingleSystemDataFromPartSurfer(system);
-
-  //         if (typeof scannedProducts[system.product.id] === 'undefined') {
-  //           scannedProducts[system.product.id] = {
-  //             result: result,
-  //             systemId: system.id
-  //           };
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   }
-  // }
 };
