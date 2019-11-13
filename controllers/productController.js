@@ -1,5 +1,6 @@
 // const Sequelize = require('sequelize');
-const db = require('../db');
+// const db = require('../db');
+const { ipcRenderer } = require('electron');
 const Product = require('../models/Product');
 const ProductPart = require('../models/ProductPart');
 const partController = require('../controllers/partController');
@@ -243,21 +244,44 @@ exports.getProductDataFromPartSurfer = async () => {
   await this.browser.init();
 
   // eslint-disable-next-line no-restricted-syntax
-  let promiseArray = [];
+  // let promiseArray = [];
   const concurrency = 5;
+  let curItem = 1;
+  // let subItems = [];
 
   // eslint-disable-next-line no-restricted-syntax
   for (const product of productsToScan) {
-    if (promiseArray.length < concurrency) {
-      promiseArray.push(this.getSingleProductDataFromPartSurfer(product));
-    } else {
-      await Promise.all(promiseArray);
-      promiseArray = [];
-    }
-    // await this.getSingleProductDataFromPartSurfer(product);
+    ipcRenderer.send('set-progress', {
+      mainItem: 'Getting product data',
+      subItem: product.productNumber,
+      curItem: curItem,
+      totalItem: productsToScan.length
+    });
+    await this.getSingleProductDataFromPartSurfer(product);
+    curItem++;
   }
 
-  if (promiseArray.length > 0) {
-    await Promise.all(promiseArray);
-  }
+  // // eslint-disable-next-line no-restricted-syntax
+  // for (const product of productsToScan) {
+  //   if (promiseArray.length < concurrency) {
+  //     promiseArray.push(this.getSingleProductDataFromPartSurfer(product));
+  //     curItem++;
+  //     subItems.push(product.productNumber);
+  //   } else {
+  //     ipcRenderer.send('set-progress', {
+  //       mainItem: 'Getting product data',
+  //       subItem: subItems.join(' '),
+  //       curItem: curItem,
+  //       totalItem: productsToScan.length
+  //     });
+
+  //     await Promise.all(promiseArray);
+  //     promiseArray = [];
+  //     subItems = [];
+  //   }
+  // }
+
+  // if (promiseArray.length > 0) {
+  //   await Promise.all(promiseArray);
+  // }
 };

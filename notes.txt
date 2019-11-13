@@ -8,4 +8,5 @@ Main tasks:
 
 
 create interface to show progress of import
+
 Auto-update feature

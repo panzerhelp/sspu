@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Worker Window</title>
+  </head>
+  <body></body>
+  <script>
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+    const productController = require('./controllers/productController');
+    const systemController = require('./controllers/systemController');
+
+    ipcRenderer.on('get-partsurfer-data', async () => {
+      await productController.getProductDataFromPartSurfer();
+      await systemController.getSystemDataFromPartSurfer();
+      ipcRenderer.send('finishedTask');
+    });
+  </script>
+</html>

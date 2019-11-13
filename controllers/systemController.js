@@ -1,4 +1,5 @@
 /* eslint-disable no-restricted-syntax */
+const { ipcRenderer } = require('electron');
 const sequelize = require('sequelize');
 const System = require('../models/System');
 const SystemPart = require('../models/SystemPart');
@@ -331,9 +332,16 @@ exports.getSystemDataFromPartSurfer = async () => {
 
   this.browser = new Browser();
   await this.browser.init();
-
+  let curItem = 1;
   const contracts = await Contract.findAll();
   for (const contract of contracts) {
+    ipcRenderer.send('set-progress', {
+      mainItem: 'Getting contract data',
+      subItem: `SAID ${contract.said}`,
+      curItem: curItem,
+      totalItem: contracts.length
+    });
     await this.getContractParts(contract);
+    curItem++;
   }
 };
