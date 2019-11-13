@@ -46,7 +46,7 @@ class Browser {
     }
   }
 
-  async openNewPage(url) {
+  async openNewPage(url, disableDropDownCheck) {
     if (this.instance) {
       const cookies = [
         {
@@ -61,7 +61,11 @@ class Browser {
         await page.setViewport({ width: 1400, height: 1080 });
         await page.setCookie(...cookies);
         await page.goto(url, { waitUntil: 'load', timeout: 0 });
-        await this.checkDropDown(page);
+
+        if (!disableDropDownCheck) {
+          await this.checkDropDown(page);
+        }
+
         return Promise.resolve(page);
       } catch (error) {
         return Promise.reject(error);

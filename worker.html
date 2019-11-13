@@ -12,10 +12,12 @@
     const { ipcRenderer } = electron;
     const productController = require('./controllers/productController');
     const systemController = require('./controllers/systemController');
+    const partController = require('./controllers/partController');
 
     ipcRenderer.on('get-partsurfer-data', async () => {
-      await productController.getProductDataFromPartSurfer();
-      await systemController.getSystemDataFromPartSurfer();
+      // await productController.getProductDataFromPartSurfer();
+      // await systemController.getSystemDataFromPartSurfer();
+      await partController.getFieldEquivFromPartSurfer();
       ipcRenderer.send('finishedTask');
     });
   </script>

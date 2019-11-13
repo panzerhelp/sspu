@@ -1,5 +1,10 @@
+/* eslint-disable no-restricted-syntax */
+const { ipcRenderer } = require('electron');
+const db = require('../db');
 const Part = require('../models/Part');
 const Stock = require('../models/Stock');
+const Browser = require('../models/Browser');
+const PartFieldEquiv = require('../models/PartFieldEquiv');
 
 exports.addOnePartFromStock = part => {
   return new Promise((resolve, reject) => {
@@ -68,4 +73,115 @@ exports.addPartsFromPartSurfer = partObject => {
       }
     );
   });
+};
+
+exports.browser = null;
+
+const getPartFielEquiv = async part => {
+  try {
+    const page = await this.browser.openNewPage(
+      `https://partsurfer.hpe.com/FunctionalEquivalent.aspx?spn=${part.partNumber}&country=EE`,
+      'disableDropDownCheck'
+    );
+
+    const partsFound = await page.evaluate(() => {
+      const partNumber = Array.from(
+        document.querySelectorAll('span[id$="lblspart1"]')
+      ).map(el => {
+        return el.textContent;
+      });
+      const description = Array.from(
+        document.querySelectorAll('span[id$="lblspartdesc1"]')
+      ).map(el => {
+        return el.textContent;
+      });
+
+      return partNumber.length
+        ? partNumber
+            .map((pn, i) => ({
+              key: pn,
+              value: {
+                partNumber: pn,
+                description: description[i],
+                descriptionShort: '',
+                category: '',
+                mostUsed: '',
+                csr: ''
+              }
+            }))
+            .reduce((map, obj) => {
+              // eslint-disable-next-line no-param-reassign
+              map[obj.key] = obj.value;
+              return map;
+            }, {})
+        : null;
+    });
+
+    if (partsFound) {
+      const partsAdded = await this.addPartsFromPartSurfer(partsFound);
+
+      const feParts = [];
+      partsAdded.forEach(fePart =>
+        feParts.push({
+          fePartId: fePart.id,
+          partId: part.id
+        })
+      );
+
+      await PartFieldEquiv.bulkCreate(feParts);
+      await part.update({ feScanStatus: `${feParts.length}` });
+    } else {
+      await part.update({ feScanStatus: `NO_FE` });
+    }
+    await page.close();
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.getFieldEquivFromPartSurfer = async () => {
+  //   // temporary clean scan flags and product parts data
+  // await PartFieldEquiv.destroy({
+  //   where: {},
+  //   truncate: true
+  // });
+
+  // await db.query(
+  //   "UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='partFieldEquivs'"
+  // );
+  // await Part.update(
+  //   {
+  //     feScanStatus: null
+  //   },
+  //   {
+  //     where: {
+  //       // scanStatus: {
+  //       //   [Sequelize.Op.ne]: null
+  //       // }
+  //     }
+  //   }
+  // );
+
+  this.browser = new Browser();
+  await this.browser.init();
+
+  let iteration = 0;
+  let partsToScen = await Part.findAll({ where: { feScanStatus: null } });
+
+  while (partsToScen.length) {
+    let curItem = 1;
+    for (const part of partsToScen) {
+      await getPartFielEquiv(part);
+      ipcRenderer.send('set-progress', {
+        mainItem: `Getting field equivalent data (${iteration})`,
+        subItem: `${part.partNumber}`,
+        curItem: curItem,
+        totalItem: partsToScen.length
+      });
+      curItem++;
+    }
+    iteration++;
+    partsToScen = await Part.findAll({ where: { feScanStatus: null } });
+  }
 };

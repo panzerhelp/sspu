@@ -5,6 +5,7 @@ const ProductPart = require('./models/ProductPart');
 const System = require('./models/System');
 const SystemPart = require('./models/SystemPart');
 const Contract = require('./models/Contract');
+const PartFieldEquiv = require('./models/PartFieldEquiv');
 
 const dbConnect = async () => {
   const force = {}; // { force: true };
@@ -13,6 +14,7 @@ const dbConnect = async () => {
   await Part.sync(force);
   await Product.sync(force);
   await ProductPart.sync(force);
+  await PartFieldEquiv.sync(force);
   await Stock.sync(force);
   await System.sync(force);
   await SystemPart.sync(force);
