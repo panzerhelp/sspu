@@ -9,6 +9,7 @@
   <body></body>
   <script>
     const electron = require('electron');
+    const { dialog } = require('electron').remote;
     const { shell, ipcRenderer } = electron;
     const dataFileController = require('./controllers/dataFileController');
     const productController = require('./controllers/productController');
@@ -24,10 +25,15 @@
     });
 
     ipcRenderer.on('generate-reports', async () => {
-      const outFile = await reportController.generateReports();
-      if (outFile) {
-        shell.openItem(outFile);
+      try {
+        const outFile = await reportController.generateReports();
+        if (outFile) {
+          shell.openItem(outFile);
+        }
+      } catch (error) {
+        dialog.showErrorBox('Error', error.message);
       }
+
       ipcRenderer.send('finishedTask');
     });
 

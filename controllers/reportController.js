@@ -7,6 +7,7 @@ const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 const path = require('path');
 const fs = require('fs');
+const fsPromises = require('fs').promises;
 const Stock = require('../models/Stock');
 const Part = require('../models/Part');
 const configFileController = require('../controllers/configFilesController');
@@ -372,53 +373,65 @@ const addStockPartRow = async (stockPart, sheet) => {
   return Promise.resolve();
 };
 
-const generateStockPartUsageReport = async () => {
-  // ipcRenderer.send('set-progress', {
-  //   mainItem: `Generating part usage report`,
-  //   subItem: ``,
-  //   curItem: 0,
-  //   totalItem: 0
-  // });
-
-  const stockParts = await Stock.findAll({
-    where: {},
-    include: [{ model: Part }]
-  });
-
-  let outFile = '';
-  if (stockParts.length) {
-    const wb = new Excel.Workbook();
-    outFile = getOutputFile('stockUsage');
-    const sheet = wb.addWorksheet('Stock Usage', {
-      views: [{ state: 'frozen', ySplit: 2 }],
-      properties: { tabColor: { argb: 'FFFFFFFF' } }
-    });
-
-    addMainRow(partUsageColumns, sheet);
-
-    let curItem = 1;
-    for (const stockPart of stockParts) {
-      ipcRenderer.send('set-progress', {
-        mainItem: `Generating part usage report`,
-        subItem: stockPart.part.partNumber,
-        curItem: curItem,
-        totalItem: stockParts.length
-      });
-
-      await addStockPartRow(stockPart, sheet);
-      curItem++;
-    }
-
-    sheet.autoFilter = {
-      from: { row: 2, column: 1 },
-      to: { row: sheet.lastRow._number, column: sheet.columnCount }
-    };
-
-    setColWidth(partUsageColumns, sheet);
-    await wb.xlsx.writeFile(outFile);
+const checkFileBusy = async outFile => {
+  if (!fs.existsSync(outFile)) {
+    return Promise.resolve();
   }
 
-  return Promise.resolve(outFile);
+  let filehandle;
+  try {
+    filehandle = await fsPromises.open(outFile, 'r+');
+    if (filehandle !== undefined) await filehandle.close();
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+const generateStockPartUsageReport = async () => {
+  try {
+    const outFile = getOutputFile('stockUsage');
+    await checkFileBusy(outFile);
+    const stockParts = await Stock.findAll({
+      where: {},
+      include: [{ model: Part }]
+    });
+
+    if (stockParts.length) {
+      const wb = new Excel.Workbook();
+      const sheet = wb.addWorksheet('Stock Usage', {
+        views: [{ state: 'frozen', ySplit: 2 }],
+        properties: { tabColor: { argb: 'FFFFFFFF' } }
+      });
+
+      addMainRow(partUsageColumns, sheet);
+
+      let curItem = 1;
+      for (const stockPart of stockParts) {
+        ipcRenderer.send('set-progress', {
+          mainItem: `Generating part usage report`,
+          subItem: stockPart.part.partNumber,
+          curItem: curItem,
+          totalItem: stockParts.length
+        });
+
+        await addStockPartRow(stockPart, sheet);
+        curItem++;
+      }
+
+      sheet.autoFilter = {
+        from: { row: 2, column: 1 },
+        to: { row: sheet.lastRow._number, column: sheet.columnCount }
+      };
+
+      setColWidth(partUsageColumns, sheet);
+      await wb.xlsx.writeFile(outFile);
+    }
+
+    return Promise.resolve(outFile);
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
 
 exports.generateReports = async () => {
