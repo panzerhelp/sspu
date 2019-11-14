@@ -5,6 +5,7 @@ class Progress {
     this.percentage = document.getElementById('percentage');
     this.subItem = document.getElementById('subItem');
     this.subItemStatus = document.getElementById('subItemStatus');
+    this.progressBar = document.getElementById('progressBar');
     this.injectHTML();
     this.events();
   }
@@ -34,6 +35,15 @@ class Progress {
         ? `${status.curItem} / ${status.totalItem}`
         : ''
     };
+
+    if (status.totalItem) {
+      this.progressBar.style.display = 'block';
+      this.progressBar.style.width = `${pct}%`;
+      this.progressBar['aria-valuenow'] = pct;
+      // this.progressBar.textContent = `${pct} %`;
+    } else {
+      this.progressBar.style.display = 'none';
+    }
 
     this.setStatus(progressStatus);
   }
