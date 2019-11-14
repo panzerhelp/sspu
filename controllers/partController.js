@@ -50,6 +50,7 @@ exports.addOnePart = part => {
         mostUsed: part.mostUsed
       }
     })
+      // eslint-disable-next-line no-unused-vars
       .then(([partdb, created]) => {
         resolve(partdb.dataValues);
       })

@@ -15,6 +15,7 @@ exports.addOneProduct = product => {
         description: product.description
       }
     })
+      // eslint-disable-next-line no-unused-vars
       .then(([productdb, created]) => {
         resolve(productdb.dataValues);
       })

@@ -252,15 +252,17 @@ const groupSystemsByContracts = systems => {
     contracts[system.contract.said][system.product.productNumber].serials.push(
       system.serial
     );
-
-    const type = getContractType(system.contract);
   });
   return contracts;
 };
 
 const addStockPartRow = async (stockPart, sheet) => {
   const feParts = await partController.getPartFieldEquiv(stockPart);
-  const systems = await systemController.findSystemsWithPart(stockPart.part.id);
+  const fePartIds = feParts.map(p => p.id);
+  const systems = await systemController.findSystemsWithPart([
+    ...fePartIds,
+    stockPart.part.id
+  ]);
 
   // group by contracts / products
   const contracts = groupSystemsByContracts(systems);
@@ -296,6 +298,7 @@ const addStockPartRow = async (stockPart, sheet) => {
     ''
   ]);
 
+  // eslint-disable-next-line no-unused-vars
   sheet.lastRow.eachCell((cell, collNumber) => {
     let color = 'FFFFFFFF';
 
@@ -354,6 +357,7 @@ const addStockPartRow = async (stockPart, sheet) => {
         '' // list[c][s][p].wasSearched // 29
       ]);
 
+      // eslint-disable-next-line no-unused-vars
       sheet.lastRow.eachCell((cell, colNumber) => {
         cell.fill = {
           type: 'pattern',

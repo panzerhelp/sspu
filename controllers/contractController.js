@@ -13,6 +13,7 @@ exports.addOneContract = contract => {
         city: contract.city
       }
     })
+      // eslint-disable-next-line no-unused-vars
       .then(([contractdb, created]) => {
         resolve(contractdb.dataValues);
       })

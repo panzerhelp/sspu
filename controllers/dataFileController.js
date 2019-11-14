@@ -166,6 +166,7 @@ exports.validateSalesData = data => {
 };
 
 const importSalesDataFileRow = data => {
+  // eslint-disable-next-line no-unused-vars
   return new Promise((resolve, reject) => {
     if (this.validateSalesData(data)) {
       if (typeof productsData[data.productNumber] === 'undefined') {

@@ -7,9 +7,9 @@ Main tasks:
 + Cookies are not set all the time!!!
 + create interface to show progress of import
 + add field equivalent
++ add stock usage report
 
 add incremential data import 
-add stock usage report
 issue with navigation timeout in puppeteer
 look at mutiple page issue when doing scrapping. swicth to mutiple browsers!
 Auto-update feature

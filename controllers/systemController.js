@@ -351,7 +351,7 @@ exports.getSystemDataFromPartSurfer = async () => {
   }
 };
 
-exports.findSystemsWithPart = async partId => {
+exports.findSystemsWithPart = async partIds => {
   try {
     const systemParts = await System.findAll({
       where: { partSystemId: null, scanStatus: 'SCANNED' },
@@ -366,7 +366,7 @@ exports.findSystemsWithPart = async partId => {
         },
         {
           model: Part,
-          where: { id: partId },
+          where: { id: partIds },
           required: true
         }
       ]
@@ -386,7 +386,7 @@ exports.findSystemsWithPart = async partId => {
             {
               model: Part,
               required: true,
-              where: { id: partId }
+              where: { id: partIds }
             }
           ]
         }
