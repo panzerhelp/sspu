@@ -1,11 +1,7 @@
-// const { remote } = require('electron');
 const { shell, ipcRenderer } = require('electron');
 
 document.title = `SSPU v.${process.env.npm_package_version}`;
 const configFileController = require('./controllers/configFilesController');
-// const dataFileController = require('./controllers/dataFileController');
-// const productController = require('./controllers/productController');
-// const systemController = require('./controllers/systemController');
 const FileImport = require('./frontend-js/modules/FileImport');
 
 // eslint-disable-next-line no-unused-vars

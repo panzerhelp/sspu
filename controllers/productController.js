@@ -1,10 +1,7 @@
-// const Sequelize = require('sequelize');
-// const db = require('../db');
 const { ipcRenderer } = require('electron');
 const Product = require('../models/Product');
 const ProductPart = require('../models/ProductPart');
 const partController = require('../controllers/partController');
-// const Part = require('../models/Part');
 const Browser = require('../models/Browser');
 
 exports.addOneProduct = product => {
@@ -260,28 +257,4 @@ exports.getProductDataFromPartSurfer = async () => {
     await this.getSingleProductDataFromPartSurfer(product);
     curItem++;
   }
-
-  // // eslint-disable-next-line no-restricted-syntax
-  // for (const product of productsToScan) {
-  //   if (promiseArray.length < concurrency) {
-  //     promiseArray.push(this.getSingleProductDataFromPartSurfer(product));
-  //     curItem++;
-  //     subItems.push(product.productNumber);
-  //   } else {
-  //     ipcRenderer.send('set-progress', {
-  //       mainItem: 'Getting product data',
-  //       subItem: subItems.join(' '),
-  //       curItem: curItem,
-  //       totalItem: productsToScan.length
-  //     });
-
-  //     await Promise.all(promiseArray);
-  //     promiseArray = [];
-  //     subItems = [];
-  //   }
-  // }
-
-  // if (promiseArray.length > 0) {
-  //   await Promise.all(promiseArray);
-  // }
 };

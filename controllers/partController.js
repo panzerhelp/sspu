@@ -206,10 +206,6 @@ exports.getPartFieldEquiv = async stockPart => {
     let feParts = [];
     if (fePartIds) feParts = await Part.findAll({ where: { id: fePartIds } });
 
-    // if (fePartIds.length !== feParts.length) {
-    //   debugger;
-    // }
-
     return Promise.resolve(feParts);
   } catch (error) {
     return Promise.reject(error);

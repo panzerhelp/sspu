@@ -13,9 +13,5 @@ exports.clearStock = () => {
           .catch(err => reject(err));
       })
       .catch(err => reject(err));
-
-    // Stock.sync({ force: true })
-    //   .then(resolve())
-    //   .catch(err => reject(err));
   });
 };

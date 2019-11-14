@@ -12,7 +12,6 @@ const Stock = require('../models/Stock');
 const Part = require('../models/Part');
 const configFileController = require('../controllers/configFilesController');
 const partController = require('../controllers/partController');
-// const contractController = require('../controllers/contractController');
 const systemController = require('../controllers/systemController');
 
 dayjs.extend(customParseFormat);
@@ -142,26 +141,6 @@ const setColWidth = (columns, sheet) => {
     }
   });
 };
-
-// class _contracts_ {
-//   constructor() {
-//     this.Ctr6HR = 0;
-//     this.Ons4HR = 0;
-//     this.OnsNCD = 0;
-//   }
-
-//   addValue(key, val) {
-//     if (typeof this[key] !== 'undefined') {
-//       this[key] += val;
-//     }
-//   }
-// }
-
-// const addSystemsForPart = async (list, partId, equiv) => {
-//   await systemController.findSystemsWithPart(partId);
-//   // debugger;
-//   return Promise.resolve();
-// };
 
 const getContractsStatus = contract => {
   const endDate = dayjs(contract.endDate, 'MMDDYY');

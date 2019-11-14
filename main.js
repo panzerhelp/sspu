@@ -167,7 +167,3 @@ app.on('activate', async () => {
     }
   }
 });
-
-// ipcMain.on('loginForm:submit', (e, data) => {
-//  fetch3parData();
-// });

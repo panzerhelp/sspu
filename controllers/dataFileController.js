@@ -260,48 +260,4 @@ exports.importFiles = async () => {
   } catch (error) {
     return Promise.reject(error);
   }
-
-  // // debugger;
-  // const t0 = performance.now();
-
-  // filesToLoad.forEach(file => {
-  //   promiseArray.push(this.loadFile(file, this.processDataRow));
-  // });
-  // Promise.all(promiseArray).then(
-  //   // eslint-disable-next-line no-unused-vars
-  //   fileTypes => {
-  //     // console.log('Finished reading data files. Starting data import');
-  //     // console.log(systemsData);
-  //     // console.log(contractsData);
-  //     // debugger;
-  //     productController
-  //       .addProducts(productsData)
-  //       .then(productIds => {
-  //         contractController
-  //           .addContracts(contractsData)
-  //           .then(contractIds => {
-  //             systemController
-  //               .addSystems(systemsData, productIds, contractIds)
-  //               .then(systemIds => {
-  //                 const t1 = performance.now();
-  //                 const time = t1 - t0;
-  //                 console.log(
-  //                   `Data file import complete in ${time} milliseconds`
-  //                 );
-  //                 // console.log(productIds);
-  //                 // console.log(contractIds);
-  //                 // console.log(systemIds);
-  //                 this.cleanUpAfterImport();
-  //                 // debugger;
-  //               })
-  //               .catch(err => console.log(err));
-  //           })
-  //           .catch(err => console.log(err));
-  //       })
-  //       .catch(err => console.log(err));
-  //   },
-  //   reason => {
-  //     this.cleanUpAfterImport();
-  //   }
-  // );
 };
