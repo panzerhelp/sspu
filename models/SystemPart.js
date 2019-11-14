@@ -6,4 +6,6 @@ const SystemPart = db.define('systemPart', {}, {});
 System.belongsToMany(Part, { through: SystemPart });
 Part.belongsToMany(System, { through: SystemPart });
 
+Part.belongsToMany(System, { through: SystemPart });
+
 module.exports = SystemPart;

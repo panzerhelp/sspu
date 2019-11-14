@@ -29,8 +29,10 @@ class Progress {
     const progressStatus = {
       mainItem: status.mainItem,
       subItem: status.subItem,
-      percentage: `${pct} %`,
-      subItemStatus: `${status.curItem} / ${status.totalItem}`
+      percentage: status.totalItem ? `${pct} %` : '',
+      subItemStatus: status.totalItem
+        ? `${status.curItem} / ${status.totalItem}`
+        : ''
     };
 
     this.setStatus(progressStatus);

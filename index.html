@@ -1,40 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="./css/style.css">
-    <script src="https://kit.fontawesome.com/2b78d59932.js" crossorigin="anonymous"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="./node_modules/bootstrap/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="./css/style.css" />
+    <script
+      src="https://kit.fontawesome.com/2b78d59932.js"
+      crossorigin="anonymous"
+    ></script>
     <title></title>
-</head>
-<body>
-    
+  </head>
+  <body>
     <div class="d-flex justify-content-center p-2" id="appTitle">
-        <h1>Sophela Stock Planning Utility</h1>
+      <h1>Sophela Stock Planning Utility</h1>
     </div>
-    
+
     <div class="container">
+      <div class="d-flex justify-content-center p-2 mb-2">
+        <button class="btn btn-primary px-5 py-2" onclick="generateReports()">
+          <i class="far fa-file-excel"></i> Generate Reports
+        </button>
+      </div>
 
-        <div class="row">
-           <div class="col-12 col-lg-10" id="file-import-block">
-           </div>
-        </div>
+      <hr />
 
-    <hr>
-    
-    <div class="d-flex justify-content-center p-2 mb-2">
-        <button class="btn btn-primary px-5 py-2" onclick="getPartSurferData()"><i class="fas fa-search"></i>   PartSurfer Scan </button>
+      <div class="row">
+        <div class="col-12 col-lg-10" id="file-import-block"></div>
+      </div>
+
+      <hr />
+
+      <div class="d-flex justify-content-center p-2 mb-2">
+        <button class="btn btn-primary px-5 py-2" onclick="getPartSurferData()">
+          <i class="fas fa-search"></i> PartSurfer Scan
+        </button>
+      </div>
     </div>
 
     <script>
-       window.jQuery = window.$ = require('jquery');
-   </script>
-   <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
-   
+      window.jQuery = window.$ = require('jquery');
+    </script>
+    <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+
     <script src="renderer.js"></script>
     <!-- <script src="./frontend-js/main.js"></script> -->
-</body>
-
+  </body>
 </html>

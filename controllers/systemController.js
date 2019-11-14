@@ -6,6 +6,7 @@ const SystemPart = require('../models/SystemPart');
 // const db = require('../db');
 const Browser = require('../models/Browser');
 const Product = require('../models/Product');
+const Part = require('../models/Part');
 const partController = require('./partController');
 const Contract = require('../models/Contract');
 
@@ -21,7 +22,11 @@ exports.addOneSystem = system => {
       }
     })
       .then(([systemdb, created]) => {
-        console.log(`Added system with serial ${systemdb.serial}`);
+        console.log(
+          created
+            ? `Added system with serial ${systemdb.serial}`
+            : `Updated system with serial ${systemdb.serial}`
+        );
         resolve(systemdb.dataValues);
       })
       .catch(err => {
@@ -343,5 +348,72 @@ exports.getSystemDataFromPartSurfer = async () => {
     });
     await this.getContractParts(contract);
     curItem++;
+  }
+};
+
+exports.findSystemsWithPart = async partId => {
+  try {
+    const systemParts = await System.findAll({
+      where: { partSystemId: null, scanStatus: 'SCANNED' },
+      include: [
+        {
+          model: Contract,
+          required: true
+        },
+        {
+          model: Product,
+          required: true
+        },
+        {
+          model: Part,
+          where: { id: partId },
+          required: true
+        }
+      ]
+    });
+
+    const systemNoParts = await System.findAll({
+      where: { partSystemId: null, scanStatus: 'NO_DATA' },
+      include: [
+        {
+          model: Contract,
+          required: true
+        },
+        {
+          model: Product,
+          required: true,
+          include: [
+            {
+              model: Part,
+              required: true,
+              where: { id: partId }
+            }
+          ]
+        }
+      ]
+    });
+
+    const systemIds = [];
+    systemParts.forEach(s => systemIds.push(s.id));
+    systemNoParts.forEach(s => systemIds.push(s.id));
+
+    const systemLinked = await System.findAll({
+      where: { partSystemId: systemIds },
+      include: [
+        {
+          model: Contract,
+          required: true
+        },
+        {
+          model: Product,
+          required: true
+        }
+      ]
+    });
+
+    const systems = [...systemParts, ...systemNoParts, ...systemLinked];
+    return Promise.resolve(systems);
+  } catch (error) {
+    return Promise.reject(error);
   }
 };

@@ -119,8 +119,16 @@ function createProgressWindow(command) {
   });
 }
 
+ipcMain.on('import-files', () => {
+  createProgressWindow('import-files');
+});
+
 ipcMain.on('get-partsurfer-data', () => {
   createProgressWindow('get-partsurfer-data');
+});
+
+ipcMain.on('generate-reports', () => {
+  createProgressWindow('generate-reports');
 });
 
 // forward set-progress events from worker to progress window

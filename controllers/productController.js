@@ -47,7 +47,6 @@ exports.addProducts = productsData => {
       },
       reason => {
         reject(reason);
-        debugger;
       }
     );
   });
@@ -245,7 +244,7 @@ exports.getProductDataFromPartSurfer = async () => {
 
   // eslint-disable-next-line no-restricted-syntax
   // let promiseArray = [];
-  const concurrency = 5;
+  // const concurrency = 5;
   let curItem = 1;
   // let subItems = [];
 

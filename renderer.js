@@ -3,7 +3,7 @@ const { shell, ipcRenderer } = require('electron');
 
 document.title = `SSPU v.${process.env.npm_package_version}`;
 const configFileController = require('./controllers/configFilesController');
-const dataFileController = require('./controllers/dataFileController');
+// const dataFileController = require('./controllers/dataFileController');
 // const productController = require('./controllers/productController');
 // const systemController = require('./controllers/systemController');
 const FileImport = require('./frontend-js/modules/FileImport');
@@ -33,21 +33,23 @@ const selectFile = fileType => {
 };
 
 // eslint-disable-next-line no-unused-vars
-const importFiles = () => {
-  dataFileController.importFiles();
-};
-
-// eslint-disable-next-line no-unused-vars
 const selectDataDir = () => {
   if (configFileController.setDataDir()) init();
 };
 
 // eslint-disable-next-line no-unused-vars
+const importFiles = () => {
+  ipcRenderer.send('import-files');
+};
+
+// eslint-disable-next-line no-unused-vars
 const getPartSurferData = async () => {
   ipcRenderer.send('get-partsurfer-data');
+};
 
-  // await productController.getProductDataFromPartSurfer();
-  // await systemController.getSystemDataFromPartSurfer();
+// eslint-disable-next-line no-unused-vars
+const generateReports = async () => {
+  ipcRenderer.send('generate-reports');
 };
 
 if (document.getElementById('file-import-block')) {

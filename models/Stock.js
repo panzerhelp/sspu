@@ -11,6 +11,8 @@ const Stock = db.define(
     freezeTableName: true
   }
 );
+
 Part.hasMany(Stock);
+Stock.belongsTo(Part);
 
 module.exports = Stock;

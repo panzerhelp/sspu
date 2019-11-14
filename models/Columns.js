@@ -4,7 +4,7 @@ const Columns = {
       names: ['part number', 'part', 'p/n']
     },
     qty: {
-      names: ['qty', 'material left']
+      names: ['qty', 'material left', 'total stock']
     },
     description: {
       names: ['description']

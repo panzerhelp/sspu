@@ -1,3 +1,4 @@
+const { ipcRenderer } = require('electron');
 const fs = require('fs');
 const Excel = require('exceljs');
 const path = require('path');
@@ -9,11 +10,21 @@ const productController = require('../controllers/productController');
 const contractController = require('../controllers/contractController');
 const systemController = require('../controllers/systemController');
 
+const sendProgressMessage = (fileType, message) => {
+  ipcRenderer.send('set-progress', {
+    mainItem: `Importing data files`,
+    subItem: `${fileType} : ${message}`,
+    curItem: 0,
+    totalItem: 0
+  });
+};
+
 exports.loadFile = (file, processRowCallBack) => {
   return new Promise((resolve, reject) => {
     const { filePath } = file;
     if (fs.existsSync(filePath)) {
       if (path.parse(filePath).ext === '.xlsx') {
+        sendProgressMessage(file.type, 'loading fail');
         this.loadFileXLSX(file, processRowCallBack)
           .then(() => resolve())
           .catch(error => reject(error));
@@ -195,6 +206,7 @@ const importSalesDataFileRow = data => {
 
 exports.processDataRow = (fileType, row) => {
   return new Promise((resolve, reject) => {
+    sendProgressMessage(fileType, `processed rows ${row._number}`);
     if (row._number === 1) {
       Columns.setIds(fileType, row);
       resolve();
@@ -227,54 +239,68 @@ exports.processDataRow = (fileType, row) => {
 };
 
 exports.importFiles = async () => {
-  const filesToLoad = configFilesController.selectAllFilesFromConfig();
+  try {
+    const filesToLoad = configFilesController.selectAllFilesFromConfig();
+    await stockController.clearStock();
+    const promiseArray = [];
+    filesToLoad.forEach(file => {
+      promiseArray.push(this.loadFile(file, this.processDataRow));
+    });
 
-  const promiseArray = [];
+    await Promise.all(promiseArray);
 
-  await stockController.clearStock();
-  // debugger;
-  const t0 = performance.now();
+    const productIds = await productController.addProducts(productsData);
+    const contractIds = await contractController.addContracts(contractsData);
 
-  filesToLoad.forEach(file => {
-    promiseArray.push(this.loadFile(file, this.processDataRow));
-  });
-  Promise.all(promiseArray).then(
-    // eslint-disable-next-line no-unused-vars
-    fileTypes => {
-      // console.log('Finished reading data files. Starting data import');
-      // console.log(systemsData);
-      // console.log(contractsData);
-      // debugger;
-      productController
-        .addProducts(productsData)
-        .then(productIds => {
-          contractController
-            .addContracts(contractsData)
-            .then(contractIds => {
-              systemController
-                .addSystems(systemsData, productIds, contractIds)
-                .then(systemIds => {
-                  const t1 = performance.now();
-                  const time = t1 - t0;
-                  console.log(
-                    `Data file import complete in ${time} milliseconds`
-                  );
-                  // console.log(productIds);
-                  // console.log(contractIds);
-                  // console.log(systemIds);
-                  this.cleanUpAfterImport();
-                  // debugger;
-                })
-                .catch(err => console.log(err));
-            })
-            .catch(err => console.log(err));
-        })
-        .catch(err => console.log(err));
-    },
-    reason => {
-      console.log(reason);
-      debugger;
-      this.cleanUpAfterImport();
-    }
-  );
+    await systemController.addSystems(systemsData, productIds, contractIds);
+
+    this.cleanUpAfterImport();
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
+  // // debugger;
+  // const t0 = performance.now();
+
+  // filesToLoad.forEach(file => {
+  //   promiseArray.push(this.loadFile(file, this.processDataRow));
+  // });
+  // Promise.all(promiseArray).then(
+  //   // eslint-disable-next-line no-unused-vars
+  //   fileTypes => {
+  //     // console.log('Finished reading data files. Starting data import');
+  //     // console.log(systemsData);
+  //     // console.log(contractsData);
+  //     // debugger;
+  //     productController
+  //       .addProducts(productsData)
+  //       .then(productIds => {
+  //         contractController
+  //           .addContracts(contractsData)
+  //           .then(contractIds => {
+  //             systemController
+  //               .addSystems(systemsData, productIds, contractIds)
+  //               .then(systemIds => {
+  //                 const t1 = performance.now();
+  //                 const time = t1 - t0;
+  //                 console.log(
+  //                   `Data file import complete in ${time} milliseconds`
+  //                 );
+  //                 // console.log(productIds);
+  //                 // console.log(contractIds);
+  //                 // console.log(systemIds);
+  //                 this.cleanUpAfterImport();
+  //                 // debugger;
+  //               })
+  //               .catch(err => console.log(err));
+  //           })
+  //           .catch(err => console.log(err));
+  //       })
+  //       .catch(err => console.log(err));
+  //   },
+  //   reason => {
+  //     this.cleanUpAfterImport();
+  //   }
+  // );
 };

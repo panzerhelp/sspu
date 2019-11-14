@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 const { ipcRenderer } = require('electron');
-const db = require('../db');
+// const db = require('../db');
 const Part = require('../models/Part');
 const Stock = require('../models/Stock');
 const Browser = require('../models/Browser');
@@ -183,5 +183,34 @@ exports.getFieldEquivFromPartSurfer = async () => {
     }
     iteration++;
     partsToScen = await Part.findAll({ where: { feScanStatus: null } });
+  }
+};
+
+exports.getPartFieldEquiv = async stockPart => {
+  try {
+    const fePartIds = [];
+
+    const isFE = await PartFieldEquiv.findAll({
+      where: { fePartId: stockPart.part.id }
+    });
+
+    isFE.forEach(i => fePartIds.push(i.partId));
+
+    const hasFE = await PartFieldEquiv.findAll({
+      where: { partId: stockPart.part.id }
+    });
+
+    hasFE.forEach(i => fePartIds.push(i.fePartId));
+
+    let feParts = [];
+    if (fePartIds) feParts = await Part.findAll({ where: { id: fePartIds } });
+
+    // if (fePartIds.length !== feParts.length) {
+    //   debugger;
+    // }
+
+    return Promise.resolve(feParts);
+  } catch (error) {
+    return Promise.reject(error);
   }
 };

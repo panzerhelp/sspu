@@ -9,15 +9,30 @@
   <body></body>
   <script>
     const electron = require('electron');
-    const { ipcRenderer } = electron;
+    const { shell, ipcRenderer } = electron;
+    const dataFileController = require('./controllers/dataFileController');
     const productController = require('./controllers/productController');
     const systemController = require('./controllers/systemController');
     const partController = require('./controllers/partController');
+    const reportController = require('./controllers/reportController');
 
     ipcRenderer.on('get-partsurfer-data', async () => {
-      // await productController.getProductDataFromPartSurfer();
-      // await systemController.getSystemDataFromPartSurfer();
+      await productController.getProductDataFromPartSurfer();
+      await systemController.getSystemDataFromPartSurfer();
       await partController.getFieldEquivFromPartSurfer();
+      ipcRenderer.send('finishedTask');
+    });
+
+    ipcRenderer.on('generate-reports', async () => {
+      const outFile = await reportController.generateReports();
+      if (outFile) {
+        shell.openItem(outFile);
+      }
+      ipcRenderer.send('finishedTask');
+    });
+
+    ipcRenderer.on('import-files', async () => {
+      await dataFileController.importFiles();
       ipcRenderer.send('finishedTask');
     });
   </script>
