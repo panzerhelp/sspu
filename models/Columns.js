@@ -13,6 +13,17 @@ const Columns = {
       names: ['unit price', 'price']
     }
   },
+  caseUsageFile: {
+    partNumber: {
+      names: ['spare part']
+    },
+    qty: {
+      names: ['spare parts qty']
+    },
+    source: {
+      names: ['is kur paimta dalis remontui']
+    }
+  },
   salesDataFile: {
     country: {
       names: ['hwst country cd']

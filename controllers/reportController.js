@@ -46,36 +46,38 @@ const partUsageColumns = [
   new XCol(1, 'Part Number', 15, []),
   new XCol(2, 'Description', 40, []),
   new XCol(3, 'Qty', 5, []),
-  new XCol(4, 'Price', 5, []),
-  new XCol(5, 'Field Equiv', 20, []),
-  new XCol(6, 'Active', 10, [
-    new XCol(6, 'CTR+SD', 10, []),
-    new XCol(7, 'CTR', 10, []),
-    new XCol(8, 'SD', 10, []),
-    new XCol(9, 'ND', 10, [])
+  new XCol(4, 'Case Use', 15, []),
+  new XCol(5, 'Price', 5, []),
+  new XCol(6, 'Field Equiv', 20, []),
+  new XCol(7, 'Active', 10, [
+    new XCol(7, 'CTR+SD', 10, []),
+    new XCol(8, 'CTR', 10, []),
+    new XCol(9, 'SD', 10, []),
+    new XCol(10, 'ND', 10, [])
   ]),
-  new XCol(10, 'Active 6m', 10, [
-    new XCol(10, 'CTR+SD', 10, []),
-    new XCol(11, 'CTR', 10, []),
-    new XCol(12, 'SD', 10, []),
-    new XCol(13, 'ND', 10, [])
+  new XCol(11, 'Active 6m', 10, [
+    new XCol(11, 'CTR+SD', 10, []),
+    new XCol(12, 'CTR', 10, []),
+    new XCol(13, 'SD', 10, []),
+    new XCol(14, 'ND', 10, [])
   ]),
-  new XCol(14, 'Expired', 10, [
-    new XCol(14, 'CTR+SD', 10, []),
-    new XCol(15, 'CTR', 10, []),
-    new XCol(16, 'SD', 10, []),
-    new XCol(17, 'ND', 10, [])
+  new XCol(15, 'Expired', 10, [
+    new XCol(15, 'CTR+SD', 10, []),
+    new XCol(16, 'CTR', 10, []),
+    new XCol(17, 'SD', 10, []),
+    new XCol(18, 'ND', 10, [])
   ]),
-  new XCol(18, 'Customer', 40, []),
-  new XCol(19, 'SAID', 14, []),
-  new XCol(20, 'SLA', 10, []),
-  new XCol(21, 'Start', 10, []),
-  new XCol(22, 'End', 10, []),
-  new XCol(23, 'Serials', 15, []),
-  new XCol(24, 'Product', 14, []),
-  new XCol(25, 'Desciption', 20, []),
-  new XCol(26, 'Qty', 10, []),
-  new XCol(27, 'FE', 10, [])
+  new XCol(19, 'Customer', 40, []),
+  new XCol(20, 'SAID', 14, []),
+  new XCol(21, 'SLA', 10, []),
+  new XCol(22, 'Status', 15, []),
+  new XCol(23, 'Start', 15, []),
+  new XCol(24, 'End', 15, []),
+  new XCol(25, 'Serials', 15, []),
+  new XCol(26, 'Product', 14, []),
+  new XCol(27, 'Desciption', 20, []),
+  new XCol(28, 'Qty', 10, []),
+  new XCol(29, 'FE', 10, [])
 ];
 
 const addOneRow = (columns, sheet, subRow) => {
@@ -202,9 +204,14 @@ const setPartStatus = contracts => {
 const groupSystemsByContracts = systems => {
   const contracts = {};
 
-  systems.sort((a, b) =>
-    a.contract.response.localeCompare(b.contract.response)
-  );
+  systems.sort((a, b) => {
+    const compare = a.contract.response.localeCompare(b.contract.response);
+    if (compare === 0) {
+      return a.contract.customer.localeCompare(b.contract.customer);
+    }
+
+    return compare;
+  });
 
   systems.forEach(system => {
     if (typeof contracts[system.contract.said] === 'undefined') {
@@ -252,6 +259,7 @@ const addStockPartRow = async (stockPart, sheet) => {
     stockPart.part.partNumber,
     stockPart.part.description || stockPart.part.descriptionShort,
     parseInt(stockPart.qty, 10),
+    parseInt(stockPart.caseUse, 10),
     stockPart.part.price ? parseFloat(stockPart.part.price) : '',
     feParts.length ? [...feParts].map(e => e.partNumber).join(',') : '',
     partStatus.active.ctr + partStatus.active.sd,
@@ -266,6 +274,7 @@ const addStockPartRow = async (stockPart, sheet) => {
     partStatus.expired.ctr,
     partStatus.expired.sd,
     partStatus.expired.nd,
+    '',
     '',
     '',
     '',
@@ -306,6 +315,18 @@ const addStockPartRow = async (stockPart, sheet) => {
     Object.keys(contracts[said]).forEach(product => {
       const s = contracts[said][product].systems;
 
+      // if (!s[0].parts && !s[0].product.parts) {
+      //   debugger;
+      // }
+
+      let parts;
+      if (s[0].parts) {
+        parts = s[0].parts.map(p => p.partNumber);
+      } else if (s[0].product.parts) {
+        parts = s[0].product.parts.map(p => p.partNumber);
+      }
+      //  debugger;
+
       sheet.addRow([
         '', // 1
         '', // 2
@@ -324,17 +345,19 @@ const addStockPartRow = async (stockPart, sheet) => {
         '', // 15
         '', // 16
         '', // 17
-        `${s[0].contract.customer} - ${s[0].contract.city}`, // 18
-        `'${s[0].contract.said}`, // 19
-        s[0].contract.response, // 20
-        dayjs(s[0].contract.startDate, 'MMDDYY').format('MM/DD/YYYY'), // 22
-        dayjs(s[0].contract.endDate, 'MMDDYY').format('MM/DD/YYYY'), // 23
-        contracts[said][product].serials.join(','), // 24
-        product, // p, // 25
-        s[0].product.description, // list[c][s][p].prodDesc, // 26
-        contracts[said][product].serials.length, // list[c][s][p].qty, // 27
-        '', // list[c][s][p].equiv, // 28
-        '' // list[c][s][p].wasSearched // 29
+        '', // 18
+        `${s[0].contract.customer} - ${s[0].contract.city}`, // 19
+        `'${s[0].contract.said}`, // 20
+        s[0].contract.response, // 21
+        getContractsStatus(s[0].contract), // status 22
+        dayjs(s[0].contract.startDate, 'MMDDYY').format('MM/DD/YYYY'), // 23
+        dayjs(s[0].contract.endDate, 'MMDDYY').format('MM/DD/YYYY'), // 24
+        contracts[said][product].serials.join(','), // 25
+        product, // p, // 26
+        s[0].product.description, // list[c][s][p].prodDesc, // 27
+        contracts[said][product].serials.length, // list[c][s][p].qty, // 28
+        parts ? parts.join(',') : '', // list[c][s][p].equiv, // 29
+        '' // list[c][s][p].wasSearched // 30
       ]);
 
       // eslint-disable-next-line no-unused-vars

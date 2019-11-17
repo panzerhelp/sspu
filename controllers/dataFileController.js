@@ -26,13 +26,11 @@ exports.loadFile = (file, processRowCallBack) => {
       if (path.parse(filePath).ext === '.xlsx') {
         sendProgressMessage(file.type, 'loading fail');
         this.loadFileXLSX(file, processRowCallBack)
-          .then(() => resolve())
+          .then(data => resolve(data))
           .catch(error => reject(error));
       } else if (path.parse(filePath).ext === '.csv') {
         this.loadFileCSV(file, processRowCallBack)
-          .then(() => {
-            resolve(file.type);
-          })
+          .then(data => resolve(data))
           .catch(error => reject(error));
       } else {
         reject(new Error(`${filePath}: wrong file type`));
@@ -213,18 +211,7 @@ exports.processDataRow = (fileType, row) => {
       resolve();
     } else {
       const data = Columns.getData(fileType, row);
-      if (
-        fileType === 'stockFile' &&
-        typeof data.partNumber !== 'undefined' &&
-        data.partNumber
-      ) {
-        partController
-          .addOnePartFromStock(data)
-          .then(part => {
-            resolve(part);
-          })
-          .catch(err => reject(err));
-      } else if (fileType === 'salesDataFile') {
+      if (fileType === 'salesDataFile') {
         importSalesDataFileRow(data)
           .then(() => {
             resolve(data);
@@ -233,27 +220,51 @@ exports.processDataRow = (fileType, row) => {
             reject(err);
           });
       } else {
-        resolve();
+        resolve(data); // - pass data to post processing
       }
     }
   });
 };
 
+const getFilesToLoad = () => {
+  const filesToLoad = configFilesController.selectAllFilesFromConfig();
+  const ordering = {}; // map for efficient lookup of sortIndex
+  const fileLoadOrder = ['stockFile', 'caseUsageFile', 'salesDataFile'];
+  for (let i = 0; i < fileLoadOrder.length; i++) {
+    ordering[fileLoadOrder[i]] = i;
+  }
+  return filesToLoad.sort((a, b) => ordering[a.type] - ordering[b.type]);
+};
+
 exports.importFiles = async () => {
   try {
-    const filesToLoad = configFilesController.selectAllFilesFromConfig();
-    await stockController.clearStock();
-    const promiseArray = [];
-    filesToLoad.forEach(file => {
-      promiseArray.push(this.loadFile(file, this.processDataRow));
-    });
+    // await stockController.clearStock();
+    const filesToLoad = getFilesToLoad();
 
-    await Promise.all(promiseArray);
+    // eslint-disable-next-line no-restricted-syntax
+    for (const file of filesToLoad) {
+      // pre-processing functions
+      if (file.type === 'stockFile') {
+        await stockController.clearStock();
+      } else if (file.type === 'caseUsageFile') {
+        await stockController.clearStockCaseUse();
+      }
 
-    const productIds = await productController.addProducts(productsData);
-    const contractIds = await contractController.addContracts(contractsData);
+      const data = await this.loadFile(file, this.processDataRow);
 
-    await systemController.addSystems(systemsData, productIds, contractIds);
+      // post-processing functions
+      if (file.type === 'stockFile') {
+        await stockController.addStockParts(data);
+      } else if (file.type === 'caseUsageFile') {
+        await stockController.addStockPartCaseUsage(data);
+      } else if (file.type === 'salesDataFile') {
+        const productIds = await productController.addProducts(productsData);
+        const contractIds = await contractController.addContracts(
+          contractsData
+        );
+        await systemController.addSystems(systemsData, productIds, contractIds);
+      }
+    }
 
     this.cleanUpAfterImport();
     return Promise.resolve();

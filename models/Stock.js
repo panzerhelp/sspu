@@ -5,7 +5,8 @@ const Part = require('./Part');
 const Stock = db.define(
   'stock',
   {
-    qty: { type: sequelize.INTEGER, defaulValue: 0 }
+    qty: { type: sequelize.INTEGER, defaulValue: 0 },
+    caseUse: { type: sequelize.INTEGER, defaulValue: 0 }
   },
   {
     freezeTableName: true

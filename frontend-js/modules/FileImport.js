@@ -10,6 +10,9 @@ class FileImport {
       stockFile: {
         title: 'stock file'
       },
+      caseUsageFile: {
+        title: 'part case usage file'
+      },
       salesDataFile: {
         title: 'sales data file(s)'
       },
@@ -73,7 +76,7 @@ class FileImport {
       ? ` <a class="p-2" href="#" onclick="openFile('${file.id}')" id="${fileType}Path">${file.name}</a>
         <div id="${fileType}Info"> ${fileSize}K <i class="fas fa-table"></i></div>`
       : ` <a class="p-2" href="#" onclick="selectFile('${fileType}')" id="${fileType}Path">add ${this.sections[fileType].title}</a>
-    <div id="${fileType}Info">- <i class="fas fa-table"></i></div>`;
+    <div id="${fileType}Info"></div>`;
   }
 
   addFileSection(file, fileType, secondary) {
@@ -122,7 +125,7 @@ class FileImport {
 
   importButtonHTML() {
     return `<div class="d-flex justify-content-center p-2 mb-2">
-        <button class="btn btn-primary px-5 py-2" onclick="importFiles()"><i class="fas fa-file-import"></i>   Import </button>
+        <button class="btn btn-primary px-5 py-2" onclick="importFiles()"><i class="fas fa-file-import"></i>   Import Files</button>
         </div>`;
   }
 
@@ -178,6 +181,7 @@ class FileImport {
 
   injectHTML() {
     this.fileImport.innerHTML = '';
+    debugger;
     if (this.files) {
       Object.keys(this.sections).forEach(section => {
         const fileArr = [];

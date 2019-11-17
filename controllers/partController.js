@@ -15,20 +15,28 @@ exports.addOnePartFromStock = part => {
         price: part.price
       }
     })
-      .then(([partdb, created]) => {
-        if (!created) {
+      .then(([partdb, partCreated]) => {
+        if (!partCreated) {
           partdb.update({
             // update price for existing part
             price: part.price
           });
         }
 
-        Stock.create({
-          qty: part.qty,
-          partId: partdb.id
+        Stock.findCreateFind({
+          where: { partId: partdb.id },
+          defaults: { qty: part.qty, caseUse: 0 }
         })
-          .then(() => {
-            resolve(part);
+          .then(([stock, stockCreated]) => {
+            if (!stockCreated) {
+              const newQty = stock.qty + part.qty;
+              stock
+                .update({ qty: newQty })
+                .then(() => resolve(part))
+                .catch(err => reject(err));
+            } else {
+              resolve(part);
+            }
           })
           .catch(err => reject(err));
       })
