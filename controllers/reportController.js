@@ -104,6 +104,28 @@ const addOneRow = (columns, sheet, subRow) => {
   return hasSubRow;
 };
 
+const addTitleRow = (title, columns, sheet) => {
+  sheet.addRow([title]);
+  sheet.mergeCells(
+    sheet.lastRow._number,
+    1,
+    sheet.lastRow._number,
+    columns[columns.length - 1].id
+  );
+
+  sheet.getCell(1, 1).font = {
+    size: 18,
+    bold: true,
+    color: { argb: 'FFFFFFFF' }
+  };
+  sheet.getCell('A1').fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF333333' },
+    bgColor: { argb: 'FF333333' }
+  };
+};
+
 const addMainRow = (columns, sheet) => {
   const hasSubRow = addOneRow(columns, sheet, false);
   if (hasSubRow) {
@@ -402,10 +424,17 @@ const generateStockPartUsageReport = async () => {
     if (stockParts.length) {
       const wb = new Excel.Workbook();
       const sheet = wb.addWorksheet('Stock Usage', {
-        views: [{ state: 'frozen', ySplit: 2 }],
+        views: [{ state: 'frozen', ySplit: 3 }],
         properties: { tabColor: { argb: 'FFFFFFFF' } }
       });
 
+      const date = dayjs().format('YYYY-MMM-DD');
+      const country = configFileController.getImportCountry();
+      addTitleRow(
+        `${country} - Stock Part Usage (${date})`,
+        partUsageColumns,
+        sheet
+      );
       addMainRow(partUsageColumns, sheet);
 
       let curItem = 1;
@@ -422,7 +451,7 @@ const generateStockPartUsageReport = async () => {
       }
 
       sheet.autoFilter = {
-        from: { row: 2, column: 1 },
+        from: { row: 3, column: 1 },
         to: { row: sheet.lastRow._number, column: sheet.columnCount }
       };
 
