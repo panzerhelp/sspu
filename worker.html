@@ -18,7 +18,7 @@
     const reportController = require('./controllers/reportController');
 
     ipcRenderer.on('get-partsurfer-data', async () => {
-      await productController.getProductDataFromPartSurfer();
+      // await productController.getProductDataFromPartSurfer();
       await systemController.getSystemDataFromPartSurfer();
       await partController.getFieldEquivFromPartSurfer();
       ipcRenderer.send('finishedTask');

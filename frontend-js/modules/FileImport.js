@@ -15,10 +15,10 @@ class FileImport {
       },
       salesDataFile: {
         title: 'sales data file(s)'
-      },
-      priceFile: {
-        title: 'part price file'
-      }
+      } // ,
+      // priceFile: {
+      //   title: 'part price file'
+      // }
     };
     this.injectHTML();
     this.countryOptions = document.getElementsByClassName('country-option');
@@ -181,7 +181,6 @@ class FileImport {
 
   injectHTML() {
     this.fileImport.innerHTML = '';
-    debugger;
     if (this.files) {
       Object.keys(this.sections).forEach(section => {
         const fileArr = [];

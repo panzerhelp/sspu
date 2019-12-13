@@ -1,3 +1,14 @@
+!!! Important notes:
+
+Problem in exceljs with date detection when parsing csv files. 
+Workaround comment out dayjs detection code in lib/csv.js
+
+const dt = dayjs(datum, dateFormats, true);
+  if (dt.isValid()) {
+    return new Date(dt.valueOf());
+}
+
+
 Main tasks:
 
 + Create app configuration with electron-store
@@ -9,7 +20,46 @@ Main tasks:
 + add field equivalent
 + add stock usage report
 
-add incremential data import 
+
+
+++ add window states
+++ remove part price entry as it has no relevant data file
+++ Automate import for the selected country
+
+++ add incremential data import 
+++ add support to import from 'Install base data - Sophela - Q1FY20.xlsx':
+
+
+add validation of file type
 issue with navigation timeout in puppeteer
 look at mutiple page issue when doing scrapping. swicth to mutiple browsers!
 Auto-update feature
+
+
+Data issue:
+
+Shareporint install base (SIB) file is missing response flags for some entries
+ - as a solution we can try to generate support data out of other columns. Let's try to parse 'Package Product Description' column for the following keys:
+   a)   NBD, Next - NBD
+   b)   24x7  -  SD
+   c)   CTR - CTR 
+
+SIB file some entries missing serial numbers. 
+
+Need a a way to find HW entry in SIB. Currently :
+Mandatroty fields:
+- SAID
+- productNumber
+- should have serial. if missing use #SAID#Product as dummy serial
+
+How to add if entry is a valid HW entry? 
+
+- should have valid response
+
+
+
+Install base data report missing serial numbers. 
+
+We need to generat merged contract/system data out of 2 reports
+
+

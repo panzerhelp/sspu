@@ -1,4 +1,5 @@
 /* eslint-disable no-restricted-syntax */
+const { ipcRenderer } = require('electron');
 const Stock = require('../models/Stock');
 const Part = require('../models/Part');
 const db = require('../db');
@@ -21,10 +22,19 @@ exports.clearStock = () => {
 
 exports.addStockParts = async stockParts => {
   try {
+    const tot = stockParts.length;
+    let cur = 1;
     for (const part of stockParts) {
       if (part && typeof part.partNumber !== 'undefined' && part.partNumber) {
+        ipcRenderer.send('set-progress', {
+          mainItem: 'Importing parts from stock',
+          subItem: `${part.partNumber}`,
+          curItem: cur,
+          totalItem: tot
+        });
         await partController.addOnePartFromStock(part);
       }
+      cur++;
     }
     return Promise.resolve();
   } catch (error) {

@@ -1,31 +1,37 @@
 /* eslint-disable no-restricted-syntax */
 const { ipcRenderer } = require('electron');
 const sequelize = require('sequelize');
+const db = require('../db');
 const System = require('../models/System');
-const SystemPart = require('../models/SystemPart');
-// const db = require('../db');
+const SystemPart = require('../models/SerialPart');
 const Browser = require('../models/Browser');
 const Product = require('../models/Product');
 const Part = require('../models/Part');
 const partController = require('./partController');
+const serialController = require('./serialController');
 const Contract = require('../models/Contract');
-
-// const Contract = require('../models/Contract');
 
 exports.addOneSystem = system => {
   return new Promise((resolve, reject) => {
+    const serialList = system.serialList.join(',');
+
     System.findCreateFind({
-      where: { serial: system.serial },
-      defaults: {
+      where: {
         contractId: system.contractId,
         productId: system.productId
+      },
+      defaults: {
+        contractId: system.contractId,
+        productId: system.productId,
+        serialList: serialList,
+        serialId: system.serialId
       }
     })
       .then(([systemdb, created]) => {
         console.log(
           created
-            ? `Added system with serial ${systemdb.serial}`
-            : `Updated system with serial ${systemdb.serial}`
+            ? `Added system with serial list ${systemdb.serialList}`
+            : `Updated system with serial ${systemdb.serialList}`
         );
         resolve(systemdb.dataValues);
       })
@@ -35,32 +41,54 @@ exports.addOneSystem = system => {
   });
 };
 
-exports.addSystems = (systemsData, productIds, contractIds) => {
-  return new Promise((resolve, reject) => {
-    const promiseArray = [];
+exports.addSystems = async (systemsData, productIds, contractIds) => {
+  try {
+    const tot = Object.keys(systemsData).length;
+    let cur = 1;
+    for (const i in systemsData) {
+      if ({}.hasOwnProperty.call(systemsData, i)) {
+        const sys = systemsData[i];
 
-    Object.keys(systemsData).forEach(serial => {
-      promiseArray.push(
-        this.addOneSystem({
-          serial: serial,
-          contractId: contractIds[systemsData[serial].contract],
-          productId: productIds[systemsData[serial].product]
-        })
-      );
-    });
+        ipcRenderer.send('set-progress', {
+          mainItem: 'Importing systems',
+          subItem: `${sys.contract} ${sys.product}`,
+          curItem: cur,
+          totalItem: tot
+        });
+        cur++;
 
-    Promise.all(promiseArray).then(
-      systems => {
-        const systemIds = Object.assign(
-          {},
-          ...systems.map(system => ({ [system.serial]: system.id }))
-        );
-        resolve(systemIds);
-      },
-      reason => {
-        reject(reason);
+        let serialId = null;
+
+        if (sys.serialList.length) {
+          serialId = await serialController.addSerialList(sys.serialList);
+        }
+
+        await this.addOneSystem({
+          contractId: contractIds[sys.contract],
+          productId: productIds[sys.product],
+          serialList: sys.serialList,
+          serialId: serialId
+        });
       }
-    );
+    }
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.clearSystems = () => {
+  return new Promise((resolve, reject) => {
+    System.destroy({
+      where: {},
+      truncate: true
+    })
+      .then(() => {
+        db.query("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='systems'")
+          .then(resolve())
+          .catch(err => reject(err));
+      })
+      .catch(err => reject(err));
   });
 };
 

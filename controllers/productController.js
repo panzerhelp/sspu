@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 const { ipcRenderer } = require('electron');
 const Product = require('../models/Product');
 const ProductPart = require('../models/ProductPart');
@@ -14,7 +15,7 @@ exports.addOneProduct = product => {
     })
       // eslint-disable-next-line no-unused-vars
       .then(([productdb, created]) => {
-        resolve(productdb.dataValues);
+        resolve(productdb);
       })
       .catch(err => {
         reject(err);
@@ -22,32 +23,35 @@ exports.addOneProduct = product => {
   });
 };
 
-exports.addProducts = productsData => {
-  return new Promise((resolve, reject) => {
-    const promiseArray = [];
+exports.addProducts = async productsData => {
+  try {
+    const productIds = {};
+    const tot = Object.keys(productsData).length;
+    let cur = 1;
+    for (const pn in productsData) {
+      if ({}.hasOwnProperty.call(productsData, pn)) {
+        ipcRenderer.send('set-progress', {
+          mainItem: 'Importing products',
+          subItem: `${pn}`,
+          curItem: cur,
+          totalItem: tot
+        });
 
-    Object.keys(productsData).forEach(productNumber => {
-      promiseArray.push(
-        this.addOneProduct({
-          productNumber: productNumber,
-          description: productsData[productNumber].description
-        })
-      );
-    });
+        cur++;
 
-    Promise.all(promiseArray).then(
-      products => {
-        const productIds = Object.assign(
-          {},
-          ...products.map(product => ({ [product.productNumber]: product.id }))
-        );
-        resolve(productIds);
-      },
-      reason => {
-        reject(reason);
+        const product = await this.addOneProduct({
+          productNumber: pn,
+          description: productsData[pn].description
+        });
+
+        productIds[pn] = product.id;
       }
-    );
-  });
+    }
+
+    return Promise.resolve(productIds);
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
 
 exports.browser = null;

@@ -6,6 +6,7 @@ class Progress {
     this.subItem = document.getElementById('subItem');
     this.subItemStatus = document.getElementById('subItemStatus');
     this.progressBar = document.getElementById('progressBar');
+    this.progress = document.getElementsByClassName('progress');
     this.injectHTML();
     this.events();
   }
@@ -38,11 +39,13 @@ class Progress {
 
     if (status.totalItem) {
       this.progressBar.style.display = 'block';
+      this.progress[0].style.display = 'flex';
       this.progressBar.style.width = `${pct}%`;
       this.progressBar['aria-valuenow'] = pct;
       // this.progressBar.textContent = `${pct} %`;
     } else {
       this.progressBar.style.display = 'none';
+      this.progress[0].style.display = 'none';
     }
 
     this.setStatus(progressStatus);

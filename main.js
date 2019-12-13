@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
+const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const dbConnect = require('./dbConnect');
 
@@ -11,11 +12,17 @@ let workerWindow;
 let progressWindow;
 
 function createWindow() {
+  // Win state keeper
+  const state = windowStateKeeper({
+    defaultWidth: 1200,
+    defaultHeight: 1000
+  });
+
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 1000,
-    x: 100,
-    y: 100,
+    x: state.x,
+    y: state.y,
+    width: state.width,
+    height: state.height,
     icon: path.join(__dirname, '/images/sspu_icon.png'),
     webPreferences: { nodeIntegration: true },
     show: true
@@ -35,6 +42,8 @@ function createWindow() {
     // createProgressWindow('test');
     // mainWindow.show();
   });
+
+  state.manage(mainWindow);
 }
 
 // WORKER WINDOW
@@ -48,7 +57,7 @@ function createWorkerWindow(command) {
     });
   } else {
     workerWindow = new BrowserWindow({
-      width: 1600,
+      width: 1200,
       height: 1080,
       x: 1200,
       y: 50,

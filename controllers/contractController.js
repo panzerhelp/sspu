@@ -1,4 +1,7 @@
+/* eslint-disable no-restricted-syntax */
+const { ipcRenderer } = require('electron');
 const Contract = require('../models/Contract');
+const db = require('../db');
 
 exports.addOneContract = contract => {
   return new Promise((resolve, reject) => {
@@ -15,7 +18,7 @@ exports.addOneContract = contract => {
     })
       // eslint-disable-next-line no-unused-vars
       .then(([contractdb, created]) => {
-        resolve(contractdb.dataValues);
+        resolve(contractdb);
       })
       .catch(err => {
         reject(err);
@@ -23,35 +26,54 @@ exports.addOneContract = contract => {
   });
 };
 
-exports.addContracts = contractsData => {
-  return new Promise((resolve, reject) => {
-    const promiseArray = [];
+exports.addContracts = async contractsData => {
+  try {
+    const contractIds = {};
+    const tot = Object.keys(contractsData).length;
+    let cur = 1;
+    for (const said in contractsData) {
+      if ({}.hasOwnProperty.call(contractsData, said)) {
+        const contract = contractsData[said];
 
-    Object.keys(contractsData).forEach(said => {
-      promiseArray.push(
-        this.addOneContract({
+        ipcRenderer.send('set-progress', {
+          mainItem: 'Importing contracts',
+          subItem: `${said}`,
+          curItem: cur,
+          totalItem: tot
+        });
+
+        cur++;
+
+        const { id } = await this.addOneContract({
           said: said,
-          startDate: contractsData[said].startDate,
-          endDate: contractsData[said].endDate,
-          response: contractsData[said].response,
-          customer: contractsData[said].customer,
-          country: contractsData[said].country,
-          city: contractsData[said].city
-        })
-      );
-    });
-
-    Promise.all(promiseArray).then(
-      contracts => {
-        const contractIds = Object.assign(
-          {},
-          ...contracts.map(contract => ({ [contract.said]: contract.id }))
-        );
-        resolve(contractIds);
-      },
-      reason => {
-        reject(reason);
+          startDate: contract.startDate,
+          endDate: contract.endDate,
+          response: contract.response,
+          customer: contract.customer,
+          country: contract.country,
+          city: contract.city
+        });
+        contractIds[said] = id;
       }
-    );
+    }
+
+    return Promise.resolve(contractIds);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.clearContracts = () => {
+  return new Promise((resolve, reject) => {
+    Contract.destroy({
+      where: {},
+      truncate: true
+    })
+      .then(() => {
+        db.query("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='contracts'")
+          .then(resolve())
+          .catch(err => reject(err));
+      })
+      .catch(err => reject(err));
   });
 };

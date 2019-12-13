@@ -3,7 +3,8 @@ const Stock = require('./models/Stock');
 const Product = require('./models/Product');
 const ProductPart = require('./models/ProductPart');
 const System = require('./models/System');
-const SystemPart = require('./models/SystemPart');
+const Serial = require('./models/Serial');
+const SerialPart = require('./models/SerialPart');
 const Contract = require('./models/Contract');
 const PartFieldEquiv = require('./models/PartFieldEquiv');
 
@@ -11,14 +12,19 @@ const dbConnect = async () => {
   const force = {}; // { force: true };
   // const force = { force: true };
 
-  await Part.sync(force);
-  await Product.sync(force);
-  await ProductPart.sync(force);
-  await PartFieldEquiv.sync(force);
-  await Stock.sync(force);
-  await System.sync(force);
-  await SystemPart.sync(force);
-  await Contract.sync(force);
+  try {
+    await SerialPart.sync(force);
+    await ProductPart.sync(force);
+    await PartFieldEquiv.sync(force);
+    await Contract.sync(force);
+    await Stock.sync(force);
+    await Part.sync(force);
+    await Product.sync(force);
+    await System.sync(force);
+    await Serial.sync(force);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 module.exports = dbConnect;

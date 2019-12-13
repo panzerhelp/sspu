@@ -1,14 +1,13 @@
 const sequelize = require('sequelize');
 const db = require('../db');
-const Product = require('../models/Product');
-const Contract = require('../models/Contract');
+const Product = require('./Product');
+const Contract = require('./Contract');
+const Serial = require('./Serial');
 
 const System = db.define(
   'system',
   {
-    serial: { type: sequelize.STRING, allowNull: false, unique: true },
-    partSystemId: { type: sequelize.INTEGER },
-    scanStatus: { type: sequelize.STRING }
+    serialList: { type: sequelize.TEXT }
   },
   {
     // options
@@ -21,15 +20,7 @@ System.belongsTo(Product);
 Contract.hasMany(System);
 System.belongsTo(Contract);
 
-module.exports = System;
+Serial.hasMany(System);
+System.belongsTo(Serial);
 
-// id integer NOT NULL PRIMARY KEY autoincrement,
-// serial said integer NOT NULL UNIQUE,
-// wasSearched integer,
-// productId integer NOT NULL,
-// contractId integer,
-// systemIdParts integer,
-// orderId integer,
-// FOREIGN KEY(productId) REFERENCES products(id),
-// FOREIGN KEY(contractId) REFERENCES contracts(id)
-// FOREIGN KEY(orderId) REFERENCES salesOrders(id)
+module.exports = System;

@@ -26,37 +26,37 @@ const Columns = {
   },
   salesDataFile: {
     country: {
-      names: ['hwst country cd']
+      names: ['hwst country cd', 'agg ship to ctry code iso']
     },
     city: {
-      names: ['hwst city']
+      names: ['hwst city', 'site city']
     },
     customer: {
-      names: ['hwst name']
+      names: ['hwst name', 'customer name']
     },
     productNumber: {
-      names: ['product nbr']
+      names: ['product nbr', 'product extend']
     },
     productDesc: {
-      names: ['product desc']
+      names: ['product desc', 'product description']
     },
     response: {
-      names: ['response']
+      names: ['response', 'service level']
     },
     serial: {
       names: ['serial nbr']
     },
     said: {
-      names: ['service agreement id']
+      names: ['service agreement id', 'svc agreement id']
     },
     funcLoc: {
       names: ['functional location']
     },
     startDate: {
-      names: ['contract start date']
+      names: ['contract start date', 'contract start date']
     },
     endDate: {
-      names: ['contract end date']
+      names: ['contract end date', 'contract term date']
     }
   }
 };
@@ -97,11 +97,6 @@ Columns.getData = (fileType, row) => {
   Object.keys(Columns[fileType]).forEach(key => {
     if (Columns[fileType][key].id > 0) {
       let { value } = row.getCell(Columns[fileType][key].id);
-
-      // if (key === 'country') {
-      //   debugger;
-      // }
-
       if (typeof value === 'object') {
         value = '';
       } else if (typeof value === 'string') {
