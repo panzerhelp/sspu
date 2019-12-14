@@ -8,8 +8,8 @@ const SerialPart = require('./models/SerialPart');
 const Contract = require('./models/Contract');
 const PartFieldEquiv = require('./models/PartFieldEquiv');
 
-const dbConnect = async () => {
-  const force = {}; // { force: true };
+const dbConnect = async options => {
+  const force = options || {}; // { force: true };
   // const force = { force: true };
 
   try {
@@ -22,8 +22,9 @@ const dbConnect = async () => {
     await Product.sync(force);
     await System.sync(force);
     await Serial.sync(force);
+    return Promise.resolve();
   } catch (error) {
-    console.log(error);
+    return Promise.reject(error);
   }
 };
 

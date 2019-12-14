@@ -140,6 +140,10 @@ ipcMain.on('generate-reports', () => {
   createProgressWindow('generate-reports');
 });
 
+ipcMain.on('clear-database', () => {
+  createProgressWindow('clear-database');
+});
+
 // forward set-progress events from worker to progress window
 ipcMain.on('set-progress', (e, progressStatus) => {
   progressWindow.webContents.send('set-progress', progressStatus);
@@ -150,6 +154,7 @@ ipcMain.on('set-progress', (e, progressStatus) => {
 
 ipcMain.on('finishedTask', () => {
   progressWindow.close(); // action window should handle worker
+  mainWindow.webContents.send('reload');
   // mainWindow.webContents.send('rebuild-data');
 });
 

@@ -29,18 +29,67 @@
             </div>
           </div>
         </div>
-        <div class="col-4">
-          <div
+        <div class="col-4 pt-4">
+          <!-- <div
             id="partsurfer-import-block"
             class="action-block d-flex justify-content-center p-2 mb-2"
           >
             <h5>database</h5>
+          </div> -->
+
+          <h5>database</h5>
+
+          <div class="mb-4" id="database">
+            <div class="row">
+              <div class="col-8">parts</div>
+              <div class="col-4" id="dbPart">-</div>
+            </div>
+            <div class="row">
+              <div class="col-8">parts in stock</div>
+              <div class="col-4" id="dbStock">-</div>
+            </div>
+            <div class="row">
+              <div class="col-8">products</div>
+              <div class="col-4" id="dbProduct">-</div>
+            </div>
+            <div class="row">
+              <div class="col-8">serials</div>
+              <div class="col-4" id="dbSerial">-</div>
+            </div>
+            <div class="row">
+              <div class="col-8">systems</div>
+              <div class="col-4" id="dbSystem">-</div>
+            </div>
+            <div class="row">
+              <div class="col-8">contracts</div>
+              <div class="col-4" id="dbContract">-</div>
+            </div>
+
+            <div class="d-flex justify-content-center p-2 mb-2">
+              <button
+                id="clearDatabaseBtn"
+                class="btn btn-primary px-5 py-2"
+                onclick="clearDatabase()"
+              >
+                <i class="fas fa-trash-alt"></i> Clear Database
+              </button>
+            </div>
+
+            <hr />
+
+            <div class="row mt-4">
+              <div class="col-8">products to scan</div>
+              <div class="col-4" id="dbProductScan">-</div>
+            </div>
+            <div class="row">
+              <div class="col-8">serials to scan</div>
+              <div class="col-4" id="dbSerialScan">-</div>
+            </div>
           </div>
-          <ul class="list-group mb-5" id="fileScan">
-            <li class="list-group-item m-0">Some Items</li>
-          </ul>
+
           <div class="d-flex justify-content-center p-2 mb-2">
             <button
+              id="getPartSurferDataBtn"
               class="btn btn-primary px-5 py-2"
               onclick="getPartSurferData()"
             >
@@ -49,10 +98,9 @@
           </div>
 
           <hr />
-          <div
-            id="generate-report-block"
-            class="action-block d-flex justify-content-center p-2 mb-2"
-          >
+
+          <h5>reports</h5>
+          <div class="d-flex justify-content-center p-2 mb-2">
             <button
               class="btn btn-primary px-5 py-2"
               onclick="generateReports()"

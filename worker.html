@@ -32,14 +32,29 @@
         }
       } catch (error) {
         dialog.showErrorBox('Error', error.message);
+      } finally {
+        ipcRenderer.send('finishedTask');
       }
-
-      ipcRenderer.send('finishedTask');
     });
 
     ipcRenderer.on('import-files', async () => {
-      await dataFileController.importFiles();
-      ipcRenderer.send('finishedTask');
+      try {
+        await dataFileController.importFiles();
+      } catch (error) {
+        dialog.showErrorBox('Error', error.message);
+      } finally {
+        ipcRenderer.send('finishedTask');
+      }
+    });
+
+    ipcRenderer.on('clear-database', async () => {
+      try {
+        await dataFileController.clearDatabase();
+      } catch (error) {
+        dialog.showErrorBox('Error', error.message);
+      } finally {
+        ipcRenderer.send('finishedTask');
+      }
     });
   </script>
 </html>

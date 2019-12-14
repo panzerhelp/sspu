@@ -12,6 +12,8 @@ const stockController = require('../controllers/stockController');
 const productController = require('../controllers/productController');
 const contractController = require('../controllers/contractController');
 const systemController = require('../controllers/systemController');
+const configFileController = require('../controllers/configFilesController');
+const dbConnect = require('../dbConnect');
 
 dayjs.extend(customParseFormat);
 
@@ -359,6 +361,28 @@ exports.importFiles = async () => {
     }
 
     this.cleanUpAfterImport();
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.clearDatabase = async () => {
+  try {
+    const dbFile = path.join(configFileController.getDataDir(), 'sspu.sqlite');
+    let idx = 1;
+    let dbCopy = `${dbFile}_bkp`;
+
+    while (fs.existsSync(dbCopy)) {
+      dbCopy = `${dbFile}_bkp${idx}`;
+      idx++;
+    }
+
+    fs.copyFileSync(dbFile, dbCopy);
+
+    await dbConnect({ force: true }); // drop all tables
+    // console.log(dbCopy);
+    // debugger;
     return Promise.resolve();
   } catch (error) {
     return Promise.reject(error);
