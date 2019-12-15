@@ -16,12 +16,20 @@
     const systemController = require('./controllers/systemController');
     const partController = require('./controllers/partController');
     const reportController = require('./controllers/reportController');
+    const serialController = require('./controllers/serialController');
 
     ipcRenderer.on('get-partsurfer-data', async () => {
       // await productController.getProductDataFromPartSurfer();
-      await systemController.getSystemDataFromPartSurfer();
-      await partController.getFieldEquivFromPartSurfer();
-      ipcRenderer.send('finishedTask');
+      // await systemController.getSystemDataFromPartSurfer();
+      try {
+        await productController.getProductDataFromPartSurfer();
+        await serialController.getSerialDataFromPartSurfer();
+        await partController.getFieldEquivFromPartSurfer();
+      } catch (error) {
+        dialog.showErrorBox('Error', error.message);
+      } finally {
+        ipcRenderer.send('finishedTask');
+      }
     });
 
     ipcRenderer.on('generate-reports', async () => {
