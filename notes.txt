@@ -44,6 +44,12 @@ Shareporint install base (SIB) file is missing response flags for some entries
    b)   24x7  -  SD
    c)   CTR - CTR 
 
+
+Too large report files:
++ Implement stream save - Fixed the error! 
+- Check SIB file to filter out redundant entries
+
+
 SIB file some entries missing serial numbers. 
 
 Need a a way to find HW entry in SIB. Currently :

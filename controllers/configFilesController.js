@@ -1,4 +1,6 @@
 const { remote } = require('electron');
+const path = require('path');
+const fs = require('fs');
 const DataFile = require('../models/DataFile');
 const ConfigStore = require('../models/ConfigStore');
 
@@ -72,4 +74,18 @@ exports.setDataDir = () => {
   }
 
   return null;
+};
+
+exports.getOutputFile = type => {
+  const fileNames = {
+    stockUsage: 'Stock Usage Report.xlsx'
+  };
+
+  const dir = path.join(this.getDataDir(), 'reports');
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+
+  const outdir = path.join(dir, this.getImportCountry());
+  if (!fs.existsSync(outdir)) fs.mkdirSync(outdir);
+
+  return path.join(outdir, `${this.getImportCountry()} ${fileNames[type]}`);
 };

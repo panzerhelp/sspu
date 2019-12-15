@@ -6,13 +6,13 @@ const System = require('../models/System');
 // const SystemPart = require('../models/SerialPart');
 // const Browser = require('../models/Browser');
 const Product = require('../models/Product');
-// const Serial = require('../models/Serial');
+const Serial = require('../models/Serial');
 const Part = require('../models/Part');
 // const partController = require('./partController');
 const serialController = require('./serialController');
 const Contract = require('../models/Contract');
 
-// const { Op } = sequelize;
+const { Op } = sequelize;
 
 exports.addOneSystem = system => {
   return new Promise((resolve, reject) => {
@@ -96,6 +96,79 @@ exports.clearSystems = () => {
       })
       .catch(err => reject(err));
   });
+};
+
+exports.findSystemsWithPart = async partIds => {
+  try {
+    const systemParts = await System.findAll({
+      where: { serialId: { [Op.not]: null } },
+      include: [
+        {
+          model: Contract,
+          required: true
+        },
+        {
+          model: Product,
+          required: true
+        },
+        {
+          model: Serial,
+          required: true,
+          include: [
+            {
+              model: Part,
+              required: true,
+              where: { id: partIds }
+            }
+          ]
+        }
+      ]
+    });
+
+    const systemNoParts = await System.findAll({
+      where: { serialId: null },
+      include: [
+        {
+          model: Contract,
+          required: true
+        },
+        {
+          model: Product,
+          required: true,
+          include: [
+            {
+              model: Part,
+              required: true,
+              where: { id: partIds }
+            }
+          ]
+        }
+      ]
+    });
+
+    const systemIds = [];
+    systemParts.forEach(s => systemIds.push(s.id));
+    systemNoParts.forEach(s => systemIds.push(s.id));
+
+    // const systemLinked = await System.findAll({
+    //   where: { partSystemId: systemIds },
+    //   include: [
+    //     {
+    //       model: Contract,
+    //       required: true
+    //     },
+    //     {
+    //       model: Product,
+    //       required: true
+    //     }
+    //   ]
+    // });
+
+    const systems = [...systemParts, ...systemNoParts]; // , ...systemLinked];
+    return Promise.resolve(systems);
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
 
 // exports.browser = null;
@@ -415,70 +488,3 @@ exports.clearSystems = () => {
 //   //   curItem++;
 //   // }
 // };
-
-exports.findSystemsWithPart = async partIds => {
-  try {
-    const systemParts = await System.findAll({
-      where: { partSystemId: null, scanStatus: 'SCANNED' },
-      include: [
-        {
-          model: Contract,
-          required: true
-        },
-        {
-          model: Product,
-          required: true
-        },
-        {
-          model: Part,
-          where: { id: partIds },
-          required: true
-        }
-      ]
-    });
-
-    const systemNoParts = await System.findAll({
-      where: { partSystemId: null, scanStatus: 'NO_DATA' },
-      include: [
-        {
-          model: Contract,
-          required: true
-        },
-        {
-          model: Product,
-          required: true,
-          include: [
-            {
-              model: Part,
-              required: true,
-              where: { id: partIds }
-            }
-          ]
-        }
-      ]
-    });
-
-    const systemIds = [];
-    systemParts.forEach(s => systemIds.push(s.id));
-    systemNoParts.forEach(s => systemIds.push(s.id));
-
-    const systemLinked = await System.findAll({
-      where: { partSystemId: systemIds },
-      include: [
-        {
-          model: Contract,
-          required: true
-        },
-        {
-          model: Product,
-          required: true
-        }
-      ]
-    });
-
-    const systems = [...systemParts, ...systemNoParts, ...systemLinked];
-    return Promise.resolve(systems);
-  } catch (error) {
-    return Promise.reject(error);
-  }
-};

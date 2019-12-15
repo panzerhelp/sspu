@@ -26,7 +26,7 @@
         await serialController.getSerialDataFromPartSurfer();
         await partController.getFieldEquivFromPartSurfer();
       } catch (error) {
-        dialog.showErrorBox('Error', error.message);
+        dialog.showErrorBox(error.name, error.message);
       } finally {
         ipcRenderer.send('finishedTask');
       }
@@ -39,7 +39,7 @@
           shell.openItem(outFile);
         }
       } catch (error) {
-        dialog.showErrorBox('Error', error.message);
+        dialog.showErrorBox(error.name, error.message);
       } finally {
         ipcRenderer.send('finishedTask');
       }
@@ -59,7 +59,7 @@
       try {
         await dataFileController.clearDatabase();
       } catch (error) {
-        dialog.showErrorBox('Error', error.message);
+        dialog.showErrorBox(error.name, error.message);
       } finally {
         ipcRenderer.send('finishedTask');
       }

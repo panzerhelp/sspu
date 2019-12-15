@@ -10,12 +10,13 @@ class FileImport {
       stockFile: {
         title: 'stock file'
       },
-      caseUsageFile: {
-        title: 'part case usage file'
-      },
       salesDataFile: {
         title: 'sales data file(s)'
-      } // ,
+      },
+      caseUsageFile: {
+        title: 'part case usage file'
+      }
+      // ,
       // priceFile: {
       //   title: 'part price file'
       // }
