@@ -1,21 +1,24 @@
 {
   "name": "sspu",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Sophela Stock Planning Utility",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "watch": "nodemon --exec electron .",
     "rebuild": "electron-rebuild -f -w sqlite3",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "electron-builder -w",
+    "release": "electron-builder -w -p 'onTagOrDraft'",
+    "win-cert": "electron-builder create-self-signed-cert -p sophela_sspu"
   },
+  "repository": "https://github.com/panzerhelp/sspu",
+  "homepage": "https://github.com/panzerhelp/sspu",
   "keywords": [],
   "author": "Pavel Zagzin",
   "license": "ISC",
   "dependencies": {
     "bootstrap": "^4.3.1",
     "dayjs": "^1.8.17",
-    "electron": "^7.1.3",
     "electron-store": "^5.0.0",
     "electron-window-state": "^5.0.3",
     "exceljs": "^3.3.1",
@@ -25,6 +28,8 @@
     "sqlite3": "^4.1.0"
   },
   "devDependencies": {
+    "electron": "^7.1.5",
+    "electron-builder": "^21.2.0",
     "electron-rebuild": "^1.8.6",
     "eslint": "^6.1.0",
     "eslint-config-airbnb": "^18.0.1",
@@ -38,5 +43,18 @@
     "eslint-plugin-react-hooks": "^1.7.0",
     "nodemon": "^1.19.4",
     "prettier": "^1.19.1"
+  },
+  "build": {
+    "appId": "com.sophela.sspu",
+    "copyright": "Copyright 2019 Sophela.com",
+    "publish": {
+      "provider": "github"
+    },
+    "win": {
+      "certificateFile": "private/sophela_sspu.pfx",
+      "certificatePassword": "",
+      "verifyUpdateCodeSignature": true,
+      "publisherName": "sophela_sspu"
+    }
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 const { app, BrowserWindow, ipcMain } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');

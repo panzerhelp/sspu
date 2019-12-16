@@ -12,7 +12,8 @@
     "no-underscore-dangle": "off",
     "no-debugger": "warn",
     "no-plusplus": "off",
-    "no-await-in-loop": "off"
+    "no-await-in-loop": "off",
+    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }]
   },
   "env": {
     "browser": true,

@@ -12,17 +12,9 @@ const systemController = require('../systemController');
 
 const Part = require('../../models/Part');
 const Stock = require('../../models/Stock');
+const XCol = require('./XCol');
 
 dayjs.extend(customParseFormat);
-
-class XCol {
-  constructor(id, title, width, subColumns) {
-    this.id = id;
-    this.title = title;
-    this.width = width;
-    this.subColumns = subColumns;
-  }
-}
 
 const partUsageColumns = [
   new XCol(1, 'Part Number', 15, []),

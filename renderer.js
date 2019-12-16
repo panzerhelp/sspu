@@ -1,8 +1,10 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-new */
-const { shell, ipcRenderer } = require('electron');
+const { shell, ipcRenderer, remote } = require('electron');
 
-document.title = `SSPU v.${process.env.npm_package_version}`;
+const version = remote.app.getVersion();
+
+document.title = `SSPU v.${version}`;
 const configFileController = require('./controllers/configFilesController');
 const FileImport = require('./frontend-js/modules/FileImport');
 const DatabaseStat = require('./frontend-js/modules/DatabaseStat');

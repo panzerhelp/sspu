@@ -1,7 +1,11 @@
 const Store = require('electron-store');
 const path = require('path');
 const fs = require('fs');
-const { remote } = require('electron');
+const electron = require('electron');
+
+const app = electron.remote ? electron.remote.app : electron.app;
+
+// const { remote } = require('electron');
 
 class ConfigStore extends Store {
   constructor() {
@@ -55,7 +59,7 @@ class ConfigStore extends Store {
   }
 
   getDefaulDataDir() {
-    const dir = path.join(remote.app.getPath('documents'), 'sspu');
+    const dir = path.join(app.getPath('documents'), 'sspu');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir);
     return dir;
   }
