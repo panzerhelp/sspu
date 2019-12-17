@@ -5,7 +5,15 @@ const Excel = require('exceljs');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 
+const Status = require('./Status');
 const checkFileBusy = require('./checkFileBusy');
+const addTitleRow = require('./addTitleRow');
+const addMainRow = require('./addMainRow');
+const setColWidth = require('./setColWidth');
+const contractType = require('./contractType');
+const contractStatus = require('./contractStatus');
+const colNum = require('./colNum');
+
 const configFilesController = require('../configFilesController');
 const partController = require('../partController');
 const systemController = require('../systemController');
@@ -54,145 +62,123 @@ const partUsageColumns = [
   new XCol(29, 'FE', 10, [])
 ];
 
-const addOneRow = (columns, sheet, subRow) => {
-  let hasSubRow = false;
-  const values = [];
+// const addOneRow = (columns, sheet, subRow) => {
+//   let hasSubRow = false;
+//   const values = [];
 
-  columns.forEach(column => {
-    if (!subRow || !column.subColumns.length) {
-      values.push(column.title);
-    }
+//   columns.forEach(column => {
+//     if (!subRow || !column.subColumns.length) {
+//       values.push(column.title);
+//     }
 
-    let subCols = 0;
-    column.subColumns.forEach(subCol => {
-      if (subCols && !subRow) {
-        values.push('');
-        hasSubRow = true;
-      } else if (subRow) {
-        values.push(subCol.title);
-      }
-      subCols++;
-    });
-  });
-  sheet.addRow(values);
-  return hasSubRow;
-};
+//     let subCols = 0;
+//     column.subColumns.forEach(subCol => {
+//       if (subCols && !subRow) {
+//         values.push('');
+//         hasSubRow = true;
+//       } else if (subRow) {
+//         values.push(subCol.title);
+//       }
+//       subCols++;
+//     });
+//   });
+//   sheet.addRow(values);
+//   return hasSubRow;
+// };
 
-const addTitleRow = (title, columns, sheet) => {
-  sheet.addRow([title]);
-  sheet.mergeCells(
-    sheet.lastRow._number,
-    1,
-    sheet.lastRow._number,
-    columns[columns.length - 1].id
-  );
+// const addMainRow = (columns, sheet) => {
+//   const hasSubRow = addOneRow(columns, sheet, false);
+//   if (hasSubRow) {
+//     addOneRow(columns, sheet, true);
+//   }
 
-  sheet.getCell(1, 1).font = {
-    size: 18,
-    bold: true,
-    color: { argb: 'FFFFFFFF' }
-  };
-  sheet.getCell('A1').fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FF333333' },
-    bgColor: { argb: 'FF333333' }
-  };
-};
+//   // merge cells
+//   const firstRow = sheet.lastRow._number - 1;
+//   columns.forEach(column => {
+//     if (column.subColumns.length) {
+//       sheet.mergeCells(
+//         firstRow,
+//         column.id,
+//         firstRow,
+//         column.id + column.subColumns.length - 1
+//       );
+//     } else {
+//       sheet.mergeCells(firstRow, column.id, firstRow + 1, column.id);
+//     }
 
-const addMainRow = (columns, sheet) => {
-  const hasSubRow = addOneRow(columns, sheet, false);
-  if (hasSubRow) {
-    addOneRow(columns, sheet, true);
-  }
+//     sheet.getCell(firstRow, column.id).alignment = {
+//       vertical: 'middle',
+//       horizontal: 'center'
+//     };
+//   });
+// };
 
-  // merge cells
-  const firstRow = sheet.lastRow._number - 1;
-  columns.forEach(column => {
-    if (column.subColumns.length) {
-      sheet.mergeCells(
-        firstRow,
-        column.id,
-        firstRow,
-        column.id + column.subColumns.length - 1
-      );
-    } else {
-      sheet.mergeCells(firstRow, column.id, firstRow + 1, column.id);
-    }
+// const setColWidth = (columns, sheet) => {
+//   columns.forEach(column => {
+//     if (column.subColumns.length) {
+//       column.subColumns.forEach(
+//         // eslint-disable-next-line no-return-assign
+//         subCol => (sheet.getColumn(subCol.id).width = subCol.width)
+//       );
+//     } else {
+//       sheet.getColumn(column.id).width = column.width;
+//     }
+//   });
+// };
 
-    sheet.getCell(firstRow, column.id).alignment = {
-      vertical: 'middle',
-      horizontal: 'center'
-    };
-  });
-};
+// const getContractsStatus = contract => {
+//   const endDate = dayjs(contract.endDate, 'MMDDYY');
 
-const setColWidth = (columns, sheet) => {
-  columns.forEach(column => {
-    if (column.subColumns.length) {
-      column.subColumns.forEach(
-        // eslint-disable-next-line no-return-assign
-        subCol => (sheet.getColumn(subCol.id).width = subCol.width)
-      );
-    } else {
-      sheet.getColumn(column.id).width = column.width;
-    }
-  });
-};
+//   if (endDate.isBefore(dayjs())) {
+//     return 'expired';
+//   }
 
-const getContractsStatus = contract => {
-  const endDate = dayjs(contract.endDate, 'MMDDYY');
+//   if (endDate.isBefore(dayjs().add(6, 'month'))) {
+//     return 'active6m';
+//   }
 
-  if (endDate.isBefore(dayjs())) {
-    return 'expired';
-  }
+//   return 'active';
+// };
 
-  if (endDate.isBefore(dayjs().add(6, 'month'))) {
-    return 'active6m';
-  }
+// const getContractType = contract => {
+//   if (contract.response.toLowerCase().indexOf('ctr') !== -1) {
+//     return 'ctr';
+//   }
 
-  return 'active';
-};
+//   if (
+//     contract.response.toLowerCase().indexOf('4h') !== -1 ||
+//     contract.response.toLowerCase().indexOf('sd') !== -1
+//   ) {
+//     return 'sd';
+//   }
 
-const getContractType = contract => {
-  if (contract.response.toLowerCase().indexOf('ctr') !== -1) {
-    return 'ctr';
-  }
-
-  if (
-    contract.response.toLowerCase().indexOf('4h') !== -1 ||
-    contract.response.toLowerCase().indexOf('sd') !== -1
-  ) {
-    return 'sd';
-  }
-
-  return 'nd';
-};
+//   return 'nd';
+// };
 
 const setPartStatus = contracts => {
-  const partStat = {
-    active: {
-      ctr: 0,
-      sd: 0,
-      nd: 0
-    },
-    active6m: {
-      ctr: 0,
-      sd: 0,
-      nd: 0
-    },
-    expired: {
-      ctr: 0,
-      sd: 0,
-      nd: 0
-    }
-  };
-
+  //   const partStat = {
+  //     active: {
+  //       ctr: 0,
+  //       sd: 0,
+  //       nd: 0
+  //     },
+  //     active6m: {
+  //       ctr: 0,
+  //       sd: 0,
+  //       nd: 0
+  //     },
+  //     expired: {
+  //       ctr: 0,
+  //       sd: 0,
+  //       nd: 0
+  //     }
+  //   };
+  const partStat = new Status();
   Object.keys(contracts).forEach(said => {
     Object.keys(contracts[said]).forEach(product => {
       const { contract } = contracts[said][product].systems[0];
-      const status = getContractsStatus(contract);
-      const type = getContractType(contract);
+      const status = contractStatus(contract);
+      const type = contractType(contract);
       partStat[status][type] += contracts[said][product].serials.length;
     });
   });
@@ -350,7 +336,7 @@ const addStockPartRow = async (stockPart, sheet) => {
         `${s[0].contract.customer} - ${s[0].contract.city}`, // 19
         `'${s[0].contract.said}`, // 20
         s[0].contract.response, // 21
-        getContractsStatus(s[0].contract), // status 22
+        contractStatus(s[0].contract), // status 22
         dayjs(s[0].contract.startDate, 'MMDDYY').format('MM/DD/YYYY'), // 23
         dayjs(s[0].contract.endDate, 'MMDDYY').format('MM/DD/YYYY'), // 24
         contracts[said][product].serials.join(','), // 25
@@ -396,13 +382,7 @@ const stockPartUsageReport = async () => {
         properties: { tabColor: { argb: 'FFFFFFFF' } }
       });
 
-      const date = dayjs().format('YYYY-MMM-DD');
-      const country = configFilesController.getImportCountry();
-      addTitleRow(
-        `${country} - Stock Part Usage (${date})`,
-        partUsageColumns,
-        sheet
-      );
+      addTitleRow('Stock Part Usage', partUsageColumns, sheet);
       addMainRow(partUsageColumns, sheet);
 
       let curItem = 1;
@@ -420,7 +400,7 @@ const stockPartUsageReport = async () => {
 
       sheet.autoFilter = {
         from: { row: 3, column: 1 },
-        to: { row: sheet.lastRow._number, column: 29 }
+        to: { row: sheet.lastRow._number, column: colNum(partUsageColumns) }
       };
 
       setColWidth(partUsageColumns, sheet);

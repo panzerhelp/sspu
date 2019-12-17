@@ -78,7 +78,8 @@ exports.setDataDir = () => {
 
 exports.getOutputFile = type => {
   const fileNames = {
-    stockUsage: 'Stock Usage Report.xlsx'
+    stockUsage: 'Stock Usage Report.xlsx',
+    contractUsage: 'Contract Usage Report.xlsx'
   };
 
   const dir = path.join(this.getDataDir(), 'reports');
