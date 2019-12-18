@@ -1,6 +1,9 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-param-reassign */
 const { ipcRenderer } = require('electron');
+const fs = require('fs');
+const fse = require('fs-extra');
+const path = require('path');
 const Excel = require('exceljs');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
@@ -9,15 +12,19 @@ const sequelize = require('sequelize');
 const addTitleRow = require('./addTitleRow');
 const addMainRow = require('./addMainRow');
 const setColWidth = require('./setColWidth');
-const contractType = require('./contractType');
-const contractStatus = require('./contractStatus');
-const Status = require('./Status');
+// const contractType = require('./contractType');
+// const contractStatus = require('./contractStatus');
+// const Status = require('./Status');
 const colNum = require('./colNum');
+// const Color = require('./Color');
+
+const createCustomerContractFile = require('./createCustomerContractFile');
 
 const Contract = require('../../models/Contract');
 // const Product = require('../../models/Product');
 // const System = require('../../models/System');
 // const Serial = require('../../models/Serial');
+// const SerialPart = require('../../models/SerialPart');
 // const Part = require('../../models/Part');
 
 const checkFileBusy = require('./checkFileBusy');
@@ -26,6 +33,8 @@ const configFilesController = require('../configFilesController');
 const XCol = require('./XCol');
 
 dayjs.extend(customParseFormat);
+
+// const { Op } = sequelize;
 
 const customerListColumns = [
   new XCol(1, 'Customer', 40, []),
@@ -50,41 +59,17 @@ const customerListColumns = [
   ])
 ];
 
-const getCustomerContractStatus = async customer => {
+const addCustomerRow = async (contract, sheet, dir) => {
   try {
-    const contracts = await Contract.findAll({
-      where: { customer: customer }
-    });
-
-    const status = new Status();
-
-    contracts.forEach(contract => {
-      const t = contractType(contract);
-      const s = contractStatus(contract);
-      status[s][t]++;
-    });
-
-    return Promise.resolve(status);
-  } catch (error) {
-    return Promise.reject(error);
-  }
-};
-
-const addCustomerRow = async (contract, sheet) => {
-  try {
-    // const count = await Contract.count({
-    //   where: { customer: contract.customer }
-    // });
-
-    // const contracts = await Contract.findAll({
-    //   where: { customer: contract.customer }
-    // });
-
     const custName = contract.customer || 'NO_NAME';
+    const status = await createCustomerContractFile(contract.customer, dir);
 
-    const status = await getCustomerContractStatus(contract.customer);
     await sheet.addRow([
-      custName,
+      {
+        text: custName,
+        hyperlink: `customers\\${custName}.xlsx`,
+        tooltip: `${custName} - customers\\${custName}.xlsx`
+      },
       contract.dataValues.contractNum,
       status.active.ctr + status.active.sd,
       status.active.ctr,
@@ -99,6 +84,11 @@ const addCustomerRow = async (contract, sheet) => {
       status.expired.sd,
       status.expired.nd
     ]);
+
+    sheet.lastRow.getCell(1).font = {
+      color: { argb: '000000ff' },
+      underline: 'single'
+    };
     Promise.resolve();
   } catch (error) {
     Promise.reject(error);
@@ -110,11 +100,13 @@ const contractPartUsageReport = async () => {
     const outFile = configFilesController.getOutputFile('contractUsage');
     await checkFileBusy(outFile);
 
-    // const customers = await Contract.aggregate('customer', 'DISTINCT', {
-    //   plain: false
-    // });
+    const dir = path.join(path.dirname(outFile), 'customers');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
+    fse.emptyDirSync(dir);
 
-    const contracts = await Contract.findAll({
+    let contracts = await Contract.findAll({
       attributes: [
         'customer',
         [sequelize.fn('COUNT', sequelize.col('customer')), 'contractNum']
@@ -122,6 +114,9 @@ const contractPartUsageReport = async () => {
       group: ['customer'],
       order: [[sequelize.fn('COUNT', sequelize.col('customer')), 'DESC']]
     });
+
+    // eslint-disable-next-line no-const-assign
+    contracts = contracts.slice(0, 5); // test first 20 customer
 
     const wb = new Excel.stream.xlsx.WorkbookWriter({
       filename: outFile,
@@ -145,36 +140,9 @@ const contractPartUsageReport = async () => {
         curItem: curItem,
         totalItem: contracts.length
       });
-      await addCustomerRow(contract, sheet);
+      await addCustomerRow(contract, sheet, dir);
       curItem++;
     }
-    // const customers = await Contract.findAll({
-    //   attributes: [
-    //     // specify an array where the first element is the SQL function and the second is the alias
-    //     [sequelize.fn('DISTINCT', sequelize.col('customer')), 'customer']
-
-    //     // specify any additional columns, e.g. country_code
-    //     // 'country_code'
-    //   ]
-    // });
-
-    // const contracts = await Contract.findAll({
-    //   order: [['customer', 'ASC']]
-    // });
-
-    // const systems = await System.findAll({
-    //   include: [{ model: Contract }, { model: Product }, { model: Serial }]
-    // });
-
-    // const contracts = await Contract.findAll({
-    //   where: { response: { [sequelize.Op.or]: ['CTR', 'Ctr6HR'] } },
-    //   include: [
-    //     {
-    //       model: Product,
-    //       required: true
-    //     }
-    //   ]
-    // });
 
     sheet.autoFilter = {
       from: { row: 3, column: 1 },

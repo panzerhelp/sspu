@@ -12,7 +12,8 @@ const Part = db.define(
     csr: { type: sequelize.STRING },
     price: { type: sequelize.STRING },
     exchangePrice: { type: sequelize.STRING },
-    feScanStatus: { type: sequelize.STRING }
+    feScanStatus: { type: sequelize.STRING },
+    stockQty: { type: sequelize.INTEGER }
   },
   {
     // options

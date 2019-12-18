@@ -12,14 +12,17 @@ exports.addOnePartFromStock = part => {
       where: { partNumber: part.partNumber },
       defaults: {
         description: part.description,
-        price: part.price
+        price: part.price,
+        stockQty: part.qty
       }
     })
       .then(([partdb, partCreated]) => {
         if (!partCreated) {
+          const newQty = partdb.stockQty + part.qty;
           partdb.update({
             // update price for existing part
-            price: part.price
+            price: part.price,
+            stockQty: newQty
           });
         }
 
@@ -195,18 +198,37 @@ exports.getFieldEquivFromPartSurfer = async () => {
   }
 };
 
-exports.getPartFieldEquiv = async stockPart => {
+exports.getPartFieldEquiv = async partId => {
   try {
     const fePartIds = [];
 
     const isFE = await PartFieldEquiv.findAll({
-      where: { fePartId: stockPart.part.id }
+      where: { fePartId: partId }
     });
 
     isFE.forEach(i => fePartIds.push(i.partId));
 
     const hasFE = await PartFieldEquiv.findAll({
-      where: { partId: stockPart.part.id }
+      where: { partId: partId }
+    });
+
+    hasFE.forEach(i => fePartIds.push(i.fePartId));
+
+    let feParts = [];
+    if (fePartIds) feParts = await Part.findAll({ where: { id: fePartIds } });
+
+    return Promise.resolve(feParts);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.getPartFieldEquivDirect = async partId => {
+  try {
+    const fePartIds = [];
+
+    const hasFE = await PartFieldEquiv.findAll({
+      where: { partId: partId }
     });
 
     hasFE.forEach(i => fePartIds.push(i.fePartId));

@@ -57,6 +57,9 @@ const Columns = {
     },
     endDate: {
       names: ['contract end date', 'contract term date']
+    },
+    qty: {
+      names: ['product quantity']
     }
   }
 };

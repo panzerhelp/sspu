@@ -7,7 +7,8 @@ const Serial = require('./Serial');
 const System = db.define(
   'system',
   {
-    serialList: { type: sequelize.TEXT }
+    serialList: { type: sequelize.TEXT },
+    qty: { type: sequelize.INTEGER }
   },
   {
     // options

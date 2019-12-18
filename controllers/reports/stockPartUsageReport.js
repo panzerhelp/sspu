@@ -62,117 +62,7 @@ const partUsageColumns = [
   new XCol(29, 'FE', 10, [])
 ];
 
-// const addOneRow = (columns, sheet, subRow) => {
-//   let hasSubRow = false;
-//   const values = [];
-
-//   columns.forEach(column => {
-//     if (!subRow || !column.subColumns.length) {
-//       values.push(column.title);
-//     }
-
-//     let subCols = 0;
-//     column.subColumns.forEach(subCol => {
-//       if (subCols && !subRow) {
-//         values.push('');
-//         hasSubRow = true;
-//       } else if (subRow) {
-//         values.push(subCol.title);
-//       }
-//       subCols++;
-//     });
-//   });
-//   sheet.addRow(values);
-//   return hasSubRow;
-// };
-
-// const addMainRow = (columns, sheet) => {
-//   const hasSubRow = addOneRow(columns, sheet, false);
-//   if (hasSubRow) {
-//     addOneRow(columns, sheet, true);
-//   }
-
-//   // merge cells
-//   const firstRow = sheet.lastRow._number - 1;
-//   columns.forEach(column => {
-//     if (column.subColumns.length) {
-//       sheet.mergeCells(
-//         firstRow,
-//         column.id,
-//         firstRow,
-//         column.id + column.subColumns.length - 1
-//       );
-//     } else {
-//       sheet.mergeCells(firstRow, column.id, firstRow + 1, column.id);
-//     }
-
-//     sheet.getCell(firstRow, column.id).alignment = {
-//       vertical: 'middle',
-//       horizontal: 'center'
-//     };
-//   });
-// };
-
-// const setColWidth = (columns, sheet) => {
-//   columns.forEach(column => {
-//     if (column.subColumns.length) {
-//       column.subColumns.forEach(
-//         // eslint-disable-next-line no-return-assign
-//         subCol => (sheet.getColumn(subCol.id).width = subCol.width)
-//       );
-//     } else {
-//       sheet.getColumn(column.id).width = column.width;
-//     }
-//   });
-// };
-
-// const getContractsStatus = contract => {
-//   const endDate = dayjs(contract.endDate, 'MMDDYY');
-
-//   if (endDate.isBefore(dayjs())) {
-//     return 'expired';
-//   }
-
-//   if (endDate.isBefore(dayjs().add(6, 'month'))) {
-//     return 'active6m';
-//   }
-
-//   return 'active';
-// };
-
-// const getContractType = contract => {
-//   if (contract.response.toLowerCase().indexOf('ctr') !== -1) {
-//     return 'ctr';
-//   }
-
-//   if (
-//     contract.response.toLowerCase().indexOf('4h') !== -1 ||
-//     contract.response.toLowerCase().indexOf('sd') !== -1
-//   ) {
-//     return 'sd';
-//   }
-
-//   return 'nd';
-// };
-
 const setPartStatus = contracts => {
-  //   const partStat = {
-  //     active: {
-  //       ctr: 0,
-  //       sd: 0,
-  //       nd: 0
-  //     },
-  //     active6m: {
-  //       ctr: 0,
-  //       sd: 0,
-  //       nd: 0
-  //     },
-  //     expired: {
-  //       ctr: 0,
-  //       sd: 0,
-  //       nd: 0
-  //     }
-  //   };
   const partStat = new Status();
   Object.keys(contracts).forEach(said => {
     Object.keys(contracts[said]).forEach(product => {
@@ -231,7 +121,7 @@ const groupSystemsByContracts = systems => {
 };
 
 const addStockPartRow = async (stockPart, sheet) => {
-  const feParts = await partController.getPartFieldEquiv(stockPart);
+  const feParts = await partController.getPartFieldEquiv(stockPart.part.id);
   const fePartIds = feParts.map(p => p.id);
   const systems = await systemController.findSystemsWithPart([
     ...fePartIds,

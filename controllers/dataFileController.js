@@ -201,6 +201,10 @@ exports.validateSalesData = data => {
     return false;
   }
 
+  if (data.customer && typeof data.customer === 'string') {
+    data.customer = data.customer.toLowerCase();
+  }
+
   if (typeof data.startDate === 'number') {
     data.startDate = getDateFromExcel(data.startDate);
   }
@@ -245,9 +249,16 @@ const importSalesDataFileRow = data => {
         systemsData[key] = {
           product: data.productNumber,
           contract: data.said,
-          serialList: []
+          serialList: [],
+          qty: 0
         };
         console.log(`Queued system ${key}`);
+      }
+
+      if (typeof data.qty === 'number') {
+        systemsData[key].qty = data.qty; // overwrite if file contains quantity
+      } else {
+        systemsData[key].qty++;
       }
 
       if (data.serial) {

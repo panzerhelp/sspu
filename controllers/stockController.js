@@ -5,20 +5,30 @@ const Part = require('../models/Part');
 const db = require('../db');
 const partController = require('../controllers/partController');
 
-exports.clearStock = () => {
-  return new Promise((resolve, reject) => {
-    Stock.destroy({
-      where: {},
-      truncate: true
-    })
-      .then(() => {
-        db.query("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='stock'")
-          .then(resolve())
-          .catch(err => reject(err));
-      })
-      .catch(err => reject(err));
-  });
+exports.clearStock = async () => {
+  try {
+    await Stock.destroy({ where: {}, truncate: true });
+    await db.query("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='stock'");
+    await Part.update({ stockQty: 0 }, { where: {} });
+
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
+//   return new Promise((resolve, reject) => {
+//     Stock.destroy({
+//       where: {},
+//       truncate: true
+//     })
+//       .then(() => {
+//         db.query("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='stock'")
+//           .then(resolve())
+//           .catch(err => reject(err));
+//       })
+//       .catch(err => reject(err));
+//   });
+// };
 
 exports.addStockParts = async stockParts => {
   try {
