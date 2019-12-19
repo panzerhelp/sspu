@@ -1,5 +1,7 @@
+/* eslint-disable no-new */
 // const path = require('path');
 const configFileController = require('../../controllers/configFilesController');
+const ReportFiles = require('./ReportFiles');
 
 class FileImport {
   constructor() {
@@ -35,6 +37,7 @@ class FileImport {
         this.flag.src = `./images/${e.target.innerHTML}.png`;
         configFileController.setImportCountry(e.target.innerHTML);
         this.countryDropDown.innerHTML = e.target.innerHTML;
+        new ReportFiles();
       });
     });
   }

@@ -76,17 +76,22 @@ exports.setDataDir = () => {
   return null;
 };
 
-exports.getOutputFile = type => {
-  const fileNames = {
-    stockUsage: 'Stock Usage Report.xlsx',
-    contractUsage: 'Contract Usage Report.xlsx'
-  };
-
+exports.getReportDir = () => {
   const dir = path.join(this.getDataDir(), 'reports');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 
   const outdir = path.join(dir, this.getImportCountry());
   if (!fs.existsSync(outdir)) fs.mkdirSync(outdir);
 
+  return outdir;
+};
+
+exports.getOutputFile = type => {
+  const fileNames = {
+    stockUsage: 'Stock Usage Report.xlsx',
+    contractUsage: 'Contract Usage Report.xlsx'
+  };
+
+  const outdir = this.getReportsDir();
   return path.join(outdir, `${this.getImportCountry()} ${fileNames[type]}`);
 };
