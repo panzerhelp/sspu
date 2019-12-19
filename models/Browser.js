@@ -12,7 +12,7 @@ class Browser {
   async init() {
     if (!this.instance) {
       this.instance = await puppeteer.launch({
-        headless: false,
+        headless: process.env.NODE_ENV === 'production',
         // devtools: true,
         executablePath: getChromiumExecPath()
       });

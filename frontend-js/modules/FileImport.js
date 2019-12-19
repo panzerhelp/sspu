@@ -24,6 +24,7 @@ class FileImport {
     this.injectHTML();
     this.countryOptions = document.getElementsByClassName('country-option');
     this.countryDropDown = document.querySelector('.countrySelect');
+    this.flag = document.getElementById('flag');
     this.events();
   }
 
@@ -31,6 +32,7 @@ class FileImport {
   events() {
     Array.from(this.countryOptions).forEach(country => {
       country.addEventListener('click', e => {
+        this.flag.src = `./images/${e.target.innerHTML}.png`;
         configFileController.setImportCountry(e.target.innerHTML);
         this.countryDropDown.innerHTML = e.target.innerHTML;
       });
@@ -40,6 +42,7 @@ class FileImport {
   // methods
   addCountrySelect(fileType) {
     const importCountry = configFileController.getImportCountry();
+
     return fileType === 'stockFile'
       ? `
     <div class="dropdown" id="countrySelect">
@@ -50,7 +53,7 @@ class FileImport {
         <a class="dropdown-item country-option" href="#">Lithuania</a>
         <a class="dropdown-item country-option" href="#">Belarus</a>
         <a class="dropdown-item country-option" href="#">Ukraine</a>
-    </div>
+    </div> <img id="flag" src="./images/${importCountry}.png">
     </div>
     `
       : '';
@@ -195,7 +198,8 @@ class FileImport {
         this.fileImport.innerHTML += this.dataFileBlockHTML(fileArr, section);
       });
 
-      if (this.dataDir && this.checkIfEnoughFiles()) {
+      if (this.dataDir) {
+        // && this.checkIfEnoughFiles()) {
         this.fileImport.innerHTML += this.importButtonHTML();
       }
 

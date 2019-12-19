@@ -2,6 +2,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
+const updater = require('./updater');
 const dbConnect = require('./dbConnect');
 
 // SET ENV
@@ -13,6 +14,11 @@ let workerWindow;
 let progressWindow;
 
 function createWindow() {
+  // Check for update after 2 seconds
+  if (process.env.NODE_ENV === 'production') {
+    setTimeout(updater, 2000);
+  }
+
   // Win state keeper
   const state = windowStateKeeper({
     defaultWidth: 1200,
@@ -28,6 +34,10 @@ function createWindow() {
     webPreferences: { nodeIntegration: true },
     show: true
   });
+
+  if (process.env.NODE_ENV === 'production') {
+    mainWindow.setMenu(null);
+  }
 
   // mainWindow.webContents.openDevTools();
   mainWindow.loadFile('index.html');

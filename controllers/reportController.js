@@ -3,11 +3,9 @@ const contractPartUsageReport = require('./reports/contractPartUsageReport');
 
 exports.generateReports = async () => {
   try {
-    // const stockUsageFile = await stockPartUsageReport();
-    // return Promise.resolve(stockUsageFile);
-
+    const stockUsageFile = await stockPartUsageReport();
     const contractUsageFile = await contractPartUsageReport();
-    return Promise.resolve(contractUsageFile);
+    return Promise.resolve([stockUsageFile, contractUsageFile]);
   } catch (error) {
     return Promise.reject(error);
   }

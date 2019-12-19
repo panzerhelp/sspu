@@ -9,6 +9,7 @@
   <body></body>
   <script>
     const electron = require('electron');
+    const path = require('path');
     const { dialog } = require('electron').remote;
     const { shell, ipcRenderer } = electron;
     const dataFileController = require('./controllers/dataFileController');
@@ -19,8 +20,6 @@
     const serialController = require('./controllers/serialController');
 
     ipcRenderer.on('get-partsurfer-data', async () => {
-      // await productController.getProductDataFromPartSurfer();
-      // await systemController.getSystemDataFromPartSurfer();
       try {
         await productController.getProductDataFromPartSurfer();
         await serialController.getSerialDataFromPartSurfer();
@@ -34,9 +33,10 @@
 
     ipcRenderer.on('generate-reports', async () => {
       try {
-        const outFile = await reportController.generateReports();
-        if (outFile) {
-          shell.openItem(outFile);
+        const outFiles = await reportController.generateReports();
+
+        if (outFiles && outFile.length) {
+          shell.openItem(path.dirname(outFile[0]));
         }
       } catch (error) {
         dialog.showErrorBox(error.name, error.message);
