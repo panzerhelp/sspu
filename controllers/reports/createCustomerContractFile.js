@@ -31,21 +31,38 @@ dayjs.extend(customParseFormat);
 
 const contractColumns = [
   new XCol(1, 'Service Agreement ID', 20, []),
-  new XCol(2, 'Status', 15, []),
-  new XCol(3, 'Response', 15, []),
-  new XCol(4, 'Start Date', 15, []),
-  new XCol(5, 'End Date', 15, []),
+  new XCol(2, 'Status', 12, []),
+  new XCol(3, 'Response', 10, []),
+  new XCol(4, 'Start Date', 10, []),
+  new XCol(5, 'End Date', 10, []),
   new XCol(6, 'Product', 15, []),
   new XCol(7, 'Description', 40, []),
   new XCol(8, 'Qty', 10, []),
-  new XCol(9, 'Part Number', 20, []),
-  new XCol(10, 'Part Description', 60, []),
-  new XCol(11, 'Stock Qty', 12, []),
-  new XCol(12, 'Category', 20, []),
-  new XCol(13, 'Most Used', 10, []),
-  new XCol(14, 'CSR', 10, []),
-  new XCol(15, 'From', 20, [])
+  new XCol(9, 'Serial List', 20, []),
+  new XCol(10, 'Part Number', 20, []),
+  new XCol(11, 'Part Description', 60, []),
+  new XCol(12, 'Stock Qty', 12, []),
+  new XCol(13, 'Category', 20, []),
+  new XCol(14, 'Most Used', 10, []),
+  new XCol(15, 'CSR', 10, []),
+  new XCol(16, 'From', 25, [])
 ];
+
+class PartData {
+  constructor(partModel, from) {
+    this.id = partModel.id;
+    this.partNumber = partModel.partNumber;
+    this.description = partModel.descriptionShort
+      ? `${partModel.descriptionShort}`
+      : `${partModel.description} `;
+    this.stockQty = partModel.stockQty;
+    this.category = partModel.category;
+    this.mostUsed = partModel.mostUsed;
+    this.csr = partModel.csr;
+    this.feScanStatus = partModel.feScanStatus;
+    this.from = from;
+  }
+}
 
 let productPartCache = {};
 let partFeCache = {};
@@ -77,20 +94,7 @@ const getProductParts = async systems => {
           ]
         });
 
-        const partMap = parts.map(p => {
-          return {
-            id: p.id,
-            partNumber: p.partNumber,
-            description: p.descriptionShort
-              ? `${p.descriptionShort}`
-              : `${p.description} `,
-            stockQty: p.stockQty,
-            category: p.category,
-            mostUsed: p.mostUsed,
-            csr: p.csr,
-            feScanStatus: p.feScanStatus
-          };
-        });
+        const partMap = parts.map(p => new PartData(p, ''));
         system.product.parts = partMap;
         productPartCache[system.product.id] = partMap;
       }
@@ -107,10 +111,6 @@ const groupByContract = async systems => {
     const contracts = {};
 
     systems = await getProductParts(systems);
-
-    // group by contract
-    // systems.forEach(system => {
-
     for (const system of systems) {
       if (typeof contracts[system.contract.said] === 'undefined') {
         contracts[system.contract.said] = {};
@@ -118,23 +118,25 @@ const groupByContract = async systems => {
         contracts[system.contract.said].products = [];
       }
 
+      system.product.parts.forEach(p => {
+        p.from = '_Product';
+      });
+
       // merge product and serial parts
       if (system.serial && system.serial.parts && system.serial.parts.length) {
-        system.serial.parts.forEach(serialPart => {
-          serialPart.fromSerial = true;
+        for (const serialPart of system.serial.parts) {
           let found = false;
           for (const productPart of system.product.parts) {
-            productPart.fromSerial = false;
             if (serialPart.id === productPart.id) {
               found = true;
-              productPart.fromSerial = true;
+              productPart.from += '_Serial';
               break;
             }
           }
           if (!found) {
-            system.product.parts.push(serialPart);
+            system.product.parts.push(new PartData(serialPart, '_Serial'));
           }
-        });
+        }
       }
 
       system.product.parts.forEach(part => {
@@ -166,8 +168,9 @@ const groupByContract = async systems => {
       contracts[system.contract.said].products.push({
         productNumber: system.product.productNumber,
         description: system.product.description,
-        parts: system.product.parts,
+        parts: JSON.parse(JSON.stringify(system.product.parts)), // deep copy
         qty: system.qty,
+        serialList: system.serialList || '',
         hasParts: system.hasParts
       });
     }
@@ -203,6 +206,7 @@ const createCustomerContractFile = async (customer, dir) => {
     });
 
     const status = new Status();
+    const noStock = new Status();
 
     Object.keys(contracts).forEach(c => {
       const { contract } = contracts[c];
@@ -212,7 +216,6 @@ const createCustomerContractFile = async (customer, dir) => {
       status[contStatus][contType]++;
 
       const contractColor = getContractColor(contType, true);
-
       const contractRow = sheet.addRow([
         `'${contract.said}`,
         contStatus,
@@ -222,13 +225,14 @@ const createCustomerContractFile = async (customer, dir) => {
         'product', // 6
         'description',
         'qty',
+        'Serial List',
         '',
-        '', // 10
+        '', // 11
         '',
         '',
         '',
         '',
-        '' // 15
+        '' // 16
       ]);
 
       contractRow.eachCell((cell, colNumber) => {
@@ -253,8 +257,9 @@ const createCustomerContractFile = async (customer, dir) => {
           product.productNumber, // 6
           product.description,
           product.qty,
-          'Parts in product (SBOM)', // 9
-          '', // 10
+          product.serialList,
+          'Parts in product (SBOM)', // 10
+          '', // 11
           '',
           '',
           '',
@@ -266,7 +271,7 @@ const createCustomerContractFile = async (customer, dir) => {
           if (colNumber < 6) {
             fillCell.solid(cell, contractColor);
             cell.font = { color: { argb: contractColor } };
-          } else if (colNumber < 9) {
+          } else if (colNumber < 10) {
             fillCell.solid(cell, productColor);
             cell.border = { top: { style: 'thin' } };
           } else {
@@ -274,27 +279,18 @@ const createCustomerContractFile = async (customer, dir) => {
             fillCell.solid(cell, Color.BLACK);
             cell.border = { bottom: { style: 'thin' } };
           }
-
-          // if (colNumber >= 6) {
-          //   cell.border = { top: { style: 'thin' } };
-          //   if (colNumber >= 9) {
-          //     cell.font = { color: { argb: Color.WHITE } };
-          //     fillCell.solid(cell, Color.BLACK);
-          //     cell.border = { bottom: { style: 'thin' } };
-          //   } else {
-          //     fillCell.solid(cell, productColor);
-          //   }
-          // } else {
-          //   fillCell.solid(cell, contractColor);
-          //   cell.font = { color: { argb: contractColor } };
-          // }
         });
 
-        sheet.getCell(sheet.lastRow._number, 9).alignment = {
+        sheet.getCell(sheet.lastRow._number, 10).alignment = {
           vertical: 'middle',
           horizontal: 'center'
         };
-        sheet.mergeCells(sheet.lastRow._number, 9, sheet.lastRow._number, 15);
+        sheet.mergeCells(
+          sheet.lastRow._number,
+          10,
+          sheet.lastRow._number,
+          colNum(contractColumns)
+        );
 
         let partsBom = 0;
         let partsStock = 0;
@@ -312,6 +308,7 @@ const createCustomerContractFile = async (customer, dir) => {
             '',
             '',
             '',
+            '',
             part.partNumber,
             part.descriptionShort
               ? `${part.descriptionShort}`
@@ -320,11 +317,11 @@ const createCustomerContractFile = async (customer, dir) => {
             part.category || '',
             part.mostUsed || '',
             part.csr || '',
-            part.fromSerial ? 'Serial' : 'Product'
+            part.from || ''
           ]);
 
           sheet.lastRow.eachCell((cell, colNumber) => {
-            if (colNumber >= 9) {
+            if (colNumber >= 10) {
               fillCell.solid(
                 cell,
                 part.stockQty ? Color.PART_IN_STOCK : Color.WHITE
@@ -348,6 +345,7 @@ const createCustomerContractFile = async (customer, dir) => {
               '',
               '',
               '',
+              '',
               fePart.partNumber,
               fePart.descriptionShort
                 ? `${fePart.descriptionShort}`
@@ -356,11 +354,11 @@ const createCustomerContractFile = async (customer, dir) => {
               fePart.category || '',
               fePart.mostUsed || '',
               fePart.csr || '',
-              'Field Equiv'
+              '_Field Equiv'
             ]);
 
             sheet.lastRow.eachCell((cell, colNumber) => {
-              if (colNumber >= 9) {
+              if (colNumber >= 10) {
                 fillCell.solid(
                   cell,
                   fePart.stockQty ? Color.PART_IN_STOCK_FE : Color.PART_FE
@@ -376,21 +374,13 @@ const createCustomerContractFile = async (customer, dir) => {
         });
 
         productRow.getCell(
-          9
-        ).value = `Parts BOM: ${partsBom}  STOCK: ${partsStock}`;
-      });
+          10
+        ).value = `Parts   BOM: ${partsBom}  STOCK: ${partsStock}`;
 
-      // contractRow.eachCell((cell, colNumber) => {
-      //   if (colNumber <= 5) {
-      //     sheet.mergeCells(
-      //       contractRow._number,
-      //       colNumber,
-      //       sheet.lastRow._number,
-      //       colNumber
-      //     );
-      //     cell.alignment = { vertical: 'top', horizontal: 'center' };
-      //   }
-      // });
+        if (partsStock < 1) {
+          noStock[contStatus][contType]++;
+        }
+      });
     });
 
     sheet.autoFilter = {
@@ -402,7 +392,7 @@ const createCustomerContractFile = async (customer, dir) => {
     productPartCache = {}; // clear cache
     partFeCache = {}; // clear cache
     await wb.commit();
-    return Promise.resolve(status);
+    return Promise.resolve([status, noStock]);
   } catch (error) {
     return Promise.reject(error);
   }

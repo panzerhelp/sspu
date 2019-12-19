@@ -58,7 +58,9 @@ class FileImport {
 
   addButtonHTML(file, fileType, secondary) {
     const btnClass =
-      fileType === 'priceFile' || typeof secondary !== 'undefined'
+      fileType === 'caseUsageFile' ||
+      fileType === 'priceFile' ||
+      typeof secondary !== 'undefined'
         ? 'btn-outline-warning'
         : 'btn-outline-danger';
     return file
@@ -144,7 +146,7 @@ class FileImport {
       });
     }
 
-    if (stockDataFileCount > 0 && salesDataFileCount > 0) {
+    if (stockDataFileCount && salesDataFileCount) {
       return true;
     }
 
@@ -193,8 +195,7 @@ class FileImport {
         this.fileImport.innerHTML += this.dataFileBlockHTML(fileArr, section);
       });
 
-      if (this.dataDir) {
-        // && this.checkIfEnoughFiles()) {
+      if (this.dataDir && this.checkIfEnoughFiles()) {
         this.fileImport.innerHTML += this.importButtonHTML();
       }
 

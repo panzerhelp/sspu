@@ -191,6 +191,7 @@ exports.validateSalesData = data => {
     !data.said ||
     typeof data.productNumber !== 'string' ||
     !data.productNumber ||
+    data.productNumber[0] === 'U' ||
     (data.productNumber[0] === 'H' && !data.serial) ||
     typeof data.response === 'undefined' ||
     typeof data.response !== 'string' ||
@@ -223,10 +224,6 @@ exports.validateSalesData = data => {
   if (typeof data.serial !== 'string') {
     data.serial = data.serial.toString();
   }
-
-  // if (!data.endDate || !data.startDate) {
-  //   debugger;
-  // }
 
   return true;
 };

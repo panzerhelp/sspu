@@ -12,6 +12,8 @@ const sequelize = require('sequelize');
 const addTitleRow = require('./addTitleRow');
 const addMainRow = require('./addMainRow');
 const setColWidth = require('./setColWidth');
+const fillCell = require('./fillCell');
+const Color = require('./Color');
 // const contractType = require('./contractType');
 // const contractStatus = require('./contractStatus');
 // const Status = require('./Status');
@@ -56,13 +58,34 @@ const customerListColumns = [
     new XCol(12, 'CTR', 10, []),
     new XCol(13, 'SD', 10, []),
     new XCol(14, 'ND', 10, [])
+  ]),
+  new XCol(15, 'No Stock', 10, [
+    new XCol(15, 'CTR+SD', 10, []),
+    new XCol(16, 'CTR', 10, []),
+    new XCol(17, 'SD', 10, []),
+    new XCol(18, 'ND', 10, [])
+  ]),
+  new XCol(19, 'No Stock 6m', 10, [
+    new XCol(19, 'CTR+SD', 10, []),
+    new XCol(20, 'CTR', 10, []),
+    new XCol(21, 'SD', 10, []),
+    new XCol(22, 'ND', 10, [])
+  ]),
+  new XCol(23, 'No Stock Expired', 10, [
+    new XCol(23, 'CTR+SD', 10, []),
+    new XCol(24, 'CTR', 10, []),
+    new XCol(25, 'SD', 10, []),
+    new XCol(26, 'ND', 10, [])
   ])
 ];
 
 const addCustomerRow = async (contract, sheet, dir) => {
   try {
     const custName = contract.customer || 'NO_NAME';
-    const status = await createCustomerContractFile(contract.customer, dir);
+    const [status, noStock] = await createCustomerContractFile(
+      contract.customer,
+      dir
+    );
 
     await sheet.addRow([
       {
@@ -82,13 +105,35 @@ const addCustomerRow = async (contract, sheet, dir) => {
       status.expired.ctr + status.expired.sd,
       status.expired.ctr,
       status.expired.sd,
-      status.expired.nd
+      status.expired.nd,
+      noStock.active.ctr + noStock.active.sd,
+      noStock.active.ctr,
+      noStock.active.sd,
+      noStock.active.nd,
+      noStock.active6m.ctr + noStock.active6m.sd,
+      noStock.active6m.ctr,
+      noStock.active6m.sd,
+      noStock.active6m.nd,
+      noStock.expired.ctr + noStock.expired.sd,
+      noStock.expired.ctr,
+      noStock.expired.sd,
+      noStock.expired.nd
     ]);
 
     sheet.lastRow.getCell(1).font = {
       color: { argb: '000000ff' },
       underline: 'single'
     };
+
+    sheet.lastRow.eachCell((cell, colNumber) => {
+      if (colNumber === 15 && cell.value > 0) {
+        fillCell.solid(cell, Color.RED_SOLID);
+      } else if (colNumber === 19 && cell.value > 0) {
+        fillCell.solid(cell, Color.RED);
+      } else {
+        fillCell.solid(cell, Color.WHITE);
+      }
+    });
     Promise.resolve();
   } catch (error) {
     Promise.reject(error);
@@ -106,7 +151,7 @@ const contractPartUsageReport = async () => {
     }
     fse.emptyDirSync(dir);
 
-    let contracts = await Contract.findAll({
+    const contracts = await Contract.findAll({
       attributes: [
         'customer',
         [sequelize.fn('COUNT', sequelize.col('customer')), 'contractNum']
@@ -116,7 +161,7 @@ const contractPartUsageReport = async () => {
     });
 
     // eslint-disable-next-line no-const-assign
-    contracts = contracts.slice(0, 5); // test first 20 customer
+    // contracts = contracts.slice(18, 20); // test first 20 customer
 
     const wb = new Excel.stream.xlsx.WorkbookWriter({
       filename: outFile,
