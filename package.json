@@ -1,10 +1,11 @@
 {
   "name": "sspu",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Sophela Stock Planning Utility",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "postinstall": "electron-builder install-app-deps",
     "watch": "nodemon --exec electron .",
     "rebuild": "electron-rebuild -f -w sqlite3",
     "build": "electron-builder -w",
@@ -28,10 +29,10 @@
     "jquery": "^3.4.1",
     "puppeteer": "^2.0.0",
     "sequelize": "^5.21.2",
-    "sqlite3": "^4.1.0"
+    "sqlite3": "^4.1.1"
   },
   "devDependencies": {
-    "electron": "^7.1.5",
+    "electron": "6.1.5",
     "electron-builder": "^21.2.0",
     "electron-rebuild": "^1.8.6",
     "eslint": "^6.1.0",
@@ -56,7 +57,7 @@
     "win": {
       "certificateFile": "private/sophela_sspu.pfx",
       "certificatePassword": "",
-      "verifyUpdateCodeSignature": true,
+      "verifyUpdateCodeSignature": false,
       "publisherName": "sophela_sspu"
     }
   }

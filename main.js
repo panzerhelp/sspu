@@ -2,11 +2,11 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
-// const updater = require('./updater');
+const updater = require('./updater');
 const dbConnect = require('./dbConnect');
 
 // SET ENV
-// process.env.NODE_ENV = 'production';
+process.env.NODE_ENV = 'production';
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
 let mainWindow;
@@ -14,11 +14,10 @@ let workerWindow;
 let progressWindow;
 
 function createWindow() {
-  // disable auto update due to the bug
   // Check for update after 2 seconds
-  // if (process.env.NODE_ENV === 'production') {
-  // setTimeout(updater, 2000);
-  // }
+  if (process.env.NODE_ENV === 'production') {
+    setTimeout(updater, 2000);
+  }
 
   // Win state keeper
   const state = windowStateKeeper({
