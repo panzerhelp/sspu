@@ -92,6 +92,6 @@ exports.getOutputFile = type => {
     contractUsage: 'Contract Usage Report.xlsx'
   };
 
-  const outdir = this.getReportsDir();
+  const outdir = this.getReportDir();
   return path.join(outdir, `${this.getImportCountry()} ${fileNames[type]}`);
 };
