@@ -37,7 +37,7 @@ module.exports = () => {
         type: 'info',
         title: 'Update ready',
         message: 'Install and update now?',
-        buttons: ['Insall Now', 'Later']
+        buttons: ['Install Now', 'Later']
       });
 
       if (buttonId === 0) {
