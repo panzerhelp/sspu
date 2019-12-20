@@ -35,8 +35,8 @@
       try {
         const outFiles = await reportController.generateReports();
 
-        if (outFiles && outFile.length) {
-          shell.openItem(path.dirname(outFile[0]));
+        if (outFiles && outFiles.length) {
+          shell.openItem(path.dirname(outFiles[0]));
         }
       } catch (error) {
         dialog.showErrorBox(error.name, error.message);
