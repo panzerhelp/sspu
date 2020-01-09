@@ -5,15 +5,15 @@ const Excel = require('exceljs');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 
-const addTitleRow = require('./addTitleRow');
-const addMainRow = require('./addMainRow');
-const setColWidth = require('./setColWidth');
-const contractType = require('./contractType');
-const contractStatus = require('./contractStatus');
-const Status = require('./Status');
-const colNum = require('./colNum');
-const Color = require('./Color');
-const fillCell = require('./fillCell');
+const addTitleRow = require('./utils/addTitleRow');
+const addMainRow = require('./utils/addMainRow');
+const setColWidth = require('./utils/setColWidth');
+const contractType = require('./utils/contractType');
+const contractStatus = require('./utils/contractStatus');
+const Status = require('./utils/Status');
+const colNum = require('./utils/colNum');
+const Color = require('./utils/Color');
+const fillCell = require('./utils/fillCell');
 
 // const Contract = require('../../models/Contract');
 // const System = require('../../models/System');
@@ -25,7 +25,7 @@ const Part = require('../../models/Part');
 const systemController = require('../systemController');
 const partController = require('../partController');
 
-const XCol = require('./XCol');
+const XCol = require('./utils/XCol');
 
 dayjs.extend(customParseFormat);
 

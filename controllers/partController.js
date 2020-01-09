@@ -241,3 +241,22 @@ exports.getPartFieldEquivDirect = async partId => {
     return Promise.reject(error);
   }
 };
+
+exports.getPartFieldEquivBack = async partId => {
+  try {
+    const fePartIds = [];
+
+    const isFE = await PartFieldEquiv.findAll({
+      where: { fePartId: partId }
+    });
+
+    isFE.forEach(i => fePartIds.push(i.partId));
+
+    let feParts = [];
+    if (fePartIds) feParts = await Part.findAll({ where: { id: fePartIds } });
+
+    return Promise.resolve(feParts);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};

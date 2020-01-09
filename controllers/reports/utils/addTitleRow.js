@@ -1,13 +1,14 @@
 /* eslint-disable no-param-reassign */
-const dayjs = require('dayjs');
-const customParseFormat = require('dayjs/plugin/customParseFormat');
-const configFilesController = require('../configFilesController');
+// const dayjs = require('dayjs');
+// const customParseFormat = require('dayjs/plugin/customParseFormat');
+const configFilesController = require('../../configFilesController');
 const colNum = require('./colNum');
 
-dayjs.extend(customParseFormat);
+// dayjs.extend(customParseFormat);
 
 const addTitleRow = (title, columns, sheet) => {
-  const date = dayjs().format('YYYY-MMM-DD');
+  // const date = dayjs().format('YYYY-MMM-DD');
+  const date = configFilesController.getContractExpireDate();
   const country = configFilesController.getImportCountry();
 
   sheet.addRow([`${country} - ${title} (${date})`]);

@@ -30,13 +30,6 @@
           </div>
         </div>
         <div class="col-4 pt-4">
-          <!-- <div
-            id="partsurfer-import-block"
-            class="action-block d-flex justify-content-center p-2 mb-2"
-          >
-            <h5>database</h5>
-          </div> -->
-
           <h5>database</h5>
 
           <div class="mb-4" id="database">
@@ -85,51 +78,59 @@
               <div class="col-8">serials to scan</div>
               <div class="col-4" id="dbSerialScan">-</div>
             </div>
-          </div>
-
-          <div class="d-flex justify-content-center p-2 mb-2">
+            <br>
+          <div>
+           <div class="d-flex justify-content-center p-2 mb-2">
             <button
               id="getPartSurferDataBtn"
               class="btn btn-primary px-5 py-2"
-              onclick="getPartSurferData()"
+              onclick="getPartSurferData()" disabled
             >
               <i class="fas fa-search"></i> PartSurfer Scan
             </button>
           </div>
 
+          <input
+          id="showScanWindow"
+          type="checkbox"
+          aria-label="show scan window"
+        />
+        <span class="ml-2">show partsurfer scan window</span>
+        </div>
+
           <hr />
 
           <h5>reports</h5>
-          <div class="d-flex justify-content-center p-2 mb-2">
-            <button
-              class="btn btn-primary px-5 py-2"
-              onclick="generateReports()"
-            >
-              <i class="far fa-file-excel"></i> Generate Reports
-            </button>
+          <div>
+            <div class="d-flex justify-content-left p-2 mb-2">
+              <form>
+                <div class="form-group">
+                  <label for="contractExpireDate"
+                    >contracts expiration date:</label
+                  >
+                  <input
+                    class="form-control"
+                    type="date"
+                    id="contractExpireDate"
+                    name="contract-expire-date"
+                    value=""
+                    required="required"
+                  />
+                </div>
+              </form>
+            </div>
+            <div class="d-flex justify-content-center p-2 mb-2">
+              <button
+                class="btn btn-primary px-5 py-2"
+                onclick="generateReports()"
+              >
+                <i class="far fa-file-excel"></i> Generate Reports
+              </button>
+            </div>
           </div>
           <div id="fileList"></div>
         </div>
       </div>
-
-      <!-- <div class="row">
-          <div class="col-12 col-lg-10">
-              <div id="file-import-block" class="action-block">
-
-              </div>
-              <hr />
-              <div id="partsurfer-import-block" class="action-block d-flex justify-content-center p-2 mb-2">
-                  <button class="btn btn-primary px-5 py-2" onclick="getPartSurferData()">
-                      <i class="fas fa-search"></i> PartSurfer Scan
-                    </button>
-              </div>
-              <hr />
-              <div id="generate-report-block" class="action-block d-flex justify-content-center p-2 mb-2">
-                  <button class="btn btn-primary px-5 py-2" onclick="generateReports()">
-                      <i class="far fa-file-excel"></i> Generate Reports
-                  </button>
-              </div>
-          </div> -->
     </div>
 
     <script>

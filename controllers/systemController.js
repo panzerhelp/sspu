@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 const { ipcRenderer } = require('electron');
-const sequelize = require('sequelize');
+// const sequelize = require('sequelize');
 const db = require('../db');
 const System = require('../models/System');
 // const SystemPart = require('../models/SerialPart');
@@ -12,7 +12,7 @@ const Part = require('../models/Part');
 const serialController = require('./serialController');
 const Contract = require('../models/Contract');
 
-const { Op } = sequelize;
+// const { Op } = sequelize;
 
 exports.addOneSystem = system => {
   return new Promise((resolve, reject) => {
@@ -98,8 +98,45 @@ exports.clearSystems = async () => {
 
 exports.findSystemsWithPart = async partIds => {
   try {
-    const systemsWithSerial = await System.findAll({
-      where: { serialId: { [Op.not]: null } },
+    const systems = await System.findAll({
+      include: [
+        {
+          model: Contract,
+          required: true
+        },
+        {
+          model: Product,
+          required: true,
+          include: [
+            {
+              model: Part,
+              required: true,
+              where: { id: partIds }
+            }
+          ]
+        },
+        {
+          model: Serial,
+          include: [
+            {
+              model: Part,
+              required: true,
+              where: { id: partIds }
+            }
+          ]
+        }
+      ]
+    });
+    return Promise.resolve(systems);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.findSystemsWithProductId = async productId => {
+  try {
+    const systems = await System.findAll({
+      where: { productId: productId },
       include: [
         {
           model: Contract,
@@ -111,44 +148,16 @@ exports.findSystemsWithPart = async partIds => {
         },
         {
           model: Serial,
-          required: true,
           include: [
             {
               model: Part,
-              required: true,
-              where: { id: partIds }
+              required: true
             }
           ]
         }
       ]
     });
 
-    const systemNoSerial = await System.findAll({
-      where: { serialId: null },
-      include: [
-        {
-          model: Contract,
-          required: true
-        },
-        {
-          model: Product,
-          required: true,
-          include: [
-            {
-              model: Part,
-              required: true,
-              where: { id: partIds }
-            }
-          ]
-        }
-      ]
-    });
-
-    // const systemIds = [];
-    // systemsWithSerial.forEach(s => systemIds.push(s.id));
-    // systemNoSerial.forEach(s => systemIds.push(s.id));
-
-    const systems = [...systemsWithSerial, ...systemNoSerial]; // , ...systemLinked];
     return Promise.resolve(systems);
   } catch (error) {
     return Promise.reject(error);
@@ -161,7 +170,9 @@ exports.findSystemsWithCustomer = async customer => {
       include: [
         {
           model: Contract,
-          where: { customer: customer },
+          where: {
+            customer: customer
+          },
           required: true
         },
         {

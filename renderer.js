@@ -49,7 +49,7 @@ const generateReports = () => {
 };
 
 const clearDatabase = () => {
-  document.getElementById('clearDatabaseBtn').style.visibility = 'hidden';
+  // document.getElementById('clearDatabaseBtn').style.visibility = 'hidden';
   ipcRenderer.send('clear-database');
 };
 

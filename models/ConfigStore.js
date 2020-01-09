@@ -5,8 +5,6 @@ const electron = require('electron');
 
 const app = electron.remote ? electron.remote.app : electron.app;
 
-// const { remote } = require('electron');
-
 class ConfigStore extends Store {
   constructor() {
     super({});
@@ -19,6 +17,12 @@ class ConfigStore extends Store {
 
     this.dataDir = this.get('dataDir') || this.getDefaulDataDir();
     this.set('dataDir', this.dataDir);
+
+    this.contractExpireDate = this.get('contractExpireDate') || '';
+    this.set('contractExpireDate', this.contractExpireDate);
+
+    this.showScanWindow = this.get('showScanWindow') || false;
+    this.set('showScanWindow', this.showScanWindow);
   }
 
   addDataFile(dataFile) {
@@ -66,7 +70,7 @@ class ConfigStore extends Store {
 
   setValue(key, value) {
     this.key = value;
-    this.set(key, this.key);
+    this.set(key, value);
   }
 }
 

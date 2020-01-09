@@ -1,8 +1,12 @@
 const { remote } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const dayjs = require('dayjs');
+const customParseFormat = require('dayjs/plugin/customParseFormat');
 const DataFile = require('../models/DataFile');
 const ConfigStore = require('../models/ConfigStore');
+
+dayjs.extend(customParseFormat);
 
 const configStore = new ConfigStore();
 
@@ -89,9 +93,38 @@ exports.getReportDir = () => {
 exports.getOutputFile = type => {
   const fileNames = {
     stockUsage: 'Stock Usage Report.xlsx',
-    contractUsage: 'Contract Usage Report.xlsx'
+    contractUsage: 'Contract Usage Report.xlsx',
+    productUsage: 'Product Usage Report.xlsx'
   };
 
   const outdir = this.getReportDir();
   return path.join(outdir, `${this.getImportCountry()} ${fileNames[type]}`);
+};
+
+exports.setContractExpireDate = date => {
+  // clear custom date when set to today
+  if (date === dayjs().format('YYYY-MM-DD')) {
+    configStore.setValue('contractExpireDate', '');
+  } else {
+    configStore.setValue('contractExpireDate', date);
+  }
+};
+
+exports.getContractExpireDate = () => {
+  const date = configStore.get('contractExpireDate');
+
+  if (!date) {
+    return dayjs().format('YYYY-MM-DD');
+  }
+
+  return date;
+};
+
+exports.getShowScanWindow = () => {
+  return configStore.get('showScanWindow');
+};
+
+exports.toggleShowScanWindow = () => {
+  const showScanWindow = configStore.get('showScanWindow');
+  configStore.setValue('showScanWindow', !showScanWindow);
 };

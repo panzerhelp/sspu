@@ -15,6 +15,8 @@ const systemController = require('../controllers/systemController');
 const configFileController = require('../controllers/configFilesController');
 const dbConnect = require('../dbConnect');
 
+const ExcludeCities = require('../models/ExcludeCities');
+
 dayjs.extend(customParseFormat);
 
 const sendProgressMessage = (fileType, message) => {
@@ -184,6 +186,60 @@ const matchCountry = country => {
   return false;
 };
 
+const checkExcludeCity = data => {
+  if (
+    data.city &&
+    typeof data.city === 'string' &&
+    ExcludeCities[data.country].indexOf(data.city.toLowerCase()) !== -1
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+const checkResponse = data => {
+  // try to deduct reposnse for the systems with serial numbers from offer and package columns
+  if (
+    !data.response &&
+    data.serial &&
+    data.package &&
+    typeof data.package === 'string' &&
+    data.offer &&
+    typeof data.offer === 'string' &&
+    data.offer.indexOf('Hardware') !== -1
+  ) {
+    if (data.package.indexOf('NDB') !== -1) {
+      data.response = 'ND';
+      return true;
+    }
+
+    if (data.package.indexOf('CTR') !== -1) {
+      data.response = 'CTR';
+      return true;
+    }
+
+    if (
+      data.package.indexOf('24x7') !== -1 ||
+      data.package.indexOf('4H') !== -1
+    ) {
+      data.response = 'SD';
+      return true;
+    }
+  }
+
+  if (
+    typeof data.response === 'undefined' ||
+    typeof data.response !== 'string' ||
+    data.response === '' ||
+    validResposes.indexOf(data.response.trim().toLowerCase()) === -1
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
 exports.validateSalesData = data => {
   if (
     !data ||
@@ -193,11 +249,10 @@ exports.validateSalesData = data => {
     !data.productNumber ||
     data.productNumber[0] === 'U' ||
     (data.productNumber[0] === 'H' && !data.serial) ||
-    typeof data.response === 'undefined' ||
-    typeof data.response !== 'string' ||
-    data.response === '' ||
-    validResposes.indexOf(data.response.trim().toLowerCase()) === -1 ||
-    !matchCountry(data.country)
+    !checkResponse(data) ||
+    !matchCountry(data.country) ||
+    checkExcludeCity(data) ||
+    (data.status && data.status === 'Fully Rejected')
   ) {
     return false;
   }

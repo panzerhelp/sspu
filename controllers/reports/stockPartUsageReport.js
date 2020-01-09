@@ -5,14 +5,14 @@ const Excel = require('exceljs');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 
-const Status = require('./Status');
-const checkFileBusy = require('./checkFileBusy');
-const addTitleRow = require('./addTitleRow');
-const addMainRow = require('./addMainRow');
-const setColWidth = require('./setColWidth');
-const contractType = require('./contractType');
-const contractStatus = require('./contractStatus');
-const colNum = require('./colNum');
+const Status = require('./utils/Status');
+const checkFileBusy = require('./utils/checkFileBusy');
+const addTitleRow = require('./utils/addTitleRow');
+const addMainRow = require('./utils/addMainRow');
+const setColWidth = require('./utils/setColWidth');
+const contractType = require('./utils/contractType');
+const contractStatus = require('./utils/contractStatus');
+const colNum = require('./utils/colNum');
 
 const configFilesController = require('../configFilesController');
 const partController = require('../partController');
@@ -20,7 +20,7 @@ const systemController = require('../systemController');
 
 const Part = require('../../models/Part');
 const Stock = require('../../models/Stock');
-const XCol = require('./XCol');
+const XCol = require('./utils/XCol');
 
 dayjs.extend(customParseFormat);
 
@@ -69,7 +69,9 @@ const setPartStatus = contracts => {
       const { contract } = contracts[said][product].systems[0];
       const status = contractStatus(contract);
       const type = contractType(contract);
-      partStat[status][type] += contracts[said][product].serials.length;
+      // debugger;
+      // partStat[status][type] += contracts[said][product].serials.length;
+      partStat[status][type] += contracts[said][product].systems.length;
     });
   });
 

@@ -9,16 +9,15 @@ const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 const sequelize = require('sequelize');
 
-const addTitleRow = require('./addTitleRow');
-const addMainRow = require('./addMainRow');
-const setColWidth = require('./setColWidth');
-const fillCell = require('./fillCell');
-const Color = require('./Color');
-// const contractType = require('./contractType');
-// const contractStatus = require('./contractStatus');
-// const Status = require('./Status');
-const colNum = require('./colNum');
-// const Color = require('./Color');
+const addTitleRow = require('./utils/addTitleRow');
+const addMainRow = require('./utils/addMainRow');
+const setColWidth = require('./utils/setColWidth');
+const fillCell = require('./utils/fillCell');
+const Color = require('./utils/Color');
+const colNum = require('./utils/colNum');
+const checkFileBusy = require('./utils/checkFileBusy');
+
+const configFilesController = require('../configFilesController');
 
 const createCustomerContractFile = require('./createCustomerContractFile');
 
@@ -29,10 +28,7 @@ const Contract = require('../../models/Contract');
 // const SerialPart = require('../../models/SerialPart');
 // const Part = require('../../models/Part');
 
-const checkFileBusy = require('./checkFileBusy');
-const configFilesController = require('../configFilesController');
-
-const XCol = require('./XCol');
+const XCol = require('./utils/XCol');
 
 dayjs.extend(customParseFormat);
 

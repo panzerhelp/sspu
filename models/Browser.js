@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const configFilesController = require('../controllers/configFilesController');
 
 const getChromiumExecPath = () => {
   return puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked');
@@ -9,10 +10,16 @@ class Browser {
     this.instance = null;
   }
 
+  // headless when true it won't show puppeteer window
+  // always false in non-production
+  // in production it check showScanValue
+
   async init() {
     if (!this.instance) {
       this.instance = await puppeteer.launch({
-        headless: process.env.NODE_ENV === 'production',
+        headless:
+          process.env.NODE_ENV === 'production' &&
+          !configFilesController.getShowScanWindow(),
         // devtools: true,
         executablePath: getChromiumExecPath()
       });

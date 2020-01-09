@@ -60,6 +60,15 @@ const Columns = {
     },
     qty: {
       names: ['product quantity']
+    },
+    status: {
+      names: ['renewal status', 'contract status']
+    },
+    package: {
+      names: ['package product description']
+    },
+    offer: {
+      names: ['offer product description']
     }
   }
 };
