@@ -63,6 +63,10 @@ exports.addSystems = async (systemsData, productIds, contractIds) => {
 
         let serialId = null;
 
+        if (sys.serialList.length > 128) {
+          sys.serialList = sys.serialList.slice(0, 127);
+        }
+
         if (sys.serialList.length) {
           serialId = await serialController.addSerialList({
             serialList: sys.serialList,

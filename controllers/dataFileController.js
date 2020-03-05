@@ -33,7 +33,7 @@ exports.loadFile = (file, processRowCallBack) => {
     const { filePath } = file;
     if (fs.existsSync(filePath)) {
       if (path.parse(filePath).ext === '.xlsx') {
-        sendProgressMessage(file.type, 'loading fail');
+        sendProgressMessage(file.type, 'loading file');
         this.loadFileXLSX(file, processRowCallBack)
           .then(data => resolve(data))
           .catch(error => reject(error));
