@@ -432,6 +432,13 @@ exports.importFiles = async () => {
 
 exports.clearDatabase = async () => {
   try {
+    ipcRenderer.send('set-progress', {
+      mainItem: 'Clearing database',
+      subItem: '',
+      curItem: 0,
+      totalItem: 0
+    });
+
     const dbFile = path.join(configFileController.getDataDir(), 'sspu.sqlite');
     let idx = 1;
     let dbCopy = `${dbFile}_bkp`;

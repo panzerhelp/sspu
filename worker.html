@@ -19,16 +19,28 @@
     const reportController = require('./controllers/reportController');
     const serialController = require('./controllers/serialController');
 
+    let scanRestart = 0;
+    const maxRestarts = 20;
+
     ipcRenderer.on('get-partsurfer-data', async () => {
-      try {
-        await productController.getProductDataFromPartSurfer();
-        await serialController.getSerialDataFromPartSurfer();
-        await partController.getFieldEquivFromPartSurfer();
-      } catch (error) {
-        dialog.showErrorBox(error.name, error.message);
-      } finally {
-        ipcRenderer.send('finishedTask');
+      while (true) {
+        try {
+          await productController.getProductDataFromPartSurfer();
+          await serialController.getSerialDataFromPartSurfer();
+          await partController.getFieldEquivFromPartSurfer();
+          break;
+        } catch (error) {
+          if (++scanRestart == maxRestarts) {
+            dialog.showErrorBox(error.name, error.message);
+            ipcRenderer.send('finishedTask');
+            break;
+          } else {
+            console.log(error);
+            console.log(`Restarting ${scanRestart} of ${maxRestarts}`);
+          }
+        }
       }
+      ipcRenderer.send('finishedTask');
     });
 
     ipcRenderer.on('generate-reports', async () => {

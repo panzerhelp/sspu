@@ -3,8 +3,8 @@ const { ipcRenderer } = require('electron');
 // const db = require('../db');
 const Part = require('../models/Part');
 const Stock = require('../models/Stock');
-const Browser = require('../models/Browser');
 const PartFieldEquiv = require('../models/PartFieldEquiv');
+const browserController = require('./browserController');
 
 exports.addOnePartFromStock = part => {
   return new Promise((resolve, reject) => {
@@ -87,11 +87,11 @@ exports.addPartsFromPartSurfer = partObject => {
   });
 };
 
-exports.browser = null;
-
-const getPartFielEquiv = async part => {
+const getPartFielEquiv = async (part, browserId) => {
   try {
-    const page = await this.browser.openNewPage(
+    const browser = browserController.instances[browserId];
+    await browser.init();
+    const page = await browser.openNewPage(
       `https://partsurfer.hpe.com/FunctionalEquivalent.aspx?spn=${part.partNumber}&country=EE`,
       'disableDropDownCheck'
     );
@@ -146,6 +146,7 @@ const getPartFielEquiv = async part => {
       await part.update({ feScanStatus: `NO_FE` });
     }
     await page.close();
+    await browser.close();
     return Promise.resolve();
   } catch (error) {
     return Promise.reject(error);
@@ -175,24 +176,55 @@ exports.getFieldEquivFromPartSurfer = async () => {
   //   }
   // );
 
-  this.browser = new Browser();
-  await this.browser.init();
-
   let iteration = 0;
   let partsToScen = await Part.findAll({ where: { feScanStatus: null } });
+
+  const { concurrency } = browserController;
+  browserController.closeBrowsers();
+  browserController.createBrowsers();
+
+  let promiseArray = [];
+  let scanList = [];
+  let browserId = 0;
 
   while (partsToScen.length) {
     let curItem = 1;
     for (const part of partsToScen) {
-      await getPartFielEquiv(part);
+      scanList.push(part.partNumber);
+
+      promiseArray.push(getPartFielEquiv(part, browserId));
+      browserId++;
+      curItem++;
+
+      if (promiseArray.length === concurrency) {
+        ipcRenderer.send('set-progress', {
+          mainItem: `Getting field equivalent data (${iteration})`,
+          subItem: scanList.join(' '),
+          curItem: curItem,
+          totalItem: partsToScen.length
+        });
+
+        await Promise.all(promiseArray);
+        promiseArray = [];
+        scanList = [];
+        browserId = 0;
+      }
+    }
+
+    if (promiseArray.length) {
       ipcRenderer.send('set-progress', {
         mainItem: `Getting field equivalent data (${iteration})`,
-        subItem: `${part.partNumber}`,
+        subItem: scanList.join(' '),
         curItem: curItem,
         totalItem: partsToScen.length
       });
-      curItem++;
+
+      await Promise.all(promiseArray);
+      promiseArray = [];
+      scanList = [];
+      browserId = 0;
     }
+
     iteration++;
     partsToScen = await Part.findAll({ where: { feScanStatus: null } });
   }

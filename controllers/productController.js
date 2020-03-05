@@ -3,7 +3,7 @@ const { ipcRenderer } = require('electron');
 const Product = require('../models/Product');
 const ProductPart = require('../models/ProductPart');
 const partController = require('../controllers/partController');
-const Browser = require('../models/Browser');
+const browserController = require('./browserController');
 
 exports.addOneProduct = product => {
   return new Promise((resolve, reject) => {
@@ -53,8 +53,6 @@ exports.addProducts = async productsData => {
     return Promise.reject(error);
   }
 };
-
-exports.browser = null;
 
 const getPartsGeneralTab = page => {
   return new Promise((resolve, reject) => {
@@ -194,9 +192,11 @@ const processPartPage = async (product, page) => {
   }
 };
 
-exports.getSingleProductDataFromPartSurfer = async product => {
+exports.getSingleProductDataFromPartSurfer = async (product, browserId) => {
   try {
-    const page = await this.browser.openNewPage(
+    const browser = browserController.instances[browserId];
+    await browser.init();
+    const page = await browser.openNewPage(
       `https://partsurfer.hpe.com/Search.aspx?type=PROD&SearchText=${product.productNumber}`
     );
 
@@ -212,6 +212,7 @@ exports.getSingleProductDataFromPartSurfer = async product => {
     }
 
     await page.close();
+    await browser.close();
     return Promise.resolve(isValid ? result : 'NOT_VALID_PRODUCT');
   } catch (error) {
     return Promise.reject(error);
@@ -241,24 +242,53 @@ exports.getProductDataFromPartSurfer = async () => {
 
   //   // temporary
   const productsToScan = await Product.findAll({ where: { scanStatus: null } });
-  this.browser = new Browser();
-  await this.browser.init();
 
-  // eslint-disable-next-line no-restricted-syntax
-  // let promiseArray = [];
-  // const concurrency = 5;
+  if (!productsToScan || !productsToScan.length) {
+    return;
+  }
+
+  const { concurrency } = browserController;
+  browserController.closeBrowsers();
+  browserController.createBrowsers();
+
+  let promiseArray = [];
   let curItem = 1;
-  // let subItems = [];
+  let scanList = [];
+  let browserId = 0;
 
-  // eslint-disable-next-line no-restricted-syntax
   for (const product of productsToScan) {
+    scanList.push(product.productNumber);
+
+    promiseArray.push(
+      this.getSingleProductDataFromPartSurfer(product, browserId)
+    );
+    browserId++;
+    curItem++;
+
+    if (promiseArray.length === concurrency) {
+      ipcRenderer.send('set-progress', {
+        mainItem: 'Getting product data',
+        subItem: scanList.join(' '),
+        curItem: curItem,
+        totalItem: productsToScan.length
+      });
+      await Promise.all(promiseArray);
+      promiseArray = [];
+      scanList = [];
+      browserId = 0;
+    }
+  }
+
+  if (promiseArray.length) {
     ipcRenderer.send('set-progress', {
       mainItem: 'Getting product data',
-      subItem: product.productNumber,
+      subItem: scanList.join(' '),
       curItem: curItem,
       totalItem: productsToScan.length
     });
-    await this.getSingleProductDataFromPartSurfer(product);
-    curItem++;
+
+    await Promise.all(promiseArray);
   }
+
+  browserController.closeBrowsers();
 };

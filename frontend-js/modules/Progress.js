@@ -27,14 +27,18 @@ class Progress {
   }
 
   setProgressStatus(status) {
-    const pct = Math.round((status.curItem * 100) / status.totalItem);
+    const pct = Math.min(
+      Math.round((status.curItem * 100) / status.totalItem),
+      100
+    );
+
+    const curItem = Math.min(status.curItem, status.totalItem);
+
     const progressStatus = {
       mainItem: status.mainItem,
       subItem: status.subItem,
       percentage: status.totalItem ? `${pct} %` : '',
-      subItemStatus: status.totalItem
-        ? `${status.curItem} / ${status.totalItem}`
-        : ''
+      subItemStatus: status.totalItem ? `${curItem} / ${status.totalItem}` : ''
     };
 
     if (status.totalItem) {

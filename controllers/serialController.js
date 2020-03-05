@@ -2,9 +2,9 @@
 const sequelize = require('sequelize');
 const { ipcRenderer } = require('electron');
 const Serial = require('../models/Serial');
-const Browser = require('../models/Browser');
 const SerialPart = require('../models/SerialPart');
 const partController = require('./partController');
+const browserController = require('./browserController');
 
 const { Op } = sequelize;
 
@@ -208,9 +208,11 @@ const inputSystemSerial = async (serialNum, page) => {
   }
 };
 
-exports.getPartsForSerial = async serial => {
+exports.getPartsForSerial = async (serial, browserId) => {
   try {
-    const page = await this.browser.openNewPage(
+    const browser = browserController.instances[browserId];
+    await browser.init();
+    const page = await browser.openNewPage(
       `https://partsurfer.hpe.com/Search.aspx?SearchText`
     );
 
@@ -233,6 +235,7 @@ exports.getPartsForSerial = async serial => {
 
     await processSerialPage(serial, page);
     await page.close();
+    await browser.close();
     return Promise.resolve('SCANNED');
   } catch (error) {
     return Promise.reject(error);
@@ -241,24 +244,55 @@ exports.getPartsForSerial = async serial => {
 
 exports.getSerialDataFromPartSurfer = async () => {
   try {
-    this.browser = new Browser();
-    await this.browser.init();
-
     const serials = await Serial.findAll({ where: { scanStatus: null } });
 
+    if (!serials || !serials.length) {
+      return Promise.resolve();
+    }
+
+    const { concurrency } = browserController;
+    browserController.closeBrowsers();
+    browserController.createBrowsers();
+
+    let promiseArray = [];
     let curItem = 1;
+    let scanList = [];
+    let browserId = 0;
+
     for (const serial of serials) {
+      scanList.push(serial.serialNum);
+
+      promiseArray.push(this.getPartsForSerial(serial, browserId));
+      browserId++;
+      curItem++;
+
+      if (promiseArray.length === concurrency) {
+        ipcRenderer.send('set-progress', {
+          mainItem: 'Getting parts for the serial',
+          subItem: scanList.join(' '),
+          curItem: curItem,
+          totalItem: serials.length
+        });
+
+        await Promise.all(promiseArray);
+        promiseArray = [];
+        scanList = [];
+        browserId = 0;
+      }
+    }
+
+    if (promiseArray.length) {
       ipcRenderer.send('set-progress', {
         mainItem: 'Getting parts for the serial',
-        subItem: `${serial.serialNum}`,
+        subItem: scanList.join(' '),
         curItem: curItem,
         totalItem: serials.length
       });
-      await this.getPartsForSerial(serial);
 
-      curItem++;
+      await Promise.all(promiseArray);
     }
 
+    browserController.closeBrowsers();
     return Promise.resolve();
   } catch (error) {
     return Promise.reject(error);
