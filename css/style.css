@@ -41,6 +41,7 @@ hr {
 
 body {
   background-color: #f4f4f4;
+  font-size: 0.9rem;
 }
 
 li.list-group-item {
@@ -51,6 +52,22 @@ a {
   font-size: 115%;
 }
 
+input[type='number'],
+input[type='date'] {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #495057;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  text-align: center;
+}
+
 .clear-file {
   border-radius: 40%;
+}
+
+#subItem,
+#restart,
+#restartStats {
+  font-size: 0.7rem;
 }

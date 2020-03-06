@@ -1,6 +1,7 @@
 const Browser = require('../models/Browser');
+const configFilesController = require('../controllers/configFilesController');
 
-exports.concurrency = 3;
+exports.concurrency = configFilesController.getScanWinNum();
 
 exports.instances = [];
 

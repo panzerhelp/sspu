@@ -89,37 +89,32 @@
               <i class="fas fa-search"></i> PartSurfer Scan
             </button>
           </div>
-
-          <input
-          id="showScanWindow"
-          type="checkbox"
-          aria-label="show scan window"
-        />
-        <span class="ml-2">show partsurfer scan window</span>
         </div>
+
+        <div class="row">
+          <div class="col-8"><span>show partsurfer scan window</span></div> 
+          <div class="col-2"><input id="showScanWindow" type="checkbox" aria-label="show scan window"/></div>
+        </div>
+    
+       <div class="row">
+        <div class="col-8"><span>scan concurrency</span></div>
+        <div class="col-2"><input type="number" id="scanWinNum" name="scanWinNum" min="1" max="5"></div>   
+       </div>
+
+       <div class="row">
+        <div class="col-8"><span>max scan restarts</span></div>
+        <div class="col-2"><input type="number" id="maxScanRestarts" name="maxScanRestarts" min="0" max="10000"></div>   
+       </div>
 
           <hr />
 
           <h5>reports</h5>
           <div>
-            <div class="d-flex justify-content-left p-2 mb-2">
-              <form>
-                <div class="form-group">
-                  <label for="contractExpireDate"
-                    >contracts expiration date:</label
-                  >
-                  <input
-                    class="form-control"
-                    type="date"
-                    id="contractExpireDate"
-                    name="contract-expire-date"
-                    value=""
-                    required="required"
-                  />
-                </div>
-              </form>
+            <div class="row">
+              <div class="col-8"><span>contracts expiration date</span></div>
+              <div class="col-2"><input type="date" id="contractExpireDate" name="contract-expire-date" value="" required="required"/></div>
             </div>
-            <div class="d-flex justify-content-center p-2 mb-2">
+            <div class="d-flex justify-content-center p-2 mb-2 mt-2">
               <button
                 class="btn btn-primary px-5 py-2"
                 onclick="generateReports()"

@@ -7,6 +7,8 @@ class Progress {
     this.subItemStatus = document.getElementById('subItemStatus');
     this.progressBar = document.getElementById('progressBar');
     this.progress = document.getElementsByClassName('progress');
+    this.restartStats = document.getElementById('restartStats');
+    this.restart = document.getElementById('restart');
     this.injectHTML();
     this.events();
   }
@@ -17,6 +19,8 @@ class Progress {
   // methods
   injectHTML() {
     document.title = this.title;
+    this.restartStats.style.display = 'none';
+    this.restart.style.display = 'none';
   }
 
   setStatus(progressStatus) {
@@ -53,6 +57,12 @@ class Progress {
     }
 
     this.setStatus(progressStatus);
+  }
+
+  setRestarts(curRestart, maxRestarts) {
+    this.restartStats.innerHTML = `${curRestart} / ${maxRestarts}`;
+    this.restartStats.style.display = 'block';
+    this.restart.style.display = 'block';
   }
 }
 

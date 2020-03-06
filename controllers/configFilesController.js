@@ -128,3 +128,37 @@ exports.toggleShowScanWindow = () => {
   const showScanWindow = configStore.get('showScanWindow');
   configStore.setValue('showScanWindow', !showScanWindow);
 };
+
+exports.getScanWinNum = () => {
+  const num = configStore.get('scanWinNum');
+  if (num) {
+    return parseInt(num, 10);
+  }
+
+  return 0;
+};
+
+exports.setScanWinNum = num => {
+  const maxValue = 6;
+  configStore.setValue(
+    'scanWinNum',
+    Math.min(Math.max(1, num), maxValue).toString()
+  );
+};
+
+exports.getMaxScanRestarts = () => {
+  const num = configStore.get('maxScanRestarts');
+  if (num) {
+    return parseInt(num, 10);
+  }
+
+  return 0;
+};
+
+exports.setMaxScanRestarts = num => {
+  const maxValue = 100000;
+  configStore.setValue(
+    'maxScanRestarts',
+    Math.min(Math.max(0, num), maxValue).toString()
+  );
+};

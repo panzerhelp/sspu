@@ -188,7 +188,7 @@ exports.getFieldEquivFromPartSurfer = async () => {
   let browserId = 0;
 
   while (partsToScen.length) {
-    let curItem = 1;
+    let curItem = 0;
     for (const part of partsToScen) {
       scanList.push(part.partNumber);
 

@@ -23,6 +23,12 @@ class ConfigStore extends Store {
 
     this.showScanWindow = this.get('showScanWindow') || false;
     this.set('showScanWindow', this.showScanWindow);
+
+    this.scanWinNum = this.get('scanWinNum') || '3';
+    this.set('scanWinNum', this.scanWinNum);
+
+    this.maxScanRestarts = this.get('maxScanRestarts') || '10000';
+    this.set('maxScanRestarts', this.maxScanRestarts);
   }
 
   addDataFile(dataFile) {

@@ -18,23 +18,24 @@
     const partController = require('./controllers/partController');
     const reportController = require('./controllers/reportController');
     const serialController = require('./controllers/serialController');
+    const configFilesController = require('./controllers/configFilesController');
 
     let scanRestart = 0;
-    const maxRestarts = 20;
+    const maxRestarts = configFilesController.getMaxScanRestarts();
 
     ipcRenderer.on('get-partsurfer-data', async () => {
       while (true) {
         try {
-          await productController.getProductDataFromPartSurfer();
+          // await productController.getProductDataFromPartSurfer();
           await serialController.getSerialDataFromPartSurfer();
           await partController.getFieldEquivFromPartSurfer();
           break;
         } catch (error) {
           if (++scanRestart == maxRestarts) {
             dialog.showErrorBox(error.name, error.message);
-            ipcRenderer.send('finishedTask');
             break;
           } else {
+            ipcRenderer.send('set-restart', scanRestart, maxRestarts);
             console.log(error);
             console.log(`Restarting ${scanRestart} of ${maxRestarts}`);
           }

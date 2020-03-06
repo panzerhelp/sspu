@@ -252,7 +252,7 @@ exports.getProductDataFromPartSurfer = async () => {
   browserController.createBrowsers();
 
   let promiseArray = [];
-  let curItem = 1;
+  let curItem = 0;
   let scanList = [];
   let browserId = 0;
 

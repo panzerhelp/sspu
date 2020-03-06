@@ -163,6 +163,12 @@ ipcMain.on('set-progress', (e, progressStatus) => {
   }
 });
 
+// forward et-restart events from worker to progress window
+ipcMain.on('set-restart', (e, curRestart, maxRestarts) => {
+  // console.log(`Set restarts ${curRestart} / ${maxRestarts}`);
+  progressWindow.webContents.send('set-restart', curRestart, maxRestarts);
+});
+
 ipcMain.on('finishedTask', () => {
   progressWindow.close(); // action window should handle worker
   mainWindow.webContents.send('reload');

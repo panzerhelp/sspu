@@ -46,12 +46,25 @@
           aria-valuemax="100"
         ></div>
       </div>
+
+      <div class="row mt-4">
+        <div class="col-8">
+          <p id="restart">restarts</p>
+        </div>
+        <div class="col-4 d-flex justify-content-end">
+          <p id="restartStats"></p>
+        </div>
+      </div>
     </div>
     <script>
       const electron = require('electron');
       const { ipcRenderer } = electron;
       const Progress = require('./frontend-js/modules/Progress');
       const progress = new Progress('Progress Window');
+
+      ipcRenderer.on('set-restart', (e, curRestart, maxRestarts) => {
+        progress.setRestarts(curRestart, maxRestarts);
+      });
 
       ipcRenderer.on('set-progress', (e, status) => {
         progress.setProgressStatus(status);

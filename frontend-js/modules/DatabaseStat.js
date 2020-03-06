@@ -12,6 +12,8 @@ class DatabaseStat {
     this.clearDatabaseBtn = document.getElementById('clearDatabaseBtn');
     this.getPartSurferDataBtn = document.getElementById('getPartSurferDataBtn');
     this.showScanWindow = document.getElementById('showScanWindow');
+    this.scanWinNum = document.getElementById('scanWinNum');
+    this.maxScanRestarts = document.getElementById('maxScanRestarts');
     this.injectHTML();
     this.events();
   }
@@ -20,6 +22,18 @@ class DatabaseStat {
   events() {
     this.showScanWindow.addEventListener('click', () => {
       configFilesController.toggleShowScanWindow();
+    });
+
+    this.scanWinNum.addEventListener('change', e => {
+      e.preventDefault();
+      configFilesController.setScanWinNum(e.target.value);
+      e.target.value = configFilesController.getScanWinNum();
+    });
+
+    this.maxScanRestarts.addEventListener('change', e => {
+      e.preventDefault();
+      configFilesController.setMaxScanRestarts(e.target.value);
+      e.target.value = configFilesController.getMaxScanRestarts();
     });
   }
 
@@ -44,6 +58,8 @@ class DatabaseStat {
     );
 
     this.showScanWindow.checked = configFilesController.getShowScanWindow();
+    this.scanWinNum.value = configFilesController.getScanWinNum();
+    this.maxScanRestarts.value = configFilesController.getMaxScanRestarts();
 
     this.getPartSurferDataBtn.setAttribute('disabled', 'true');
 
