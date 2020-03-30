@@ -200,6 +200,7 @@ const inputSystemSerial = async (serialNum, page) => {
     const input = await page.$(
       '#ctl00_BodyContentPlaceHolder_SearchText_TextBox1'
     );
+
     await input.click({ clickCount: 3 });
     await input.type(serialNum);
     return Promise.resolve();
@@ -212,9 +213,7 @@ exports.getPartsForSerial = async (serial, browserId) => {
   try {
     const browser = browserController.instances[browserId];
     await browser.init();
-    const page = await browser.openNewPage(
-      `https://partsurfer.hpe.com/Search.aspx?SearchText`
-    );
+    const page = await browser.openNewPage(`https://partsurfer.hpe.com/`);
 
     await inputSystemSerial(serial.serialNum, page);
 

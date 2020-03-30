@@ -34,9 +34,13 @@ class Browser {
   }
 
   async checkDropDown(page) {
-    const checked = await page.evaluate(
-      () => document.querySelector('option[value="EE"').selected
-    );
+    const checked = await page.evaluate(() => {
+      const el = document.querySelector('option[value="EE"');
+      if (!el) {
+        return true;
+      }
+      return el.selected;
+    });
 
     if (!checked) {
       // disable popup script
@@ -67,7 +71,7 @@ class Browser {
         const page = await this.instance.newPage();
         await page.setViewport({ width: 1400, height: 1080 });
         await page.setCookie(...cookies);
-        await page.goto(url, { waitUntil: 'load', timeout: 0 });
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 0 });
 
         if (!disableDropDownCheck) {
           await this.checkDropDown(page);

@@ -4,7 +4,7 @@ const { shell, ipcRenderer, remote } = require('electron');
 
 const version = remote.app.getVersion();
 
-document.title = `SSPU v.${version}`;
+document.title = `SSPU v${version}`;
 const configFileController = require('./controllers/configFilesController');
 const FileImport = require('./frontend-js/modules/FileImport');
 const DatabaseStat = require('./frontend-js/modules/DatabaseStat');
