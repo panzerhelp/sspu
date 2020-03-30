@@ -9,6 +9,8 @@ const configFileController = require('./controllers/configFilesController');
 const FileImport = require('./frontend-js/modules/FileImport');
 const DatabaseStat = require('./frontend-js/modules/DatabaseStat');
 const ReportFiles = require('./frontend-js/modules/ReportFiles');
+// const dbConnect = require('./dbConnect');
+// const db = require('./db');
 
 const init = () => {
   new FileImport();
@@ -32,8 +34,11 @@ const selectFile = fileType => {
   if (file) init();
 };
 
-const selectDataDir = () => {
-  if (configFileController.setDataDir()) init();
+const selectDataDir = async () => {
+  if (configFileController.setDataDir()) {
+    remote.app.relaunch();
+    remote.app.exit();
+  }
 };
 
 const importFiles = () => {
