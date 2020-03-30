@@ -313,7 +313,7 @@ const createCustomerContractFile = async (customer, dir) => {
             part.descriptionShort
               ? `${part.descriptionShort}`
               : `${part.description} `,
-            part.stockQty,
+            part.stockQty || 0,
             part.category || '',
             part.mostUsed || '',
             part.csr || '',
@@ -350,11 +350,11 @@ const createCustomerContractFile = async (customer, dir) => {
               fePart.descriptionShort
                 ? `${fePart.descriptionShort}`
                 : `${fePart.description} `,
-              fePart.stockQty,
+              fePart.stockQty || 0,
               fePart.category || '',
               fePart.mostUsed || '',
               fePart.csr || '',
-              '_Field Equiv'
+              `${part.from}_FE`
             ]);
 
             sheet.lastRow.eachCell((cell, colNumber) => {

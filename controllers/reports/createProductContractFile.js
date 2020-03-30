@@ -205,7 +205,7 @@ const createProductContractFile = async (product, dir) => {
         sheet.getCell(dataRowNum, 2).value =
           fePart.descriptionShort || fePart.description;
         sheet.getCell(dataRowNum, 3).value = fePart.stockQty;
-        sheet.getCell(dataRowNum, 4).value = '_Field_Equiv';
+        sheet.getCell(dataRowNum, 4).value = `${part.from}_FE`;
         dataRowNum++;
 
         if (fePart.stockQty) {
