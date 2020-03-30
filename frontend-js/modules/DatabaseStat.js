@@ -14,6 +14,9 @@ class DatabaseStat {
     this.showScanWindow = document.getElementById('showScanWindow');
     this.scanWinNum = document.getElementById('scanWinNum');
     this.maxScanRestarts = document.getElementById('maxScanRestarts');
+    this.scanGeneralProductTab = document.getElementById(
+      'scanGeneralProductTab'
+    );
     this.injectHTML();
     this.events();
   }
@@ -22,6 +25,10 @@ class DatabaseStat {
   events() {
     this.showScanWindow.addEventListener('click', () => {
       configFilesController.toggleShowScanWindow();
+    });
+
+    this.scanGeneralProductTab.addEventListener('click', () => {
+      configFilesController.toggleScanGeneralProductTab();
     });
 
     this.scanWinNum.addEventListener('change', e => {
@@ -58,6 +65,7 @@ class DatabaseStat {
     );
 
     this.showScanWindow.checked = configFilesController.getShowScanWindow();
+    this.scanGeneralProductTab.checked = configFilesController.getScanGeneralProductTab();
     this.scanWinNum.value = configFilesController.getScanWinNum();
     this.maxScanRestarts.value = configFilesController.getMaxScanRestarts();
 

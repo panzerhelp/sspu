@@ -129,6 +129,15 @@ exports.toggleShowScanWindow = () => {
   configStore.setValue('showScanWindow', !showScanWindow);
 };
 
+exports.getScanGeneralProductTab = () => {
+  return configStore.get('scanGeneralProductTab');
+};
+
+exports.toggleScanGeneralProductTab = () => {
+  const scanGeneralProductTab = configStore.get('scanGeneralProductTab');
+  configStore.setValue('scanGeneralProductTab', !scanGeneralProductTab);
+};
+
 exports.getScanWinNum = () => {
   const num = configStore.get('scanWinNum');
   if (num) {

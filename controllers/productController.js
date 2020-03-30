@@ -4,6 +4,7 @@ const Product = require('../models/Product');
 const ProductPart = require('../models/ProductPart');
 const partController = require('../controllers/partController');
 const browserController = require('./browserController');
+const configFilesController = require('../controllers/configFilesController');
 
 exports.addOneProduct = product => {
   return new Promise((resolve, reject) => {
@@ -170,10 +171,24 @@ const processPartPage = async (product, page) => {
       }
     });
 
-    const partsAdded = await partController.addPartsFromPartSurfer({
-      ...partsGenTab,
-      ...partsAdvTab
-    });
+    let partsAdded;
+
+    // check if parts from generat tab should be added
+    // also add if advanced tab is empty
+    if (
+      configFilesController.getScanGeneralProductTab() ||
+      (Object.keys(partsAdvTab).length === 0 &&
+        partsAdvTab.constructor === Object)
+    ) {
+      partsAdded = await partController.addPartsFromPartSurfer({
+        ...partsGenTab,
+        ...partsAdvTab
+      });
+    } else {
+      partsAdded = await partController.addPartsFromPartSurfer({
+        ...partsAdvTab
+      });
+    }
 
     const productParts = [];
     partsAdded.forEach(part =>

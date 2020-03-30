@@ -1,20 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link
-      rel="stylesheet"
-      href="./node_modules/bootstrap/dist/css/bootstrap.min.css"
-    />
+    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="./css/style.css" />
-    <script
-      src="https://kit.fontawesome.com/2b78d59932.js"
-      crossorigin="anonymous"
-    ></script>
+    <script src="https://kit.fontawesome.com/2b78d59932.js" crossorigin="anonymous"></script>
     <title></title>
   </head>
+
   <body>
     <div class="d-flex justify-content-center p-2" id="appTitle">
       <h1>Sophela Stock Planning Utility</h1>
@@ -59,11 +55,7 @@
             </div>
 
             <div class="d-flex justify-content-center p-2 mb-2">
-              <button
-                id="clearDatabaseBtn"
-                class="btn btn-primary px-5 py-2"
-                onclick="clearDatabase()"
-              >
+              <button id="clearDatabaseBtn" class="btn btn-primary px-5 py-2" onclick="clearDatabase()">
                 <i class="fas fa-trash-alt"></i> Clear Database
               </button>
             </div>
@@ -79,60 +71,63 @@
               <div class="col-4" id="dbSerialScan">-</div>
             </div>
             <br>
-          <div>
-           <div class="d-flex justify-content-center p-2 mb-2">
-            <button
-              id="getPartSurferDataBtn"
-              class="btn btn-primary px-5 py-2"
-              onclick="getPartSurferData()" disabled
-            >
-              <i class="fas fa-search"></i> PartSurfer Scan
-            </button>
-          </div>
-        </div>
+            <div>
+              <div class="d-flex justify-content-center p-2 mb-2">
+                <button id="getPartSurferDataBtn" class="btn btn-primary px-5 py-2" onclick="getPartSurferData()"
+                  disabled>
+                  <i class="fas fa-search"></i> PartSurfer Scan
+                </button>
+              </div>
+            </div>
 
-        <div class="row">
-          <div class="col-8"><span>show partsurfer scan window</span></div> 
-          <div class="col-2"><input id="showScanWindow" type="checkbox" aria-label="show scan window"/></div>
-        </div>
-    
-       <div class="row">
-        <div class="col-8"><span>scan concurrency</span></div>
-        <div class="col-2"><input type="number" id="scanWinNum" name="scanWinNum" min="1" max="5"></div>   
-       </div>
-
-       <div class="row">
-        <div class="col-8"><span>max scan restarts</span></div>
-        <div class="col-2"><input type="number" id="maxScanRestarts" name="maxScanRestarts" min="0" max="10000"></div>   
-       </div>
-
-          <hr />
-
-          <h5>reports</h5>
-          <div>
             <div class="row">
-              <div class="col-8"><span>contracts expiration date</span></div>
-              <div class="col-2"><input type="date" id="contractExpireDate" name="contract-expire-date" value="" required="required"/></div>
+              <div class="col-8"><span>add product family parts to BOM</span></div>
+              <div class="col-2"><input id="scanGeneralProductTab" type="checkbox"
+                  aria-label="scan general product tab" /></div>
             </div>
-            <div class="d-flex justify-content-center p-2 mb-2 mt-2">
-              <button
-                class="btn btn-primary px-5 py-2"
-                onclick="generateReports()"
-              >
-                <i class="far fa-file-excel"></i> Generate Reports
-              </button>
+
+            <div class="row">
+              <div class="col-8"><span>show partsurfer scan window</span></div>
+              <div class="col-2"><input id="showScanWindow" type="checkbox" aria-label="show scan window" /></div>
             </div>
+
+            <div class="row">
+              <div class="col-8"><span>scan concurrency</span></div>
+              <div class="col-2"><input type="number" id="scanWinNum" name="scanWinNum" min="1" max="5"></div>
+            </div>
+
+            <div class="row">
+              <div class="col-8"><span>max scan restarts</span></div>
+              <div class="col-2"><input type="number" id="maxScanRestarts" name="maxScanRestarts" min="0" max="10000">
+              </div>
+            </div>
+
+            <hr />
+
+            <h5>reports</h5>
+            <div>
+              <div class="row">
+                <div class="col-8"><span>contracts expiration date</span></div>
+                <div class="col-2"><input type="date" id="contractExpireDate" name="contract-expire-date" value=""
+                    required="required" /></div>
+              </div>
+              <div class="d-flex justify-content-center p-2 mb-2 mt-2">
+                <button class="btn btn-primary px-5 py-2" onclick="generateReports()">
+                  <i class="far fa-file-excel"></i> Generate Reports
+                </button>
+              </div>
+            </div>
+            <div id="fileList"></div>
           </div>
-          <div id="fileList"></div>
         </div>
       </div>
-    </div>
 
-    <script>
-      window.jQuery = window.$ = require('jquery');
-    </script>
-    <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+      <script>
+        window.jQuery = window.$ = require('jquery');
+      </script>
+      <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
 
-    <script src="renderer.js"></script>
+      <script src="renderer.js"></script>
   </body>
+
 </html>

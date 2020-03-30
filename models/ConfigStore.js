@@ -29,6 +29,9 @@ class ConfigStore extends Store {
 
     this.maxScanRestarts = this.get('maxScanRestarts') || '10000';
     this.set('maxScanRestarts', this.maxScanRestarts);
+
+    this.scanGeneralProductTab = this.get('scanGeneralProductTab') || false;
+    this.set('scanGeneralProductTab', this.scanGeneralProductTab);
   }
 
   addDataFile(dataFile) {
