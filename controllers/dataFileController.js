@@ -443,10 +443,11 @@ exports.importFiles = async () => {
 exports.setExcludeFlags = async () => {
   try {
     const filesToLoad = configFilesController.selectAllFilesFromConfig();
+    await partController.clearExcludeFlags();
+    await productController.clearExcludeFlags();
+
     for (const file of filesToLoad) {
       if (file.type === 'partExcludeFile') {
-        await partController.clearExcludeFlags();
-        await productController.clearExcludeFlags();
         const data = await this.loadFile(file, this.processDataRow);
         await partController.setExcludeFlags(data);
         await productController.setExcludeFlags(data);

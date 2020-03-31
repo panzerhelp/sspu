@@ -85,8 +85,17 @@ class FileImport {
       fileSize = (file.size / 1024).toFixed(2);
     }
 
+    let name;
+
+    if (file) {
+      name = file.name;
+      if (name.length > 40) {
+        name = `${name.substr(0, 20)} ... ${name.substr(name.length - 20)}`;
+      }
+    }
+
     return file
-      ? ` <a class="p-2" href="#" onclick="openFile('${file.id}')" id="${fileType}Path">${file.name}</a>
+      ? ` <a class="p-2" href="#" onclick="openFile('${file.id}')" id="${fileType}Path">${name}</a>
         <div id="${fileType}Info"> ${fileSize}K <i class="fas fa-table"></i></div>`
       : ` <a class="p-2" href="#" onclick="selectFile('${fileType}')" id="${fileType}Path">add ${this.sections[fileType].title}</a>
     <div id="${fileType}Info"></div>`;
@@ -130,7 +139,7 @@ class FileImport {
       <div class="row d-flex align-items-center">
         <h5> ${this.sections[fileType].title} </h5> ${countrySelect}
       </div>
-      <ul class="list-group mb-5" id="${fileType}Section"> 
+      <ul class="list-group mb-2" id="${fileType}Section"> 
           ${fileSectionHtml}
       </ul>
     `;
@@ -177,18 +186,18 @@ class FileImport {
       <div class="row d-flex align-items-center">
         <h5>output folder</h5>
       </div>
+      <ul class="list-group mb-2">
       <li class="list-group-item m-0">
         <div class="row align-items-center">
           <div class="col-sm-1">
            ${buttonHtml}
           </div>
           <div class="col-sm-11">
-            <ul class="list-group"> 
-              <a href="#" onclick="selectDataDir()">${dataDirText}</a>
-             </ul>
-          </div>
+            <a href="#" onclick="selectDataDir()">${dataDirText}</a>
+           </div>
         </div>
       </li>
+      </ul>
     `;
   }
 

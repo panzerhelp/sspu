@@ -3,10 +3,9 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const updater = require('./updater');
-const dbConnect = require('./dbConnect');
 
 // SET ENV
-process.env.NODE_ENV = 'production';
+// process.env.NODE_ENV = 'production';
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
 let mainWindow;
@@ -177,7 +176,7 @@ ipcMain.on('finishedTask', () => {
 
 app.on('ready', async () => {
   try {
-    await dbConnect();
+    // await dbConnect();
     createWindow();
   } catch (err) {
     app.exit(-1);
@@ -191,7 +190,7 @@ app.on('window-all-closed', () => {
 app.on('activate', async () => {
   if (mainWindow === null) {
     try {
-      await dbConnect();
+      // await dbConnect();
       createWindow();
     } catch (err) {
       app.exit(-1);

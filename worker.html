@@ -26,6 +26,11 @@
     const maxRestarts = configFilesController.getMaxScanRestarts();
 
     ipcRenderer.on('get-partsurfer-data', async () => {
+
+      // reset scan counters
+      productController.totalProductsToScan = 0;
+      serialController.totalSerialsToScan = 0;
+
       while (true) {
         try {
           await productController.getProductDataFromPartSurfer();

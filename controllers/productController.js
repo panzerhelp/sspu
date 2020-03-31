@@ -199,6 +199,11 @@ const processPartPage = async (product, page) => {
       })
     );
 
+    await ProductPart.destroy({
+      where: { productId: product.id },
+      truncate: true
+    });
+
     await ProductPart.bulkCreate(productParts);
     await product.update({ scanStatus: 'SCANNED' });
 
@@ -208,13 +213,35 @@ const processPartPage = async (product, page) => {
   }
 };
 
+const inputProductNumber = async (productNumber, page) => {
+  try {
+    const input = await page.$(
+      '#ctl00_BodyContentPlaceHolder_SearchText_TextBox1'
+    );
+
+    await input.click({ clickCount: 3 });
+    await input.type(productNumber);
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
 exports.getSingleProductDataFromPartSurfer = async (product, browserId) => {
   try {
     const browser = browserController.instances[browserId];
     await browser.init();
-    const page = await browser.openNewPage(
-      `https://partsurfer.hpe.com/Search.aspx?type=PROD&SearchText=${product.productNumber}`
-    );
+
+    // const page = await browser.openNewPage(
+    //   `https://partsurfer.hpe.com/Search.aspx?type=PROD&SearchText=${product.productNumber}`
+    // );
+
+    const page = await browser.openNewPage(`https://partsurfer.hpe.com/`);
+    await inputProductNumber(product.productNumber, page);
+    await Promise.all([
+      page.click('#ctl00_BodyContentPlaceHolder_SearchText_btnSubmit'),
+      page.waitForNavigation({ timeout: 300000 })
+    ]);
 
     const isValid = await page.evaluate(() =>
       document.getElementById('ctl00_BodyContentPlaceHolder_aGeneral')
@@ -234,6 +261,9 @@ exports.getSingleProductDataFromPartSurfer = async (product, browserId) => {
     return Promise.reject(error);
   }
 };
+
+exports.totalProductsToScan = 0;
+exports.curProductItem = 0;
 
 exports.getProductDataFromPartSurfer = async () => {
   //   // temporary clean scan flags and product parts data
@@ -268,9 +298,14 @@ exports.getProductDataFromPartSurfer = async () => {
   browserController.createBrowsers();
 
   let promiseArray = [];
-  let curItem = 0;
+  // let curItem = 0;
   let scanList = [];
   let browserId = 0;
+
+  if (this.totalProductsToScan < 1) {
+    this.totalProductsToScan = productsToScan.length;
+    this.curProductItem = 0;
+  }
 
   for (const product of productsToScan) {
     scanList.push(product.productNumber);
@@ -279,14 +314,15 @@ exports.getProductDataFromPartSurfer = async () => {
       this.getSingleProductDataFromPartSurfer(product, browserId)
     );
     browserId++;
-    curItem++;
+    // curItem++;
+    this.curProductItem++;
 
     if (promiseArray.length === concurrency) {
       ipcRenderer.send('set-progress', {
         mainItem: 'Getting product data',
         subItem: scanList.join(' '),
-        curItem: curItem,
-        totalItem: productsToScan.length
+        curItem: this.curProductItem,
+        totalItem: this.totalProductsToScan
       });
       await Promise.all(promiseArray);
       promiseArray = [];
@@ -299,7 +335,7 @@ exports.getProductDataFromPartSurfer = async () => {
     ipcRenderer.send('set-progress', {
       mainItem: 'Getting product data',
       subItem: scanList.join(' '),
-      curItem: curItem,
+      curItem: this.curProductItem,
       totalItem: productsToScan.length
     });
 
