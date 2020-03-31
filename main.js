@@ -5,7 +5,7 @@ const path = require('path');
 const updater = require('./updater');
 
 // SET ENV
-// process.env.NODE_ENV = 'production';
+process.env.NODE_ENV = 'production';
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
 let mainWindow;
