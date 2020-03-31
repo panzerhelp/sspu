@@ -17,6 +17,9 @@ class FileImport {
       },
       caseUsageFile: {
         title: 'part case usage file'
+      },
+      partExcludeFile: {
+        title: 'exclude parts / products file'
       }
       // ,
       // priceFile: {
@@ -66,6 +69,7 @@ class FileImport {
     const btnClass =
       fileType === 'caseUsageFile' ||
       fileType === 'priceFile' ||
+      fileType === 'partExcludeFile' ||
       typeof secondary !== 'undefined'
         ? 'btn-outline-warning'
         : 'btn-outline-danger';
@@ -152,7 +156,7 @@ class FileImport {
       });
     }
 
-    if (stockDataFileCount && salesDataFileCount) {
+    if (1 || (stockDataFileCount && salesDataFileCount)) {
       return true;
     }
 
@@ -181,7 +185,7 @@ class FileImport {
           <div class="col-sm-11">
             <ul class="list-group"> 
               <a href="#" onclick="selectDataDir()">${dataDirText}</a>
-            </ul>
+             </ul>
           </div>
         </div>
       </li>

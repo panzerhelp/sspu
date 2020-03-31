@@ -7,8 +7,6 @@ const path = require('path');
 const Excel = require('exceljs');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
-const sequelize = require('sequelize');
-
 const addTitleRow = require('./utils/addTitleRow');
 const addMainRow = require('./utils/addMainRow');
 const setColWidth = require('./utils/setColWidth');
@@ -16,18 +14,9 @@ const fillCell = require('./utils/fillCell');
 const Color = require('./utils/Color');
 const colNum = require('./utils/colNum');
 const checkFileBusy = require('./utils/checkFileBusy');
-
 const configFilesController = require('../configFilesController');
-
+const contractController = require('../contractController');
 const createCustomerContractFile = require('./createCustomerContractFile');
-
-const Contract = require('../../models/Contract');
-// const Product = require('../../models/Product');
-// const System = require('../../models/System');
-// const Serial = require('../../models/Serial');
-// const SerialPart = require('../../models/SerialPart');
-// const Part = require('../../models/Part');
-
 const XCol = require('./utils/XCol');
 
 dayjs.extend(customParseFormat);
@@ -146,15 +135,7 @@ const contractPartUsageReport = async () => {
       fs.mkdirSync(dir);
     }
     fse.emptyDirSync(dir);
-
-    const contracts = await Contract.findAll({
-      attributes: [
-        'customer',
-        [sequelize.fn('COUNT', sequelize.col('customer')), 'contractNum']
-      ],
-      group: ['customer'],
-      order: [[sequelize.fn('COUNT', sequelize.col('customer')), 'DESC']]
-    });
+    const contracts = await contractController.getAllContracts();
 
     // eslint-disable-next-line no-const-assign
     // contracts = contracts.slice(18, 20); // test first 20 customer

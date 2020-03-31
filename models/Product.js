@@ -6,7 +6,8 @@ const Product = db.define(
   {
     productNumber: { type: sequelize.STRING, allowNull: false, unique: true },
     description: { type: sequelize.TEXT },
-    scanStatus: { type: sequelize.STRING }
+    scanStatus: { type: sequelize.STRING },
+    exclude: { type: sequelize.BOOLEAN, defualtValue: false }
   },
   {
     // options

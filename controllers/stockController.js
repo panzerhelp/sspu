@@ -82,3 +82,15 @@ exports.addStockPartCaseUsage = async partUsageData => {
     return Promise.reject(error);
   }
 };
+
+exports.getAllStockParts = async () => {
+  try {
+    const stockParts = await Stock.findAll({
+      where: {},
+      include: [{ model: Part }]
+    });
+    return Promise.resolve(stockParts);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};

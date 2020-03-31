@@ -19,9 +19,7 @@ const XCol = require('./utils/XCol');
 
 const systemController = require('../systemController');
 const partController = require('../partController');
-
-const Product = require('../../models/Product');
-const Part = require('../../models/Part');
+const productController = require('../productController');
 
 dayjs.extend(customParseFormat);
 
@@ -42,10 +40,9 @@ const productColumns = [
 
 const getPartList = async systems => {
   try {
-    const product = await Product.findOne({
-      where: { id: systems[0].productId },
-      include: [{ model: Part, required: true }]
-    });
+    const product = await productController.findOneProductById(
+      systems[0].productId
+    );
 
     const partList = product && product.parts ? product.parts : [];
 
@@ -99,7 +96,6 @@ const createProductContractFile = async (product, dir) => {
     });
 
     const systems = await systemController.findSystemsWithProductId(product.id);
-
     const sheet = wb.addWorksheet('Product', {
       views: [{ state: 'frozen', ySplit: 2 }],
       properties: { tabColor: { argb: Color.WHITE } }

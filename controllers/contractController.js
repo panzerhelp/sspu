@@ -1,5 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 const { ipcRenderer } = require('electron');
+const sequelize = require('sequelize');
+
 const Contract = require('../models/Contract');
 const db = require('../db');
 
@@ -76,4 +78,21 @@ exports.clearContracts = () => {
       })
       .catch(err => reject(err));
   });
+};
+
+exports.getAllContracts = async () => {
+  try {
+    const contracts = await Contract.findAll({
+      attributes: [
+        'customer',
+        [sequelize.fn('COUNT', sequelize.col('customer')), 'contractNum']
+      ],
+      group: ['customer'],
+      order: [[sequelize.fn('COUNT', sequelize.col('customer')), 'DESC']]
+    });
+
+    return Promise.resolve(contracts);
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };

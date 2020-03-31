@@ -8,21 +8,15 @@ const fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path');
 
-// const Status = require('./utils/Status');
 const checkFileBusy = require('./utils/checkFileBusy');
 const addTitleRow = require('./utils/addTitleRow');
 const addMainRow = require('./utils/addMainRow');
 const setColWidth = require('./utils/setColWidth');
-// const contractType = require('./utils/contractType');
-// const contractStatus = require('./utils/contractStatus');
 const colNum = require('./utils/colNum');
 
 const configFilesController = require('../configFilesController');
-// const partController = require('../partController');
-// const systemController = require('../systemController');
+const stockController = require('../stockController');
 
-const Part = require('../../models/Part');
-const Stock = require('../../models/Stock');
 const XCol = require('./utils/XCol');
 
 const createPartContractFile = require('./createPartContractFile');
@@ -54,91 +48,9 @@ const partUsageColumns = [
     new XCol(17, 'SD', 10, []),
     new XCol(18, 'ND', 10, [])
   ]) // ,
-  // new XCol(19, 'Customer', 40, []),
-  // new XCol(20, 'SAID', 14, []),
-  // new XCol(21, 'SLA', 10, []),
-  // new XCol(22, 'Status', 15, []),
-  // new XCol(23, 'Start', 15, []),
-  // new XCol(24, 'End', 15, []),
-  // new XCol(25, 'Serials', 15, []),
-  // new XCol(26, 'Product', 14, []),
-  // new XCol(27, 'Desciption', 20, []),
-  // new XCol(28, 'Qty', 10, []),
-  // new XCol(29, 'FE', 10, [])
 ];
 
-// const setPartStatus = contracts => {
-//   const partStat = new Status();
-//   Object.keys(contracts).forEach(said => {
-//     Object.keys(contracts[said]).forEach(product => {
-//       const { contract } = contracts[said][product].systems[0];
-//       const status = contractStatus(contract);
-//       const type = contractType(contract);
-//       // debugger;
-//       // partStat[status][type] += contracts[said][product].serials.length;
-//       partStat[status][type] += contracts[said][product].systems.length;
-//     });
-//   });
-
-//   return partStat;
-// };
-
-// const groupSystemsByContracts = systems => {
-//   const contracts = {};
-
-//   systems.sort((a, b) => {
-//     const compare = a.contract.response.localeCompare(b.contract.response);
-//     if (compare === 0) {
-//       return a.contract.customer.localeCompare(b.contract.customer);
-//     }
-
-//     return compare;
-//   });
-
-//   systems.forEach(system => {
-//     if (typeof contracts[system.contract.said] === 'undefined') {
-//       contracts[system.contract.said] = {};
-//     }
-
-//     if (
-//       typeof contracts[system.contract.said][system.product.productNumber] ===
-//       'undefined'
-//     ) {
-//       contracts[system.contract.said][system.product.productNumber] = {};
-
-//       contracts[system.contract.said][
-//         system.product.productNumber
-//       ].systems = [];
-
-//       contracts[system.contract.said][
-//         system.product.productNumber
-//       ].serials = [];
-//     }
-//     contracts[system.contract.said][system.product.productNumber].systems.push(
-//       system
-//     );
-
-//     if (system.serialList.length) {
-//       contracts[system.contract.said][
-//         system.product.productNumber
-//       ].serials.push(system.serialList);
-//     }
-//   });
-//   return contracts;
-// };
-
 const addStockPartRow = async (stockPart, sheet, dir) => {
-  // const feParts = await partController.getPartFieldEquiv(stockPart.part.id);
-  // const fePartIds = feParts.map(p => p.id);
-  // const systems = await systemController.findSystemsWithPart([
-  //   ...fePartIds,
-  //   stockPart.part.id
-  // ]);
-
-  // // group by contracts / products
-  // const contracts = groupSystemsByContracts(systems);
-  // const partStatus = setPartStatus(contracts);
-
   const [partStatus, feParts] = await createPartContractFile(
     stockPart.part,
     dir
@@ -170,17 +82,6 @@ const addStockPartRow = async (stockPart, sheet, dir) => {
     partStatus.expired.ctr,
     partStatus.expired.sd,
     partStatus.expired.nd // ,
-    // '',
-    // '',
-    // '',
-    // '',
-    // '',
-    // '',
-    // '',
-    // '',
-    // '',
-    // '',
-    // ''
   ]);
 
   sheet.lastRow.getCell(1).font = {
@@ -211,68 +112,6 @@ const addStockPartRow = async (stockPart, sheet, dir) => {
     };
     cell.border = { top: { style: 'thin' } };
   });
-
-  // Object.keys(contracts).forEach(said => {
-  //   Object.keys(contracts[said]).forEach(product => {
-  //     const s = contracts[said][product].systems;
-
-  //     // if (!s[0].parts && !s[0].product.parts) {
-  //     //   debugger;
-  //     // }
-
-  //     let parts;
-  //     if (s[0].parts) {
-  //       parts = s[0].parts.map(p => p.partNumber);
-  //     } else if (s[0].product.parts) {
-  //       parts = s[0].product.parts.map(p => p.partNumber);
-  //     }
-  //     //  debugger;
-
-  //     sheet.addRow([
-  //       '', // 1
-  //       '', // 2
-  //       '', // 3
-  //       '', // 4
-  //       '', // 5
-  //       '', // 6
-  //       '', // 7
-  //       '', // 8
-  //       '', // 9
-  //       '', // 10
-  //       '', // 11
-  //       '', // 12
-  //       '', // 13
-  //       '', // 14
-  //       '', // 15
-  //       '', // 16
-  //       '', // 17
-  //       '', // 18
-  //       `${s[0].contract.customer} - ${s[0].contract.city}`, // 19
-  //       `'${s[0].contract.said}`, // 20
-  //       s[0].contract.response, // 21
-  //       contractStatus(s[0].contract), // status 22
-  //       dayjs(s[0].contract.startDate, 'MMDDYY').format('MM/DD/YYYY'), // 23
-  //       dayjs(s[0].contract.endDate, 'MMDDYY').format('MM/DD/YYYY'), // 24
-  //       contracts[said][product].serials.join(','), // 25
-  //       product, // p, // 26
-  //       s[0].product.description, // list[c][s][p].prodDesc, // 27
-  //       contracts[said][product].serials.length, // list[c][s][p].qty, // 28
-  //       parts ? parts.join(',') : '' // , // list[c][s][p].equiv, // 29
-  //       // '' // list[c][s][p].wasSearched // 30
-  //     ]);
-
-  //     // eslint-disable-next-line no-unused-vars
-  //     sheet.lastRow.eachCell((cell, colNumber) => {
-  //       cell.fill = {
-  //         type: 'pattern',
-  //         pattern: 'solid',
-  //         fgColor: { argb: 'FFFFFFFF' },
-  //         bgColor: { argb: 'FFFFFFFF' }
-  //       };
-  //     });
-  //   });
-  // });
-
   return Promise.resolve();
 };
 
@@ -286,11 +125,7 @@ const stockPartUsageReport = async () => {
       fs.mkdirSync(dir);
     }
     fse.emptyDirSync(dir);
-
-    const stockParts = await Stock.findAll({
-      where: {},
-      include: [{ model: Part }]
-    });
+    const stockParts = await stockController.getAllStockParts();
 
     if (stockParts.length) {
       const wb = new Excel.stream.xlsx.WorkbookWriter({

@@ -13,7 +13,9 @@ const Part = db.define(
     price: { type: sequelize.STRING },
     exchangePrice: { type: sequelize.STRING },
     feScanStatus: { type: sequelize.STRING },
-    stockQty: { type: sequelize.INTEGER }
+    stockQty: { type: sequelize.INTEGER },
+    exclude: { type: sequelize.BOOLEAN, defualtValue: false },
+    obsolete: { type: sequelize.BOOLEAN, defualtValue: false }
   },
   {
     // options

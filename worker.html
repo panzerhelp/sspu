@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Worker Window</title>
   </head>
+
   <body></body>
   <script>
     const electron = require('electron');
@@ -29,6 +31,7 @@
           await productController.getProductDataFromPartSurfer();
           await serialController.getSerialDataFromPartSurfer();
           await partController.getFieldEquivFromPartSurfer();
+          await dataFileController.setExcludeFlags();
           break;
         } catch (error) {
           if (++scanRestart == maxRestarts) {
@@ -46,6 +49,8 @@
 
     ipcRenderer.on('generate-reports', async () => {
       try {
+
+        await dataFileController.setExcludeFlags();
         const outFiles = await reportController.generateReports();
 
         if (outFiles && outFiles.length) {
@@ -78,4 +83,5 @@
       }
     });
   </script>
+
 </html>

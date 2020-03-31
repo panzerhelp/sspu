@@ -14,17 +14,8 @@ const Status = require('./utils/Status');
 const colNum = require('./utils/colNum');
 const Color = require('./utils/Color');
 const fillCell = require('./utils/fillCell');
-
-// const Contract = require('../../models/Contract');
-// const System = require('../../models/System');
-// const ProductPart = require('../../models/ProductPart');
-// const Serial = require('../../models/Serial');
-const Product = require('../../models/Product');
-const Part = require('../../models/Part');
-
 const systemController = require('../systemController');
 const partController = require('../partController');
-
 const XCol = require('./utils/XCol');
 
 dayjs.extend(customParseFormat);
@@ -85,15 +76,9 @@ const getProductParts = async systems => {
       if (typeof productPartCache[system.product.id] !== 'undefined') {
         system.product.parts = productPartCache[system.product.id];
       } else {
-        const parts = await Part.findAll({
-          include: [
-            {
-              model: Product,
-              where: { id: system.product.id }
-            }
-          ]
-        });
-
+        const parts = await partController.findAllPartsForProductId(
+          system.product.id
+        );
         const partMap = parts.map(p => new PartData(p, ''));
         system.product.parts = partMap;
         productPartCache[system.product.id] = partMap;

@@ -1,14 +1,11 @@
 /* eslint-disable no-restricted-syntax */
 const { ipcRenderer } = require('electron');
-// const sequelize = require('sequelize');
+const sequelize = require('sequelize');
 const db = require('../db');
 const System = require('../models/System');
-// const SystemPart = require('../models/SerialPart');
-// const Browser = require('../models/Browser');
 const Product = require('../models/Product');
 const Serial = require('../models/Serial');
 const Part = require('../models/Part');
-// const partController = require('./partController');
 const serialController = require('./serialController');
 const Contract = require('../models/Contract');
 
@@ -110,12 +107,13 @@ exports.findSystemsWithPart = async partIds => {
         },
         {
           model: Product,
+          where: { exclude: false },
           required: true,
           include: [
             {
               model: Part,
               required: true,
-              where: { id: partIds }
+              where: { id: partIds, exclude: false }
             }
           ]
         },
@@ -125,7 +123,7 @@ exports.findSystemsWithPart = async partIds => {
             {
               model: Part,
               required: true,
-              where: { id: partIds }
+              where: { id: partIds, exclude: false }
             }
           ]
         }
@@ -148,14 +146,16 @@ exports.findSystemsWithProductId = async productId => {
         },
         {
           model: Product,
-          required: true
+          required: true,
+          where: { exclude: false }
         },
         {
           model: Serial,
           include: [
             {
               model: Part,
-              required: true
+              required: true,
+              where: { exclude: false }
             }
           ]
         }
@@ -249,6 +249,24 @@ exports.findSystemsWithCustomer = async customer => {
     // });
 
     // const systems = [...systemsWithSerial, ...systemNoSerial]; // , ...systemLinked];
+    return Promise.resolve(systems);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.getAllSystems = async () => {
+  try {
+    const systems = await System.findAll({
+      attributes: [
+        'productId',
+        [sequelize.fn('COUNT', sequelize.col('productId')), 'productCount']
+      ],
+      include: [{ model: Product, where: { exclude: false } }],
+      group: ['productId'],
+      order: [[sequelize.fn('COUNT', sequelize.col('productId')), 'DESC']]
+    });
+
     return Promise.resolve(systems);
   } catch (error) {
     return Promise.reject(error);

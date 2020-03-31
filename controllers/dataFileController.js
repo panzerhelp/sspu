@@ -13,6 +13,7 @@ const productController = require('../controllers/productController');
 const contractController = require('../controllers/contractController');
 const systemController = require('../controllers/systemController');
 const configFileController = require('../controllers/configFilesController');
+const partController = require('../controllers/partController');
 const dbConnect = require('../dbConnect');
 
 const ExcludeCities = require('../models/ExcludeCities');
@@ -373,6 +374,10 @@ const prepareData = async type => {
       console.log(error);
     }
   }
+  // } else if (type === 'partExcludeFile') {
+  //   await partController.clearExcludeFlags();
+  //   await productController.clearExcludeFlags();
+  // }
 };
 
 const processData = async (type, data) => {
@@ -381,6 +386,9 @@ const processData = async (type, data) => {
     await stockController.addStockParts(data);
   } else if (type === 'caseUsageFile') {
     await stockController.addStockPartCaseUsage(data);
+  } else if (type === 'partExcludeFile') {
+    await partController.setExcludeFlags(data);
+    await productController.setExcludeFlags(data);
   }
 };
 
@@ -404,26 +412,46 @@ exports.importFiles = async () => {
 
     for (const type of fileTypes) {
       // prepare data types
-      if (typeof type.prepared === 'undefined') {
-        type.prepared = true;
-        await prepareData(type.name);
-      }
+      // if (typeof type.prepared === 'undefined') {
+      //   type.prepared = true;
+      //   await prepareData(type.name);
+      // }
 
       for (const file of filesToLoad) {
         if (file.type === type.name) {
+          await prepareData(type.name);
           const data = await this.loadFile(file, this.processDataRow);
           await processData(file.type, data);
+          await postProcessData(type.name);
         }
       }
 
       // post-process data type
-      if (typeof type.processed === 'undefined') {
-        type.processed = true;
-        await postProcessData(type.name);
-      }
+      // if (typeof type.processed === 'undefined') {
+      //   type.processed = true;
+      //   await postProcessData(type.name);
+      // }
     }
 
     this.cleanUpAfterImport();
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.setExcludeFlags = async () => {
+  try {
+    const filesToLoad = configFilesController.selectAllFilesFromConfig();
+    for (const file of filesToLoad) {
+      if (file.type === 'partExcludeFile') {
+        await partController.clearExcludeFlags();
+        await productController.clearExcludeFlags();
+        const data = await this.loadFile(file, this.processDataRow);
+        await partController.setExcludeFlags(data);
+        await productController.setExcludeFlags(data);
+      }
+    }
     return Promise.resolve();
   } catch (error) {
     return Promise.reject(error);

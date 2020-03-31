@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 const { ipcRenderer } = require('electron');
-// const db = require('../db');
 const Part = require('../models/Part');
+const Product = require('../models/Product');
 const Stock = require('../models/Stock');
 const PartFieldEquiv = require('../models/PartFieldEquiv');
 const browserController = require('./browserController');
@@ -288,6 +288,48 @@ exports.getPartFieldEquivBack = async partId => {
     if (fePartIds) feParts = await Part.findAll({ where: { id: fePartIds } });
 
     return Promise.resolve(feParts);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.clearExcludeFlags = async () => {
+  try {
+    await Part.update({ exclude: false }, { where: {} });
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.setExcludeFlags = async parts => {
+  try {
+    for (const part of parts) {
+      if (part && typeof part.partNumber !== 'undefined') {
+        await Part.update(
+          { exclude: true },
+          { where: { partNumber: part.partNumber } }
+        );
+      }
+    }
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.findAllPartsForProductId = async productId => {
+  try {
+    const parts = await Part.findAll({
+      where: { exclude: false },
+      include: [
+        {
+          model: Product,
+          where: { id: productId, exclude: false }
+        }
+      ]
+    });
+    return Promise.resolve(parts);
   } catch (error) {
     return Promise.reject(error);
   }

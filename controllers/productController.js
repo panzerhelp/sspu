@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 const { ipcRenderer } = require('electron');
 const Product = require('../models/Product');
+const Part = require('../models/Part');
 const ProductPart = require('../models/ProductPart');
 const partController = require('../controllers/partController');
 const browserController = require('./browserController');
@@ -306,4 +307,43 @@ exports.getProductDataFromPartSurfer = async () => {
   }
 
   browserController.closeBrowsers();
+};
+
+exports.clearExcludeFlags = async () => {
+  try {
+    await Product.update({ exclude: false }, { where: {} });
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.setExcludeFlags = async products => {
+  try {
+    for (const product of products) {
+      if (product && typeof product.productNumber !== 'undefined') {
+        const result = await Product.update(
+          { exclude: true },
+          { where: { productNumber: product.productNumber } }
+        );
+
+        console.log(result);
+      }
+    }
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.findOneProductById = async productId => {
+  try {
+    const product = await Product.findOne({
+      where: { id: productId },
+      include: [{ model: Part, where: { exclude: false } }]
+    });
+    return Promise.resolve(product);
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };

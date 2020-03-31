@@ -5,9 +5,6 @@ const fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path');
 const Excel = require('exceljs');
-// const dayjs = require('dayjs');
-// const customParseFormat = require('dayjs/plugin/customParseFormat');
-const sequelize = require('sequelize');
 
 const addTitleRow = require('./utils/addTitleRow');
 const addMainRow = require('./utils/addMainRow');
@@ -19,8 +16,7 @@ const XCol = require('./utils/XCol');
 
 const checkFileBusy = require('./utils/checkFileBusy');
 const configFilesController = require('../configFilesController');
-const System = require('../../models/System');
-const Product = require('../../models/Product');
+const systemController = require('../systemController');
 
 const createProductContractFile = require('./createProductContractFile');
 
@@ -119,18 +115,10 @@ const productPartUsageReport = async () => {
     }
     fse.emptyDirSync(dir);
 
-    const systems = await System.findAll({
-      attributes: [
-        'productId',
-        [sequelize.fn('COUNT', sequelize.col('productId')), 'productCount']
-      ],
-      include: [{ model: Product }],
-      group: ['productId'],
-      order: [[sequelize.fn('COUNT', sequelize.col('productId')), 'DESC']]
-    });
+    const systems = await systemController.getAllSystems();
 
     // eslint-disable-next-line no-const-assign
-    // systems = systems.slice(0, 10); // test first 5 products
+    // systems = systems.slice(0, 5); // test first 5 products
 
     const wb = new Excel.stream.xlsx.WorkbookWriter({
       filename: outFile,

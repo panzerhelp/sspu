@@ -70,6 +70,14 @@ const Columns = {
     offer: {
       names: ['offer product description']
     }
+  },
+  partExcludeFile: {
+    productNumber: {
+      names: ['product number']
+    },
+    partNumber: {
+      names: ['part number']
+    }
   }
 };
 
