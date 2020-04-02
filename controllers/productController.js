@@ -200,8 +200,7 @@ const processPartPage = async (product, page) => {
     );
 
     await ProductPart.destroy({
-      where: { productId: product.id },
-      truncate: true
+      where: { productId: product.id }
     });
 
     await ProductPart.bulkCreate(productParts);

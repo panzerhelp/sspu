@@ -242,6 +242,8 @@ const checkResponse = data => {
 };
 
 exports.validateSalesData = data => {
+  const skipRejected = configFileController.getSkipFullyRejectedContracts();
+
   if (
     !data ||
     typeof data.said === 'undefined' ||
@@ -253,7 +255,7 @@ exports.validateSalesData = data => {
     !checkResponse(data) ||
     !matchCountry(data.country) ||
     checkExcludeCity(data) ||
-    (data.status && data.status === 'Fully Rejected')
+    (skipRejected && data.status && data.status === 'Fully Rejected')
   ) {
     return false;
   }

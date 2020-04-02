@@ -8,6 +8,7 @@ class FileImport {
     this.fileImport = document.querySelector('#file-import-block') || [];
     this.files = configFileController.selectAllFilesFromConfig();
     this.dataDir = configFileController.getDataDir();
+
     this.sections = {
       stockFile: {
         title: 'stock file'
@@ -30,6 +31,7 @@ class FileImport {
     this.countryOptions = document.getElementsByClassName('country-option');
     this.countryDropDown = document.querySelector('.countrySelect');
     this.flag = document.getElementById('flag');
+    this.skipRejected = document.getElementById('skipFullyRejected');
     this.events();
   }
 
@@ -42,6 +44,11 @@ class FileImport {
         this.countryDropDown.innerHTML = e.target.innerHTML;
         new ReportFiles();
       });
+    });
+
+    this.skipRejected.addEventListener('click', e => {
+      configFileController.toggleSkipFullyRejectedContracts();
+      e.target.value = configFileController.getSkipFullyRejectedContracts();
     });
   }
 
@@ -95,7 +102,7 @@ class FileImport {
     }
 
     return file
-      ? ` <a class="p-2" href="#" onclick="openFile('${file.id}')" id="${fileType}Path">${name}</a>
+      ? ` <a class="p-2" href="#" onclick="openFile('${file.id}')" id="${fileType}Path" name="${file.name}">${name}</a>
         <div id="${fileType}Info"> ${fileSize}K <i class="fas fa-table"></i></div>`
       : ` <a class="p-2" href="#" onclick="selectFile('${fileType}')" id="${fileType}Path">add ${this.sections[fileType].title}</a>
     <div id="${fileType}Info"></div>`;
@@ -201,6 +208,19 @@ class FileImport {
     `;
   }
 
+  optionsHTML() {
+    const checked = configFileController.getSkipFullyRejectedContracts();
+    return `
+    <div class="row d-flex align-items-center">
+        <h5>import options</h5>
+      </div>
+    <div class="row import-options">
+      <div class="col-8"><span>skip 'fully rejected' contracts</span></div>
+      <div class="col-2"><input id="skipFullyRejected" type="checkbox" aria-label="skip fully rejected" checked="${checked}"/></div>
+    </div>
+    `;
+  }
+
   injectHTML() {
     this.fileImport.innerHTML = '';
     if (this.files) {
@@ -218,6 +238,7 @@ class FileImport {
         this.fileImport.innerHTML += this.importButtonHTML();
       }
 
+      this.fileImport.innerHTML += this.optionsHTML();
       this.fileImport.innerHTML += this.dataDirHTML();
     }
   }

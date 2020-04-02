@@ -80,3 +80,9 @@ input[type='date'] {
 #restartStats {
   font-size: 0.7rem;
 }
+
+.import-options {
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}

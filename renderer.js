@@ -24,7 +24,7 @@ const openFile = id => {
 };
 
 const clearFile = fileType => {
-  const fileName = document.getElementById(`${fileType}Path`).textContent;
+  const fileName = document.getElementById(`${fileType}Path`).name;
   configFileController.clearFileFromConfig(fileName, fileType);
   init();
 };

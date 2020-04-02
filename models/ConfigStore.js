@@ -32,6 +32,10 @@ class ConfigStore extends Store {
 
     this.scanGeneralProductTab = this.get('scanGeneralProductTab') || false;
     this.set('scanGeneralProductTab', this.scanGeneralProductTab);
+
+    this.skipFullyRejectedContracts =
+      this.get('skipFullyRejectedContracts') || false;
+    this.set('skipFullyRejectedContracts', this.skipFullyRejectedContracts);
   }
 
   addDataFile(dataFile) {

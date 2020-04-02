@@ -138,6 +138,20 @@ exports.toggleScanGeneralProductTab = () => {
   configStore.setValue('scanGeneralProductTab', !scanGeneralProductTab);
 };
 
+exports.toggleSkipFullyRejectedContracts = () => {
+  const skipFullyRejectedContracts = configStore.get(
+    'skipFullyRejectedContracts'
+  );
+  configStore.setValue(
+    'skipFullyRejectedContracts',
+    !skipFullyRejectedContracts
+  );
+};
+
+exports.getSkipFullyRejectedContracts = () => {
+  return configStore.get('skipFullyRejectedContracts');
+};
+
 exports.getScanWinNum = () => {
   const num = configStore.get('scanWinNum');
   if (num) {
