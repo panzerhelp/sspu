@@ -20,42 +20,206 @@ const partController = require('../partController');
 
 dayjs.extend(customParseFormat);
 
+// Cases TAB
+const partCasesColumns = [
+  new XCol(1, 'Date', 15, []),
+  new XCol(2, 'Case Id', 15, []),
+  new XCol(3, 'Customer', 40, []),
+  new XCol(4, 'Response', 10, []),
+  new XCol(5, 'SAID', 20, []),
+  new XCol(6, 'Product', 15, []),
+  new XCol(7, 'Serial', 20, []),
+  new XCol(8, 'Partner', 10, []),
+  new XCol(9, 'Status', 40, [])
+];
+
+const createCasesTab = async (wb, part) => {
+  try {
+    if (part.caseParts.length) {
+      const sheet = wb.addWorksheet(`Cases (${part.caseParts.length})`, {
+        views: [{ state: 'frozen', ySplit: 2 }],
+        properties: { tabColor: { argb: Color.WHITE } }
+      });
+
+      addTitleRow(
+        `Cases with   ${part.partNumber} ${part.description ||
+          part.descriptionShort}   `,
+        partCasesColumns,
+        sheet
+      );
+
+      addMainRow(partCasesColumns, sheet);
+
+      part.caseParts.forEach(casePart => {
+        const case_ = casePart.case;
+        sheet.addRow([
+          dayjs(case_.date, 'YYYYMMDD').format('MM/DD/YYYY'),
+          case_.getCaseId(),
+          case_.customer,
+          case_.response,
+          case_.contract,
+          case_.product,
+          case_.serial,
+          case_.partner,
+          casePart.getStatus()
+        ]);
+
+        // eslint-disable-next-line no-unused-vars
+        sheet.lastRow.eachCell((cell, colNumber) => {
+          const color = casePart.isStockMiss() ? Color.RED : Color.WHITE;
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: color },
+            bgColor: { argb: color }
+          };
+        });
+      });
+      setColWidth(partCasesColumns, sheet);
+
+      sheet.autoFilter = {
+        from: { row: 2, column: 1 },
+        to: { row: sheet.lastRow._number, column: colNum(partCasesColumns) }
+      };
+    }
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+// Contract TAB
+
+const partContractColumns = [
+  new XCol(1, 'Customer', 40, []),
+  new XCol(2, 'SAID', 14, []),
+  new XCol(3, 'SLA', 10, []),
+  new XCol(4, 'Status', 15, []),
+  new XCol(5, 'Start', 15, []),
+  new XCol(6, 'End', 15, []),
+  new XCol(7, 'Serials', 15, []),
+  new XCol(8, 'Product', 14, []),
+  new XCol(9, 'Desciption', 30, []),
+  new XCol(10, 'Qty', 10, []),
+  new XCol(11, 'FE', 10, [])
+];
+
+const createContractTab = async (wb, part, contracts) => {
+  try {
+    if (Object.keys(contracts).length) {
+      const sheet = wb.addWorksheet(
+        `Contracts (${Object.keys(contracts).length})`,
+        {
+          views: [{ state: 'frozen', ySplit: 2 }],
+          properties: { tabColor: { argb: Color.WHITE } }
+        }
+      );
+
+      addTitleRow(
+        `Contracts with part   ${part.partNumber} ${part.description ||
+          part.descriptionShort}   `,
+        partContractColumns,
+        sheet
+      );
+
+      addMainRow(partContractColumns, sheet);
+
+      Object.keys(contracts).forEach(said => {
+        Object.keys(contracts[said]).forEach(product => {
+          const s = contracts[said][product].systems;
+          let parts;
+          if (s[0].parts) {
+            parts = s[0].parts.map(p => p.partNumber);
+          } else if (s[0].product.parts) {
+            parts = s[0].product.parts.map(p => p.partNumber);
+          }
+
+          sheet.addRow([
+            {
+              text: `${s[0].contract.customer} - ${s[0].contract.city}`,
+              hyperlink: `..\\customers\\${s[0].contract.customer}.xlsx`,
+              tooltip: `${s[0].contract.customer} - customers\\${s[0].contract.customer}.xlsx`
+            },
+
+            `'${s[0].contract.said}`,
+            s[0].contract.response,
+            contractStatus(s[0].contract), // status 22
+            dayjs(s[0].contract.startDate, 'MMDDYY').format('MM/DD/YYYY'),
+            dayjs(s[0].contract.endDate, 'MMDDYY').format('MM/DD/YYYY'),
+            contracts[said][product].serials.join(','),
+
+            {
+              text: product,
+              hyperlink: `..\\products\\${product}.xlsx`,
+              tooltip: `${product} - products\\${product}.xlsx`
+            },
+
+            s[0].product.description,
+            contracts[said][product].serials.length,
+            parts ? parts.join(',') : ''
+          ]);
+
+          [1, 8].forEach(cell => {
+            sheet.lastRow.getCell(cell).font = {
+              color: { argb: '000000ff' },
+              underline: 'single'
+            };
+          });
+
+          // eslint-disable-next-line no-unused-vars
+          sheet.lastRow.eachCell((cell, colNumber) => {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFFFFFFF' },
+              bgColor: { argb: 'FFFFFFFF' }
+            };
+          });
+        });
+      });
+
+      sheet.autoFilter = {
+        from: { row: 2, column: 1 },
+        to: { row: sheet.lastRow._number, column: colNum(partContractColumns) }
+      };
+
+      setColWidth(partContractColumns, sheet);
+    }
+
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+// Main Part TAB
+
 const partColumns = [
   new XCol(1, 'Part Number', 15, []),
   new XCol(2, 'Description', 40, []),
   new XCol(3, 'Qty', 5, []),
-  new XCol(4, 'Case Use', 15, []),
-  new XCol(5, 'Price', 5, []),
-  new XCol(6, 'Field Equiv', 20, []),
-  new XCol(7, 'Active', 10, [
-    new XCol(7, 'CTR+SD', 10, []),
-    new XCol(8, 'CTR', 10, []),
-    new XCol(9, 'SD', 10, []),
-    new XCol(10, 'ND', 10, [])
+  new XCol(4, 'Cases', 10, []),
+  new XCol(5, 'Stock Mis', 10, []),
+  new XCol(6, 'Price', 10, []),
+  new XCol(7, 'Field Equiv', 20, []),
+  new XCol(8, 'Active', 8, [
+    new XCol(8, 'CTR+SD', 8, []),
+    new XCol(9, 'CTR', 8, []),
+    new XCol(10, 'SD', 8, []),
+    new XCol(11, 'ND', 8, [])
   ]),
-  new XCol(11, 'Active 6m', 10, [
-    new XCol(11, 'CTR+SD', 10, []),
-    new XCol(12, 'CTR', 10, []),
-    new XCol(13, 'SD', 10, []),
-    new XCol(14, 'ND', 10, [])
+  new XCol(12, 'Active 6m', 8, [
+    new XCol(12, 'CTR+SD', 8, []),
+    new XCol(13, 'CTR', 8, []),
+    new XCol(14, 'SD', 8, []),
+    new XCol(15, 'ND', 8, [])
   ]),
-  new XCol(15, 'Expired', 10, [
-    new XCol(15, 'CTR+SD', 10, []),
-    new XCol(16, 'CTR', 10, []),
-    new XCol(17, 'SD', 10, []),
-    new XCol(18, 'ND', 10, [])
-  ]),
-  new XCol(19, 'Customer', 40, []),
-  new XCol(20, 'SAID', 14, []),
-  new XCol(21, 'SLA', 10, []),
-  new XCol(22, 'Status', 15, []),
-  new XCol(23, 'Start', 15, []),
-  new XCol(24, 'End', 15, []),
-  new XCol(25, 'Serials', 15, []),
-  new XCol(26, 'Product', 14, []),
-  new XCol(27, 'Desciption', 20, []),
-  new XCol(28, 'Qty', 10, []),
-  new XCol(29, 'FE', 10, [])
+  new XCol(16, 'Expired', 8, [
+    new XCol(16, 'CTR+SD', 8, []),
+    new XCol(17, 'CTR', 8, []),
+    new XCol(18, 'SD', 8, []),
+    new XCol(19, 'ND', 8, [])
+  ])
 ];
 
 const setPartStatus = contracts => {
@@ -65,8 +229,6 @@ const setPartStatus = contracts => {
       const { contract } = contracts[said][product].systems[0];
       const status = contractStatus(contract);
       const type = contractType(contract);
-      // debugger;
-      // partStat[status][type] += contracts[said][product].serials.length;
       partStat[status][type] += contracts[said][product].systems.length;
     });
   });
@@ -143,18 +305,20 @@ const createPartContractFile = async (part, dir) => {
       properties: { tabColor: { argb: Color.WHITE } }
     });
 
-    addTitleRow(`${part.partNumber}  `, partColumns, sheet);
+    addTitleRow(
+      `Spare part report   ${part.partNumber} ${part.description ||
+        part.descriptionShort}   `,
+      partColumns,
+      sheet
+    );
     addMainRow(partColumns, sheet);
-
-    // sheet.lastRow.eachCell(cell => {
-    //   fillCell.solid(cell, Color.SUBTITLE);
-    // });
 
     await sheet.addRow([
       part.partNumber,
       part.description || part.descriptionShort,
       parseInt(part.stockQty, 10),
-      0, // parseInt(stockPart.caseUse, 10),
+      part.caseParts.length || 0,
+      part.getStockMiss(),
       part.price ? parseFloat(part.price) : '',
       feParts.length ? [...feParts].map(e => e.partNumber).join(',') : '',
       partStatus.active.ctr + partStatus.active.sd,
@@ -168,18 +332,7 @@ const createPartContractFile = async (part, dir) => {
       partStatus.expired.ctr + partStatus.expired.sd,
       partStatus.expired.ctr,
       partStatus.expired.sd,
-      partStatus.expired.nd,
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      ''
+      partStatus.expired.nd
     ]);
 
     // eslint-disable-next-line no-unused-vars
@@ -206,73 +359,9 @@ const createPartContractFile = async (part, dir) => {
       cell.border = { top: { style: 'thin' } };
     });
 
-    Object.keys(contracts).forEach(said => {
-      Object.keys(contracts[said]).forEach(product => {
-        const s = contracts[said][product].systems;
-
-        // if (!s[0].parts && !s[0].product.parts) {
-        //   debugger;
-        // }
-
-        let parts;
-        if (s[0].parts) {
-          parts = s[0].parts.map(p => p.partNumber);
-        } else if (s[0].product.parts) {
-          parts = s[0].product.parts.map(p => p.partNumber);
-        }
-        //  debugger;
-
-        sheet.addRow([
-          '', // 1
-          '', // 2
-          '', // 3
-          '', // 4
-          '', // 5
-          '', // 6
-          '', // 7
-          '', // 8
-          '', // 9
-          '', // 10
-          '', // 11
-          '', // 12
-          '', // 13
-          '', // 14
-          '', // 15
-          '', // 16
-          '', // 17
-          '', // 18
-          `${s[0].contract.customer} - ${s[0].contract.city}`, // 19
-          `'${s[0].contract.said}`, // 20
-          s[0].contract.response, // 21
-          contractStatus(s[0].contract), // status 22
-          dayjs(s[0].contract.startDate, 'MMDDYY').format('MM/DD/YYYY'), // 23
-          dayjs(s[0].contract.endDate, 'MMDDYY').format('MM/DD/YYYY'), // 24
-          contracts[said][product].serials.join(','), // 25
-          product, // p, // 26
-          s[0].product.description, // list[c][s][p].prodDesc, // 27
-          contracts[said][product].serials.length, // list[c][s][p].qty, // 28
-          parts ? parts.join(',') : '' // , // list[c][s][p].equiv, // 29
-          // '' // list[c][s][p].wasSearched // 30
-        ]);
-
-        // eslint-disable-next-line no-unused-vars
-        sheet.lastRow.eachCell((cell, colNumber) => {
-          cell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFFFFFFF' },
-            bgColor: { argb: 'FFFFFFFF' }
-          };
-        });
-      });
-    });
-
-    sheet.autoFilter = {
-      from: { row: 3, column: 1 },
-      to: { row: sheet.lastRow._number, column: colNum(partColumns) }
-    };
-
     setColWidth(partColumns, sheet);
+    await createContractTab(wb, part, contracts);
+    await createCasesTab(wb, part);
     await wb.commit();
 
     return Promise.resolve([partStatus, feParts]);

@@ -2,6 +2,8 @@
 const { ipcRenderer } = require('electron');
 const Stock = require('../models/Stock');
 const Part = require('../models/Part');
+const Case = require('../models/Case');
+const CasePart = require('../models/CasePart');
 const db = require('../db');
 const partController = require('../controllers/partController');
 
@@ -52,42 +54,47 @@ exports.addStockParts = async stockParts => {
   }
 };
 
-exports.clearStockCaseUse = async () => {
-  return new Promise((resolve, reject) => {
-    Stock.update({ caseUse: 0 }, { where: {} })
-      .then(() => resolve())
-      .catch(err => reject(err));
-  });
-};
+// exports.clearStockCaseUse = async () => {
+//   return new Promise((resolve, reject) => {
+//     Stock.update({ caseUse: 0 }, { where: {} })
+//       .then(() => resolve())
+//       .catch(err => reject(err));
+//   });
+// };
 
-exports.addStockPartCaseUsage = async partUsageData => {
-  try {
-    for (const partUsage of partUsageData) {
-      if (partUsage) {
-        const part = await Part.findOne({
-          where: { partNumber: partUsage.partNumber },
-          include: [{ model: Stock }]
-        });
+// exports.addStockPartCaseUsage = async partUsageData => {
+//   try {
+//     for (const partUsage of partUsageData) {
+//       if (partUsage) {
+//         const part = await Part.findOne({
+//           where: { partNumber: partUsage.partNumber },
+//           include: [{ model: Stock }]
+//         });
 
-        if (part) {
-          for (const stock of part.stocks) {
-            const newQty = (stock.caseUse ? stock.caseUse : 0) + partUsage.qty;
-            await stock.update({ caseUse: newQty });
-          }
-        }
-      }
-    }
-    return Promise.resolve();
-  } catch (error) {
-    return Promise.reject(error);
-  }
-};
+//         if (part) {
+//           for (const stock of part.stocks) {
+//             const newQty = (stock.caseUse ? stock.caseUse : 0) + partUsage.qty;
+//             await stock.update({ caseUse: newQty });
+//           }
+//         }
+//       }
+//     }
+//     return Promise.resolve();
+//   } catch (error) {
+//     return Promise.reject(error);
+//   }
+// };
 
 exports.getAllStockParts = async () => {
   try {
     const stockParts = await Stock.findAll({
       where: {},
-      include: [{ model: Part }]
+      include: [
+        {
+          model: Part,
+          include: [{ model: CasePart, include: [{ model: Case }] }]
+        }
+      ]
     });
     return Promise.resolve(stockParts);
   } catch (error) {

@@ -32,6 +32,8 @@ class FileImport {
     this.countryDropDown = document.querySelector('.countrySelect');
     this.flag = document.getElementById('flag');
     this.skipRejected = document.getElementById('skipFullyRejected');
+    this.skipRejected.checked = configFileController.getSkipFullyRejectedContracts();
+
     this.events();
   }
 
@@ -209,14 +211,13 @@ class FileImport {
   }
 
   optionsHTML() {
-    const checked = configFileController.getSkipFullyRejectedContracts();
     return `
     <div class="row d-flex align-items-center">
         <h5>import options</h5>
       </div>
     <div class="row import-options">
       <div class="col-8"><span>skip 'fully rejected' contracts</span></div>
-      <div class="col-2"><input id="skipFullyRejected" type="checkbox" aria-label="skip fully rejected" checked="${checked}"/></div>
+      <div class="col-2"><input id="skipFullyRejected" type="checkbox" aria-label="skip fully rejected" "/></div>
     </div>
     `;
   }

@@ -100,6 +100,7 @@ exports.clearSystems = async () => {
 exports.findSystemsWithPart = async partIds => {
   try {
     const systems = await System.findAll({
+      where: {},
       include: [
         {
           model: Contract,
@@ -129,6 +130,7 @@ exports.findSystemsWithPart = async partIds => {
         }
       ]
     });
+
     return Promise.resolve(systems);
   } catch (error) {
     return Promise.reject(error);

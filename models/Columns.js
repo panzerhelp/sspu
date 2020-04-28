@@ -1,83 +1,51 @@
 const Columns = {
   stockFile: {
-    partNumber: {
-      names: ['part number', 'part', 'p/n']
-    },
-    qty: {
-      names: ['qty', 'material left', 'total stock']
-    },
-    description: {
-      names: ['description']
-    },
-    price: {
-      names: ['unit price', 'price']
-    }
+    partNumber: { names: ['part number', 'part', 'p/n'] },
+    qty: { names: ['qty', 'material left', 'total stock'] },
+    description: { names: ['description'] },
+    price: { names: ['unit price', 'price'] }
   },
   caseUsageFile: {
-    partNumber: {
-      names: ['spare part']
-    },
-    qty: {
-      names: ['spare parts qty']
-    },
-    source: {
-      names: ['is kur paimta dalis remontui']
-    }
+    date: { names: ['casedate'] },
+    caseId: { names: ['sfdc case id'] },
+    customer: { names: ['customer'] },
+    response: { names: ['response'] },
+    sla: { names: ['sla'] },
+    serviceLevel: { names: ['service level'] },
+    serial: { names: ['serial number'] },
+    product: { names: ['product number'] },
+    contract: { names: ['contract id'] },
+    gcsn: { names: ['gcsn'] },
+    sparePart: { names: ['spare part'] },
+    qty: { names: ['qty'] },
+    partner: { names: ['hpd partner'] },
+    stockLocation: { names: ['stock location'] },
+    status: { names: ['status'] },
+    feUsed: { names: ['fe used'] },
+    // partSource: { names: ['source'] },
+    // comment: { names: ['comment', 'source 1'] },
+    deliveryDate: { names: ['delivered'] }
   },
   salesDataFile: {
-    country: {
-      names: ['hwst country cd', 'agg ship to ctry code iso']
-    },
-    city: {
-      names: ['hwst city', 'site city']
-    },
-    customer: {
-      names: ['hwst name', 'customer name']
-    },
-    productNumber: {
-      names: ['product nbr', 'product extend']
-    },
-    productDesc: {
-      names: ['product desc', 'product description']
-    },
-    response: {
-      names: ['response', 'service level']
-    },
-    serial: {
-      names: ['serial nbr']
-    },
-    said: {
-      names: ['service agreement id', 'svc agreement id']
-    },
-    funcLoc: {
-      names: ['functional location']
-    },
-    startDate: {
-      names: ['contract start date', 'contract start date']
-    },
-    endDate: {
-      names: ['contract end date', 'contract term date']
-    },
-    qty: {
-      names: ['product quantity']
-    },
-    status: {
-      names: ['renewal status', 'contract status']
-    },
-    package: {
-      names: ['package product description']
-    },
-    offer: {
-      names: ['offer product description']
-    }
+    country: { names: ['hwst country cd', 'agg ship to ctry code iso'] },
+    city: { names: ['hwst city', 'site city'] },
+    customer: { names: ['hwst name', 'customer name'] },
+    productNumber: { names: ['product nbr', 'product extend'] },
+    productDesc: { names: ['product desc', 'product description'] },
+    response: { names: ['response', 'service level'] },
+    serial: { names: ['serial nbr'] },
+    said: { names: ['service agreement id', 'svc agreement id'] },
+    funcLoc: { names: ['functional location'] },
+    startDate: { names: ['contract start date', 'contract start date'] },
+    endDate: { names: ['contract end date', 'contract term date'] },
+    qty: { names: ['product quantity'] },
+    status: { names: ['renewal status', 'contract status'] },
+    package: { names: ['package product description'] },
+    offer: { names: ['offer product description'] }
   },
   partExcludeFile: {
-    productNumber: {
-      names: ['product number']
-    },
-    partNumber: {
-      names: ['part number']
-    }
+    productNumber: { names: ['product number'] },
+    partNumber: { names: ['part number'] }
   }
 };
 

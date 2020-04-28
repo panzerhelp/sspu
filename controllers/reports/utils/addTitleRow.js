@@ -20,7 +20,7 @@ const addTitleRow = (title, columns, sheet) => {
   );
 
   sheet.getCell(1, 1).font = {
-    size: 18,
+    size: 16,
     bold: true,
     color: { argb: 'FFFFFFFF' }
   };

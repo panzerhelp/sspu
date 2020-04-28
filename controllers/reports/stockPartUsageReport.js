@@ -27,26 +27,27 @@ const partUsageColumns = [
   new XCol(1, 'Part Number', 15, []),
   new XCol(2, 'Description', 40, []),
   new XCol(3, 'Qty', 5, []),
-  new XCol(4, 'Case Use', 15, []),
-  new XCol(5, 'Price', 5, []),
-  new XCol(6, 'Field Equiv', 20, []),
-  new XCol(7, 'Active', 10, [
-    new XCol(7, 'CTR+SD', 10, []),
-    new XCol(8, 'CTR', 10, []),
-    new XCol(9, 'SD', 10, []),
-    new XCol(10, 'ND', 10, [])
+  new XCol(4, 'Cases', 15, []),
+  new XCol(5, 'Stock Mis', 15, []),
+  new XCol(6, 'Price', 5, []),
+  new XCol(7, 'Field Equiv', 20, []),
+  new XCol(8, 'Active', 10, [
+    new XCol(8, 'CTR+SD', 10, []),
+    new XCol(9, 'CTR', 10, []),
+    new XCol(10, 'SD', 10, []),
+    new XCol(11, 'ND', 10, [])
   ]),
-  new XCol(11, 'Active 6m', 10, [
-    new XCol(11, 'CTR+SD', 10, []),
-    new XCol(12, 'CTR', 10, []),
-    new XCol(13, 'SD', 10, []),
-    new XCol(14, 'ND', 10, [])
+  new XCol(12, 'Active 6m', 10, [
+    new XCol(12, 'CTR+SD', 10, []),
+    new XCol(13, 'CTR', 10, []),
+    new XCol(14, 'SD', 10, []),
+    new XCol(15, 'ND', 10, [])
   ]),
-  new XCol(15, 'Expired', 10, [
-    new XCol(15, 'CTR+SD', 10, []),
-    new XCol(16, 'CTR', 10, []),
-    new XCol(17, 'SD', 10, []),
-    new XCol(18, 'ND', 10, [])
+  new XCol(16, 'Expired', 10, [
+    new XCol(16, 'CTR+SD', 10, []),
+    new XCol(17, 'CTR', 10, []),
+    new XCol(18, 'SD', 10, []),
+    new XCol(19, 'ND', 10, [])
   ]) // ,
 ];
 
@@ -67,7 +68,8 @@ const addStockPartRow = async (stockPart, sheet, dir) => {
 
     stockPart.part.description || stockPart.part.descriptionShort,
     parseInt(stockPart.qty, 10),
-    parseInt(stockPart.caseUse, 10),
+    parseInt(stockPart.part.caseParts.length, 10),
+    stockPart.part.getStockMiss(),
     stockPart.part.price ? parseFloat(stockPart.part.price) : '',
     feParts.length ? [...feParts].map(e => e.partNumber).join(',') : '',
     partStatus.active.ctr + partStatus.active.sd,

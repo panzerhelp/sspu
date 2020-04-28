@@ -14,6 +14,7 @@ const contractController = require('../controllers/contractController');
 const systemController = require('../controllers/systemController');
 const configFileController = require('../controllers/configFilesController');
 const partController = require('../controllers/partController');
+const caseController = require('../controllers/caseController');
 const dbConnect = require('../dbConnect');
 
 const ExcludeCities = require('../models/ExcludeCities');
@@ -367,7 +368,7 @@ const prepareData = async type => {
   if (type === 'stockFile') {
     await stockController.clearStock();
   } else if (type === 'caseUsageFile') {
-    await stockController.clearStockCaseUse();
+    await caseController.clearCaseUse();
   } else if (type === 'salesDataFile') {
     try {
       await systemController.clearSystems();
@@ -387,7 +388,8 @@ const processData = async (type, data) => {
   if (type === 'stockFile') {
     await stockController.addStockParts(data);
   } else if (type === 'caseUsageFile') {
-    await stockController.addStockPartCaseUsage(data);
+    // await stockController.addStockPartCaseUsage(data);
+    await caseController.addCaseData(data);
   } else if (type === 'partExcludeFile') {
     await partController.setExcludeFlags(data);
     await productController.setExcludeFlags(data);
@@ -413,12 +415,6 @@ exports.importFiles = async () => {
     ];
 
     for (const type of fileTypes) {
-      // prepare data types
-      // if (typeof type.prepared === 'undefined') {
-      //   type.prepared = true;
-      //   await prepareData(type.name);
-      // }
-
       for (const file of filesToLoad) {
         if (file.type === type.name) {
           await prepareData(type.name);
@@ -427,12 +423,6 @@ exports.importFiles = async () => {
           await postProcessData(type.name);
         }
       }
-
-      // post-process data type
-      // if (typeof type.processed === 'undefined') {
-      //   type.processed = true;
-      //   await postProcessData(type.name);
-      // }
     }
 
     this.cleanUpAfterImport();
