@@ -6,6 +6,8 @@ const System = require('../models/System');
 const Product = require('../models/Product');
 const Serial = require('../models/Serial');
 const Part = require('../models/Part');
+// const PartFieldEquiv = require('../models/PartFieldEquiv');
+// const Stock = require('../models/Stock');
 const serialController = require('./serialController');
 const Contract = require('../models/Contract');
 
@@ -137,38 +139,53 @@ exports.findSystemsWithPart = async partIds => {
   }
 };
 
-exports.findSystemsWithProductId = async productId => {
-  try {
-    const systems = await System.findAll({
-      where: { productId: productId },
-      include: [
-        {
-          model: Contract,
-          required: true
-        },
-        {
-          model: Product,
-          required: true,
-          where: { exclude: false }
-        },
-        {
-          model: Serial,
-          include: [
-            {
-              model: Part,
-              required: true,
-              where: { exclude: false }
-            }
-          ]
-        }
-      ]
-    });
-
-    return Promise.resolve(systems);
-  } catch (error) {
-    return Promise.reject(error);
-  }
-};
+// exports.findSystemsWithProductId = async productId => {
+//   try {
+//     const systems = await System.findAll({
+//       where: { productId: productId },
+//       include: [
+//         {
+//           model: Contract,
+//           required: true
+//         },
+//         {
+//           model: Product,
+//           required: true,
+//           where: { exclude: false },
+//           include: [
+//             {
+//               model: Part,
+//               where: { exclude: false },
+//               include: [
+//                 { model: Stock },
+//                 { model: Part, as: 'fePart', include: [{ model: Stock }] }
+//                 // { model: 'fePart' } // , include: [{ model: Stock }] }
+//               ]
+//             }
+//           ]
+//         },
+//         {
+//           model: Serial,
+//           include: [
+//             {
+//               model: Part,
+//               required: true,
+//               where: { exclude: false },
+//               include: [
+//                 { model: Stock },
+//                 { model: Part, as: 'fePart', include: [{ model: Stock }] }
+//                 // { model: 'fePart' } // , include: [{ model: Stock }] }
+//               ]
+//             }
+//           ]
+//         }
+//       ]
+//     });
+//     return Promise.resolve(systems);
+//   } catch (error) {
+//     return Promise.reject(error);
+//   }
+// };
 
 exports.findSystemsWithCustomer = async customer => {
   try {

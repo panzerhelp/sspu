@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -26,7 +25,6 @@
     const maxRestarts = configFilesController.getMaxScanRestarts();
 
     ipcRenderer.on('get-partsurfer-data', async () => {
-
       // reset scan counters
       productController.totalProductsToScan = 0;
       serialController.totalSerialsToScan = 0;
@@ -54,8 +52,7 @@
 
     ipcRenderer.on('generate-reports', async () => {
       try {
-
-        await dataFileController.setExcludeFlags();
+        await dataFileController.setExcludeFlagsAndStockMap();
         const outFiles = await reportController.generateReports();
 
         if (outFiles && outFiles.length) {
@@ -88,5 +85,4 @@
       }
     });
   </script>
-
 </html>

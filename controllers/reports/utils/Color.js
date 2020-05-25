@@ -2,7 +2,7 @@ const Color = {
   WHITE: 'FFFFFFFF',
   GREY: 'FFEEEEEE',
   RED: 'FFFFE5E5',
-  RED_SOLID: 'FFFFA5A5',
+  RED_SOLID: 'FFFFB0B0',
   BLACK: 'FF333333',
   SUBTITLE: 'FFEEEEEE',
   CONTRACT_ND: 'FFF1F8E9',
@@ -17,11 +17,3 @@ const Color = {
 };
 
 module.exports = Color;
-
-// const _ncdColor_ = 'FFF1F8E9';// light-green lighten-5
-// const _4hrColor_ = 'FFFFF8E1';// amber lighten-5
-// const _ctrColor_ = 'FFFBE9E7';//deep-orange lighten-5
-
-// const _ncdColor_misPart = 'FFC5E1A5';// light-green lighten-3
-// const _4hrColor_misPart = 'FFFFE082';// amber lighten-3
-// const _ctrColor_misPart = 'FFFFAB91';// deep-orange lighten-3

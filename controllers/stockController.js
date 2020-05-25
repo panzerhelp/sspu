@@ -18,19 +18,26 @@ exports.clearStock = async () => {
     return Promise.reject(error);
   }
 };
-//   return new Promise((resolve, reject) => {
-//     Stock.destroy({
-//       where: {},
-//       truncate: true
-//     })
-//       .then(() => {
-//         db.query("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='stock'")
-//           .then(resolve())
-//           .catch(err => reject(err));
-//       })
-//       .catch(err => reject(err));
-//   });
-// };
+
+exports.addPartToStock = async (stockPart, partId) => {
+  try {
+    const [stockPart_, wasCreated_] = await Stock.findCreateFind({
+      where: { partId: partId, location: stockPart.location },
+      defaults: {
+        qty: stockPart.qty || 0
+      }
+    });
+
+    if (!wasCreated_ && stockPart_.location === stockPart.location) {
+      stockPart_.qty += stockPart.qty;
+      stockPart_.save();
+    }
+
+    return Promise.resolve(stockPart);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
 
 exports.addStockParts = async stockParts => {
   try {
@@ -44,7 +51,8 @@ exports.addStockParts = async stockParts => {
           curItem: cur,
           totalItem: tot
         });
-        await partController.addOnePartFromStock(part);
+        const partDb = await partController.addOnePartFromStock(part);
+        await this.addPartToStock(part, partDb.id);
       }
       cur++;
     }
@@ -54,48 +62,31 @@ exports.addStockParts = async stockParts => {
   }
 };
 
-// exports.clearStockCaseUse = async () => {
-//   return new Promise((resolve, reject) => {
-//     Stock.update({ caseUse: 0 }, { where: {} })
-//       .then(() => resolve())
-//       .catch(err => reject(err));
-//   });
-// };
-
-// exports.addStockPartCaseUsage = async partUsageData => {
-//   try {
-//     for (const partUsage of partUsageData) {
-//       if (partUsage) {
-//         const part = await Part.findOne({
-//           where: { partNumber: partUsage.partNumber },
-//           include: [{ model: Stock }]
-//         });
-
-//         if (part) {
-//           for (const stock of part.stocks) {
-//             const newQty = (stock.caseUse ? stock.caseUse : 0) + partUsage.qty;
-//             await stock.update({ caseUse: newQty });
-//           }
-//         }
-//       }
-//     }
-//     return Promise.resolve();
-//   } catch (error) {
-//     return Promise.reject(error);
-//   }
-// };
-
 exports.getAllStockParts = async () => {
   try {
-    const stockParts = await Stock.findAll({
+    const stockParts = await Part.findAll({
       where: {},
       include: [
-        {
-          model: Part,
-          include: [{ model: CasePart, include: [{ model: Case }] }]
-        }
-      ]
+        { model: Stock, required: true },
+        { model: CasePart, include: [{ model: Case }] },
+        'fePart'
+      ],
+      order: ['partNumber']
     });
+
+    // const stockParts = await Stock.findAll({
+    //   where: {},
+    //   include: [
+    //     {
+    //       model: Part,
+    //       order: ['partNumber', 'DESC'],
+    //       include: [
+    //         { model: CasePart, include: [{ model: Case }] },
+    //         { model: Stock }
+    //       ]
+    //     }
+    //   ]
+    // });
     return Promise.resolve(stockParts);
   } catch (error) {
     return Promise.reject(error);

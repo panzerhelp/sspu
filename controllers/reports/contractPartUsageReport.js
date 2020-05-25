@@ -135,10 +135,17 @@ const contractPartUsageReport = async () => {
       fs.mkdirSync(dir);
     }
     fse.emptyDirSync(dir);
+
+    const contractDir = path.join(path.dirname(outFile), 'contracts');
+    if (!fs.existsSync(contractDir)) {
+      fs.mkdirSync(contractDir);
+    }
+    fse.emptyDirSync(contractDir);
+
     const contracts = await contractController.getAllContracts();
 
     // eslint-disable-next-line no-const-assign
-    // contracts = contracts.slice(18, 20); // test first 20 customer
+    // contracts = contracts.slice(0, 10); // test first 20 customer
 
     const wb = new Excel.stream.xlsx.WorkbookWriter({
       filename: outFile,
@@ -153,7 +160,6 @@ const contractPartUsageReport = async () => {
 
     addTitleRow('Contract Part Usage', customerListColumns, sheet);
     addMainRow(customerListColumns, sheet);
-
     let curItem = 1;
     for (const contract of contracts) {
       ipcRenderer.send('set-progress', {

@@ -262,9 +262,10 @@ exports.getSerialDataFromPartSurfer = async () => {
     let browserId = 0;
 
     if (this.totalSerialsToScan < 1) {
-      this.totalSerialsToScan = 0;
+      this.totalSerialsToScan = serials.length;
       this.curSerialItem = 0;
     }
+
     for (const serial of serials) {
       scanList.push(serial.serialNum);
 
@@ -277,7 +278,7 @@ exports.getSerialDataFromPartSurfer = async () => {
           mainItem: 'Getting parts for the serial',
           subItem: scanList.join(' '),
           curItem: this.curSerialItem,
-          totalItem: serials.length
+          totalItem: this.totalSerialsToScan
         });
 
         await Promise.all(promiseArray);
@@ -292,7 +293,7 @@ exports.getSerialDataFromPartSurfer = async () => {
         mainItem: 'Getting parts for the serial',
         subItem: scanList.join(' '),
         curItem: this.curSerialItem,
-        totalItem: serials.length
+        totalItem: this.totalSerialsToScan
       });
 
       await Promise.all(promiseArray);

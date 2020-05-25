@@ -13,6 +13,7 @@ const addTitleRow = require('./utils/addTitleRow');
 const addMainRow = require('./utils/addMainRow');
 const setColWidth = require('./utils/setColWidth');
 const colNum = require('./utils/colNum');
+const Color = require('./utils/Color');
 
 const configFilesController = require('../configFilesController');
 const stockController = require('../stockController');
@@ -26,94 +27,120 @@ dayjs.extend(customParseFormat);
 const partUsageColumns = [
   new XCol(1, 'Part Number', 15, []),
   new XCol(2, 'Description', 40, []),
-  new XCol(3, 'Qty', 5, []),
-  new XCol(4, 'Cases', 15, []),
-  new XCol(5, 'Stock Mis', 15, []),
-  new XCol(6, 'Price', 5, []),
-  new XCol(7, 'Field Equiv', 20, []),
-  new XCol(8, 'Active', 10, [
-    new XCol(8, 'CTR+SD', 10, []),
-    new XCol(9, 'CTR', 10, []),
-    new XCol(10, 'SD', 10, []),
-    new XCol(11, 'ND', 10, [])
+  new XCol(3, 'Field Equiv', 20, []),
+  new XCol(4, 'Price', 10, []),
+  new XCol(5, 'Cases', 15, []),
+  new XCol(6, 'Stock Mis Cases', 15, []),
+  new XCol(7, 'Stock Location', 15, []),
+  new XCol(8, 'Qty', 5, []),
+  new XCol(9, 'Active', 10, [
+    new XCol(9, 'CTR+SD', 10, []),
+    new XCol(10, 'CTR', 10, []),
+    new XCol(11, 'SD', 10, []),
+    new XCol(12, 'ND', 10, [])
   ]),
-  new XCol(12, 'Active 6m', 10, [
-    new XCol(12, 'CTR+SD', 10, []),
-    new XCol(13, 'CTR', 10, []),
-    new XCol(14, 'SD', 10, []),
-    new XCol(15, 'ND', 10, [])
+  new XCol(13, 'Active 6m', 10, [
+    new XCol(13, 'CTR+SD', 10, []),
+    new XCol(14, 'CTR', 10, []),
+    new XCol(15, 'SD', 10, []),
+    new XCol(16, 'ND', 10, [])
   ]),
-  new XCol(16, 'Expired', 10, [
-    new XCol(16, 'CTR+SD', 10, []),
-    new XCol(17, 'CTR', 10, []),
-    new XCol(18, 'SD', 10, []),
-    new XCol(19, 'ND', 10, [])
+  new XCol(17, 'Expired', 10, [
+    new XCol(18, 'CTR+SD', 10, []),
+    new XCol(19, 'CTR', 10, []),
+    new XCol(20, 'SD', 10, []),
+    new XCol(21, 'ND', 10, [])
   ]) // ,
 ];
 
 const addStockPartRow = async (stockPart, sheet, dir) => {
-  const [partStatus, feParts] = await createPartContractFile(
-    stockPart.part,
-    dir
-  );
+  const feParts = await createPartContractFile(stockPart, dir);
 
-  await sheet.addRow([
-    // stockPart.part.partNumber,
+  let rowId = 1;
 
-    {
-      text: stockPart.part.partNumber,
-      hyperlink: `parts\\${stockPart.part.partNumber}.xlsx`,
-      tooltip: `${stockPart.part.partNumber} - products\\${stockPart.part.partNumber}.xlsx`
-    },
+  for (const stock of stockPart.stocks) {
+    const { partStatus } = stock;
+    const fePartsStr = feParts.length
+      ? [...feParts].map(e => e.partNumber).join(',')
+      : '';
+    const priceStr = stockPart.price ? parseFloat(stockPart.price) : '';
 
-    stockPart.part.description || stockPart.part.descriptionShort,
-    parseInt(stockPart.qty, 10),
-    parseInt(stockPart.part.caseParts.length, 10),
-    stockPart.part.getStockMiss(),
-    stockPart.part.price ? parseFloat(stockPart.part.price) : '',
-    feParts.length ? [...feParts].map(e => e.partNumber).join(',') : '',
-    partStatus.active.ctr + partStatus.active.sd,
-    partStatus.active.ctr,
-    partStatus.active.sd,
-    partStatus.active.nd,
-    partStatus.active6m.ctr + partStatus.active6m.sd,
-    partStatus.active6m.ctr,
-    partStatus.active6m.sd,
-    partStatus.active6m.nd,
-    partStatus.expired.ctr + partStatus.expired.sd,
-    partStatus.expired.ctr,
-    partStatus.expired.sd,
-    partStatus.expired.nd // ,
-  ]);
+    await sheet.addRow([
+      {
+        text: stockPart.partNumber,
+        hyperlink: `parts\\${stockPart.partNumber}.xlsx`,
+        tooltip: `${stockPart.partNumber} - products\\${stockPart.partNumber}.xlsx`
+      },
+      stockPart.description || stockPart.descriptionShort,
+      fePartsStr,
+      priceStr,
+      stockPart.caseParts.length,
+      stockPart.getStockMiss(),
+      stock.location,
+      stock.qty,
+      partStatus.active.ctr + partStatus.active.sd,
+      partStatus.active.ctr,
+      partStatus.active.sd,
+      partStatus.active.nd,
+      partStatus.active6m.ctr + partStatus.active6m.sd,
+      partStatus.active6m.ctr,
+      partStatus.active6m.sd,
+      partStatus.active6m.nd,
+      partStatus.expired.ctr + partStatus.expired.sd,
+      partStatus.expired.ctr,
+      partStatus.expired.sd,
+      partStatus.expired.nd // ,
+    ]);
 
-  sheet.lastRow.getCell(1).font = {
-    color: { argb: '000000ff' },
-    underline: 'single'
-  };
-
-  // eslint-disable-next-line no-unused-vars
-  sheet.lastRow.eachCell((cell, collNumber) => {
-    let color = 'FFFFFFFF';
-
-    if (
-      partStatus.active.ctr +
-        partStatus.active.sd +
-        partStatus.active6m.ctr +
-        partStatus.active6m.sd <
-      1
-    ) {
-      color = 'FFFFA5A5';
-    } else if (partStatus.active.ctr + partStatus.active.sd < 1) {
-      color = 'FFFFE5E5';
-    }
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: color },
-      bgColor: { argb: color }
+    sheet.lastRow.getCell(1).font = {
+      color: { argb: '000000ff' },
+      underline: 'single'
     };
-    cell.border = { top: { style: 'thin' } };
-  });
+
+    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line no-loop-func
+    sheet.lastRow.eachCell((cell, collNumber) => {
+      let color = Color.WHITE;
+
+      if (
+        (collNumber > 6 && partStatus.isInactive()) ||
+        stockPart.partStatus.isInactive()
+      ) {
+        color = Color.RED_SOLID;
+      } else if (
+        (collNumber > 6 && partStatus.isInactive6m()) ||
+        stockPart.partStatus.isInactive6m()
+      ) {
+        color = Color.RED;
+      }
+
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: color },
+        bgColor: { argb: color }
+      };
+
+      if (rowId === 1) {
+        cell.border = { top: { style: 'thin' } };
+      }
+    });
+
+    rowId++;
+  }
+
+  if (stockPart.stocks.length > 1) {
+    for (let colNumber = 1; colNumber <= 6; colNumber++) {
+      const firstRow = sheet.lastRow._number - (stockPart.stocks.length - 1);
+      sheet.mergeCells(firstRow, colNumber, sheet.lastRow._number, colNumber);
+
+      sheet.getCell(firstRow, colNumber).alignment = {
+        vertical: 'top',
+        horizontal: colNumber < 5 ? 'left' : 'right'
+      };
+    }
+  }
+
   return Promise.resolve();
 };
 
@@ -147,11 +174,10 @@ const stockPartUsageReport = async () => {
       for (const stockPart of stockParts) {
         ipcRenderer.send('set-progress', {
           mainItem: `Generating part usage report`,
-          subItem: stockPart.part.partNumber,
+          subItem: stockPart.partNumber,
           curItem: curItem,
           totalItem: stockParts.length
         });
-
         await addStockPartRow(stockPart, sheet, dir);
         curItem++;
       }

@@ -16,11 +16,14 @@ class FileImport {
       salesDataFile: {
         title: 'sales data file(s)'
       },
-      caseUsageFile: {
-        title: 'part case usage file'
-      },
       partExcludeFile: {
         title: 'exclude parts / products file'
+      },
+      stockMapFile: {
+        title: 'stock map file'
+      },
+      caseUsageFile: {
+        title: 'part case usage file'
       }
       // ,
       // priceFile: {
@@ -174,7 +177,7 @@ class FileImport {
       });
     }
 
-    if (1 || (stockDataFileCount && salesDataFileCount)) {
+    if (stockDataFileCount && salesDataFileCount) {
       return true;
     }
 
@@ -237,9 +240,9 @@ class FileImport {
 
       if (this.dataDir && this.checkIfEnoughFiles()) {
         this.fileImport.innerHTML += this.importButtonHTML();
+        this.fileImport.innerHTML += this.optionsHTML();
       }
 
-      this.fileImport.innerHTML += this.optionsHTML();
       this.fileImport.innerHTML += this.dataDirHTML();
     }
   }

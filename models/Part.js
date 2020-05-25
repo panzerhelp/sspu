@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 const sequelize = require('sequelize');
 const db = require('../db');
 
@@ -21,6 +22,19 @@ const Part = db.define(
     // options
   }
 );
+
+Part.prototype.stockCityQty = function(stockCity) {
+  let qty = 0;
+  if (this.stocks) {
+    for (const stock of this.stocks) {
+      if (stock.location === stockCity) {
+        qty += stock.qty;
+      }
+    }
+  }
+
+  return qty;
+};
 
 module.exports = Part;
 // name text NOT NULL UNIQUE,

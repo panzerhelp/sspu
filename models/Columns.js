@@ -2,6 +2,7 @@ const Columns = {
   stockFile: {
     partNumber: { names: ['part number', 'part', 'p/n'] },
     qty: { names: ['qty', 'material left', 'total stock'] },
+    location: { names: ['whs', 'location'] },
     description: { names: ['description'] },
     price: { names: ['unit price', 'price'] }
   },
@@ -22,8 +23,6 @@ const Columns = {
     stockLocation: { names: ['stock location'] },
     status: { names: ['status'] },
     feUsed: { names: ['fe used'] },
-    // partSource: { names: ['source'] },
-    // comment: { names: ['comment', 'source 1'] },
     deliveryDate: { names: ['delivered'] }
   },
   salesDataFile: {
@@ -46,6 +45,10 @@ const Columns = {
   partExcludeFile: {
     productNumber: { names: ['product number'] },
     partNumber: { names: ['part number'] }
+  },
+  stockMapFile: {
+    contractCity: { names: ['contract site', 'contract city'] },
+    contractStock: { names: ['stock'] }
   }
 };
 
@@ -85,12 +88,19 @@ Columns.getData = (fileType, row) => {
   Object.keys(Columns[fileType]).forEach(key => {
     if (Columns[fileType][key].id > 0) {
       let { value } = row.getCell(Columns[fileType][key].id);
-      if (typeof value === 'object') {
-        value = '';
-      } else if (typeof value === 'string') {
-        value = removeNonAscii(value.trim());
+      if (value !== null) {
+        if (typeof value === 'object') {
+          if (typeof value.result !== 'undefined' && value.result) {
+            value = value.result;
+          } else {
+            value = '';
+          }
+        }
+        if (typeof value === 'string' && value) {
+          value = removeNonAscii(value.trim());
+        }
+        obj[key] = value;
       }
-      obj[key] = value;
     }
   });
 

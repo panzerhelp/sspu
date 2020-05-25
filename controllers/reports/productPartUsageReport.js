@@ -19,83 +19,166 @@ const configFilesController = require('../configFilesController');
 const systemController = require('../systemController');
 
 const createProductContractFile = require('./createProductContractFile');
+const caseController = require('../caseController');
 
 const productListColumns = [
   new XCol(1, 'Product', 20, []),
   new XCol(2, 'Description', 40, []),
-  new XCol(3, 'Parts BOM', 20, []),
-  new XCol(4, 'Parts Stock', 20, []),
-  new XCol(5, 'Contract Count', 15, []),
-  new XCol(6, 'Active', 10, [
-    new XCol(6, 'CTR+SD', 10, []),
-    new XCol(7, 'CTR', 10, []),
-    new XCol(8, 'SD', 10, []),
-    new XCol(9, 'ND', 10, [])
+  new XCol(3, 'Cases', 15, []),
+  new XCol(4, 'Stock Mis Cases', 15, []),
+  new XCol(5, 'Parts BOM', 20, []),
+  new XCol(6, 'Stock Location', 20, []),
+  new XCol(7, 'Parts Stock', 20, []),
+  new XCol(8, 'Contract Count', 15, []),
+  new XCol(9, 'Active', 10, [
+    new XCol(9, 'CTR+SD', 10, []),
+    new XCol(10, 'CTR', 10, []),
+    new XCol(11, 'SD', 10, []),
+    new XCol(12, 'ND', 10, [])
   ]),
-  new XCol(10, 'Active 6m', 10, [
-    new XCol(10, 'CTR+SD', 10, []),
-    new XCol(11, 'CTR', 10, []),
-    new XCol(12, 'SD', 10, []),
-    new XCol(13, 'ND', 10, [])
+  new XCol(13, 'Active 6m', 10, [
+    new XCol(13, 'CTR+SD', 10, []),
+    new XCol(14, 'CTR', 10, []),
+    new XCol(15, 'SD', 10, []),
+    new XCol(16, 'ND', 10, [])
   ]),
-  new XCol(14, 'Expired', 10, [
-    new XCol(14, 'CTR+SD', 10, []),
-    new XCol(15, 'CTR', 10, []),
-    new XCol(16, 'SD', 10, []),
-    new XCol(17, 'ND', 10, [])
+  new XCol(17, 'Expired', 10, [
+    new XCol(17, 'CTR+SD', 10, []),
+    new XCol(18, 'CTR', 10, []),
+    new XCol(19, 'SD', 10, []),
+    new XCol(20, 'ND', 10, [])
   ]),
-  new XCol(18, 'CTR + SD / Active + 6m', 20, [])
+  new XCol(21, 'CTR + SD / Active + 6m', 20, [])
 ];
+
+// const PARTS_BOM_ROW = 5;
+const CTR_SD_ACTIVE_ROW = 21;
+const PARTS_STOCK_ROW = 7;
 
 const addProductRow = async (system, sheet, dir) => {
   try {
     const productNumber = system.product.productNumber || 'NO_NAME';
-    const [status, partsBom, partsStock] = await createProductContractFile(
+    const [stockList, partsBom] = await createProductContractFile(
       system.product,
       dir
     );
 
-    await sheet.addRow([
-      {
-        text: productNumber,
-        hyperlink: `products\\${productNumber}.xlsx`,
-        tooltip: `${productNumber} - products\\${productNumber}.xlsx`
-      },
-      // productNumber,
-      system.product.description,
-      partsBom,
-      partsStock,
-      system.dataValues.productCount,
-      status.active.ctr + status.active.sd,
-      status.active.ctr,
-      status.active.sd,
-      status.active.nd,
-      status.active6m.ctr + status.active6m.sd,
-      status.active6m.ctr,
-      status.active6m.sd,
-      status.active6m.nd,
-      status.expired.ctr + status.expired.sd,
-      status.expired.ctr,
-      status.expired.sd,
-      status.expired.nd,
-      status.active.ctr +
-        status.active.sd +
-        status.active6m.ctr +
-        status.active6m.sd
-    ]);
+    const cases = await caseController.findCasesWithProduct(productNumber);
 
-    sheet.lastRow.getCell(1).font = {
-      color: { argb: '000000ff' },
-      underline: 'single'
+    let stockMis = 0;
+    cases.forEach(case_ => {
+      case_.caseParts.forEach(part => {
+        stockMis += part.isStockMiss();
+      });
+    });
+
+    const prodValues = [
+      partsBom > 0
+        ? {
+            text: productNumber,
+            hyperlink: `products\\${productNumber}.xlsx`,
+            tooltip: `${productNumber} - products\\${productNumber}.xlsx`
+          }
+        : {
+            text: productNumber,
+            hyperlink: `https://partsurfer.hpe.com/Search.aspx?SearchText=${productNumber}`,
+            tooltip: `${productNumber} - https://partsurfer.hpe.com/Search.aspx?SearchText=${productNumber}`
+          },
+      system.product.description,
+      cases.length,
+      stockMis,
+      partsBom
+    ];
+
+    const addRow_ = rowValues => {
+      sheet.addRow(rowValues);
+
+      // if (rowValues[PARTS_BOM_ROW - 1] > 0) {
+      sheet.lastRow.getCell(1).font = {
+        color: { argb: '000000ff' },
+        underline: 'single'
+      };
+      // }
+
+      if (
+        rowValues[CTR_SD_ACTIVE_ROW - 1] > 0 &&
+        rowValues[PARTS_STOCK_ROW - 1] < 1
+      ) {
+        sheet.lastRow.eachCell(cell => {
+          fillCell.solid(cell, Color.RED);
+        });
+      } else {
+        sheet.lastRow.eachCell(cell => {
+          fillCell.solid(cell, Color.WHITE);
+        });
+      }
     };
 
-    if (sheet.lastRow.getCell(18) > 0 && sheet.lastRow.getCell(4) < 1) {
+    sheet.lastRow.eachCell(cell => {
+      cell.border = { bottom: { style: 'thin' } };
+    });
+
+    let activeStocks = 0;
+
+    if (stockList) {
+      for (const stock of stockList) {
+        const contractCount = stock.prodStatus.total();
+        if (contractCount) {
+          activeStocks++;
+          const status = stock.prodStatus;
+          const rowValues = [
+            ...prodValues,
+            ...[
+              stock.name,
+              stock.qty,
+              contractCount,
+              status.active.ctr + status.active.sd,
+              status.active.ctr,
+              status.active.sd,
+              status.active.nd,
+              status.active6m.ctr + status.active6m.sd,
+              status.active6m.ctr,
+              status.active6m.sd,
+              status.active6m.nd,
+              status.expired.ctr + status.expired.sd,
+              status.expired.ctr,
+              status.expired.sd,
+              status.expired.nd,
+              status.active.ctr +
+                status.active.sd +
+                status.active6m.ctr +
+                status.active6m.sd
+            ]
+          ];
+
+          addRow_(rowValues);
+        }
+      }
+
+      if (activeStocks > 1) {
+        for (let colNumber = 1; colNumber <= 3; colNumber++) {
+          const firstRow = sheet.lastRow._number - (activeStocks - 1);
+          sheet.mergeCells(
+            firstRow,
+            colNumber,
+            sheet.lastRow._number,
+            colNumber
+          );
+
+          sheet.getCell(firstRow, colNumber).alignment = {
+            vertical: 'top',
+            horizontal: colNumber < 3 ? 'left' : 'right'
+          };
+        }
+      }
+    }
+
+    if (!activeStocks) {
+      const zeroes_ = new Array(15).fill(0);
+      const rowValues = [...prodValues, '', ...zeroes_];
+      addRow_(rowValues);
       sheet.lastRow.eachCell(cell => {
-        fillCell.solid(cell, Color.RED_SOLID);
-      });
-    } else {
-      sheet.lastRow.eachCell(cell => {
-        fillCell.solid(cell, Color.WHITE);
+        fillCell.solid(cell, Color.GREY);
       });
     }
     Promise.resolve();
@@ -118,7 +201,7 @@ const productPartUsageReport = async () => {
     const systems = await systemController.getAllSystems();
 
     // eslint-disable-next-line no-const-assign
-    // systems = systems.slice(0, 5); // test first 5 products
+    // systems = systems.slice(0, 100); // test first 5 products
 
     const wb = new Excel.stream.xlsx.WorkbookWriter({
       filename: outFile,
@@ -143,6 +226,7 @@ const productPartUsageReport = async () => {
         totalItem: systems.length
       });
       await addProductRow(system, sheet, dir);
+
       curItem++;
     }
 

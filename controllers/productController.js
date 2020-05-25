@@ -2,6 +2,10 @@
 const { ipcRenderer } = require('electron');
 const Product = require('../models/Product');
 const Part = require('../models/Part');
+const System = require('../models/System');
+// const Stock = require('../models/Stock');
+const Serial = require('../models/Serial');
+const Contract = require('../models/Contract');
 const ProductPart = require('../models/ProductPart');
 const partController = require('../controllers/partController');
 const browserController = require('./browserController');
@@ -376,6 +380,41 @@ exports.findOneProductById = async productId => {
     const product = await Product.findOne({
       where: { id: productId },
       include: [{ model: Part, where: { exclude: false } }]
+    });
+    return Promise.resolve(product);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.getProductDataById = async productId => {
+  try {
+    const product = await Product.findOne({
+      where: { id: productId },
+      include: [
+        {
+          model: System,
+          required: true,
+          include: [
+            { model: Contract },
+            {
+              model: Serial // ,
+              // include: [
+              //   {
+              //     model: Part,
+              //     where: { exclude: false },
+              //     attributes: ['id']
+              //   }
+              // ]
+            }
+          ]
+        },
+        {
+          model: Part,
+          where: { exclude: false },
+          attributes: ['id']
+        }
+      ]
     });
     return Promise.resolve(product);
   } catch (error) {

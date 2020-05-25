@@ -22,8 +22,9 @@ const dbConnect = async options => {
     await Stock.sync(forceOpt);
     await Part.sync(forceOpt);
     await Product.sync(forceOpt);
-    await System.sync(forceOpt);
+    // await System.sync(forceOpt);
     await Serial.sync(forceOpt);
+    await System.sync(forceOpt);
     await Case.sync(forceOpt);
     await CasePart.sync(forceOpt);
     return Promise.resolve();

@@ -1,3 +1,4 @@
+/* eslint-disable no-loop-func */
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-restricted-syntax */
 const path = require('path');
@@ -14,49 +15,16 @@ const Status = require('./utils/Status');
 const colNum = require('./utils/colNum');
 const Color = require('./utils/Color');
 const fillCell = require('./utils/fillCell');
-const systemController = require('../systemController');
+// const systemController = require('../systemController');
+const contractController = require('../contractController');
+const configFilesController = require('../configFilesController');
 const partController = require('../partController');
 const XCol = require('./utils/XCol');
 
+const ProdCache = require('./utils/ProdCache');
+const PartCache = require('./utils/PartCache');
+
 dayjs.extend(customParseFormat);
-
-const contractColumns = [
-  new XCol(1, 'Service Agreement ID', 20, []),
-  new XCol(2, 'Status', 12, []),
-  new XCol(3, 'Response', 10, []),
-  new XCol(4, 'Start Date', 10, []),
-  new XCol(5, 'End Date', 10, []),
-  new XCol(6, 'Product', 15, []),
-  new XCol(7, 'Description', 40, []),
-  new XCol(8, 'Qty', 10, []),
-  new XCol(9, 'Serial List', 20, []),
-  new XCol(10, 'Part Number', 20, []),
-  new XCol(11, 'Part Description', 60, []),
-  new XCol(12, 'Stock Qty', 12, []),
-  new XCol(13, 'Category', 20, []),
-  new XCol(14, 'Most Used', 10, []),
-  new XCol(15, 'CSR', 10, []),
-  new XCol(16, 'From', 25, [])
-];
-
-class PartData {
-  constructor(partModel, from) {
-    this.id = partModel.id;
-    this.partNumber = partModel.partNumber;
-    this.description = partModel.descriptionShort
-      ? `${partModel.descriptionShort}`
-      : `${partModel.description} `;
-    this.stockQty = partModel.stockQty;
-    this.category = partModel.category;
-    this.mostUsed = partModel.mostUsed;
-    this.csr = partModel.csr;
-    this.feScanStatus = partModel.feScanStatus;
-    this.from = from;
-  }
-}
-
-let productPartCache = {};
-let partFeCache = {};
 
 const getContractColor = (contType, hasParts) => {
   if (contType === 'ctr') {
@@ -70,103 +38,447 @@ const getContractColor = (contType, hasParts) => {
   return hasParts ? Color.CONTRACT_ND : Color.CONTRACT_ND_NO_STOCK;
 };
 
-const getProductParts = async systems => {
-  try {
-    for (const system of systems) {
-      if (typeof productPartCache[system.product.id] !== 'undefined') {
-        system.product.parts = productPartCache[system.product.id];
-      } else {
-        const parts = await partController.findAllPartsForProductId(
-          system.product.id
-        );
-        const partMap = parts.map(p => new PartData(p, ''));
-        system.product.parts = partMap;
-        productPartCache[system.product.id] = partMap;
-      }
-    }
+const getSystemStockData = (system, stockCity) => {
+  const product = ProdCache.getProduct(system.productId);
+  let partsBom = 0;
+  let partsStock = 0;
 
-    return Promise.resolve(systems);
-  } catch (error) {
-    return Promise.reject(error);
-  }
-};
-
-const groupByContract = async systems => {
-  try {
-    const contracts = {};
-
-    systems = await getProductParts(systems);
-    for (const system of systems) {
-      if (typeof contracts[system.contract.said] === 'undefined') {
-        contracts[system.contract.said] = {};
-        contracts[system.contract.said].contract = system.contract;
-        contracts[system.contract.said].products = [];
-      }
-
-      system.product.parts.forEach(p => {
-        p.from = '_Product';
-      });
-
-      // merge product and serial parts
-      if (system.serial && system.serial.parts && system.serial.parts.length) {
-        for (const serialPart of system.serial.parts) {
-          let found = false;
-          for (const productPart of system.product.parts) {
-            if (serialPart.id === productPart.id) {
-              found = true;
-              productPart.from += '_Serial';
-              break;
-            }
-          }
-          if (!found) {
-            system.product.parts.push(new PartData(serialPart, '_Serial'));
-          }
-        }
-      }
-
-      system.product.parts.forEach(part => {
-        if (part.stockQty > 0) {
-          system.hasParts = true;
-        }
-      });
-
-      for (const part of system.product.parts) {
-        if (part.feScanStatus !== 'NO_FE') {
-          if (typeof partFeCache[part.id] === 'undefined') {
-            part.feParts = await partController.getPartFieldEquivDirect(
-              part.id
-            );
-            partFeCache[part.id] = part.feParts;
-          } else {
-            part.feParts = partFeCache[part.id];
-          }
-          part.feParts.forEach(fePart => {
-            if (fePart.stockQty > 0) {
-              system.hasParts = true;
-            }
-          });
+  if (product) {
+    for (const part of product) {
+      if (part.from !== '_Serial' || part.serials.indexOf(system.id) !== -1) {
+        if (part.stocks) {
+          partsStock += part.stockCityQty(stockCity);
         } else {
-          part.feParts = [];
+          partsStock += PartCache.parts[part.id].stockCityQty(stockCity);
+        }
+      }
+    }
+
+    partsBom = product.length;
+  }
+
+  return [partsBom, partsStock];
+};
+
+const makeSystemPartList = async system => {
+  try {
+    const partList = [];
+
+    const product = ProdCache.getProduct(system.product.id);
+    if (product) {
+      const partsFromProduct = product.map(part => {
+        if (part.stocks) {
+          return part;
+        }
+        return PartCache.parts[part.id];
+      });
+
+      const partsFromSerial = system.serial ? system.serial.parts : [];
+
+      const feParts = new Set();
+      for (const partSerial of partsFromSerial) {
+        let found = false;
+        for (const partProd of partsFromProduct) {
+          if (partSerial.id === partProd.id) {
+            found = true;
+            partProd.from = '_Product_Serial';
+            break;
+          }
+        }
+
+        if (!found) {
+          const part_ = await PartCache.getPart(partSerial.id);
+          part_.from = '_Serial';
+          partList.push(part_);
+
+          for (const fePart of part_.fePart) {
+            feParts.add(fePart);
+          }
         }
       }
 
-      contracts[system.contract.said].products.push({
-        productNumber: system.product.productNumber,
-        description: system.product.description,
-        parts: JSON.parse(JSON.stringify(system.product.parts)), // deep copy
-        qty: system.qty,
-        serialList: system.serialList || '',
-        hasParts: system.hasParts
-      });
+      for (const fePart of feParts) {
+        let found = false;
+        for (const partProd of partsFromProduct) {
+          if (fePart.id === partProd.id) {
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          fePart.from = '_FE_ADDED_Serial';
+          partList.push(fePart);
+        }
+      }
+
+      return Promise.resolve([...partsFromProduct, ...partList]);
     }
-    return Promise.resolve(contracts);
+
+    return Promise.resolve(partList);
   } catch (error) {
     return Promise.reject(error);
   }
 };
+
+const addBomPartRows = async (sheet, system, product, rowValues, stockCity) => {
+  try {
+    let rowsAdded = 0;
+
+    if (product && product.length) {
+      const partList = await makeSystemPartList(system);
+      for (const part of partList) {
+        rowsAdded++;
+        const partLink = part.stocks.length
+          ? {
+              text: `${part.partNumber}`,
+              hyperlink: `..\\parts\\${part.partNumber}.xlsx`,
+              tooltip: `Open spare part report - ${part.partNumber}`
+            }
+          : part.partNumber;
+
+        const partValues = [
+          ...rowValues,
+          ...[
+            partLink,
+            part.fePart ? part.fePart.length : 0,
+            part.description || part.descriptionShort,
+            part.from,
+            part.stockCityQty(stockCity)
+          ]
+        ];
+
+        sheet.addRow(partValues);
+
+        // color parts
+        sheet.lastRow.eachCell((cell, cellNumber) => {
+          if (cellNumber > rowValues.length) {
+            const color = part.stockCityQty(stockCity)
+              ? Color.PART_IN_STOCK
+              : Color.WHITE;
+
+            fillCell.solid(cell, color);
+          }
+        });
+
+        // mark part source GRAY
+        sheet.lastRow.getCell(rowValues.length + 4).font = {
+          color: { argb: '55555555' }
+        };
+
+        if (part.stocks.length) {
+          const cellNum = 1 + rowValues.length;
+          sheet.lastRow.getCell(cellNum).font = {
+            color: { argb: '000000ff' },
+            underline: 'single'
+          };
+        }
+      }
+    } else {
+      rowValues.push(...['', '', '', '', '']);
+      sheet.addRow(rowValues);
+    }
+    return Promise.resolve(rowsAdded);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+const addContractsSystemRows = async (sheet, contract, addPartRows) => {
+  try {
+    const status = new Status();
+    const noStock = new Status();
+
+    const stockCity = contract.getStockCity();
+    const contStatus = contractStatus(contract);
+    const contType = contractType(contract);
+    status[contStatus][contType] += contract.systems.length;
+    const { customer, said } = contract;
+
+    const contractLink = addPartRows
+      ? `'${said}`
+      : {
+          text: `${said}`,
+          hyperlink: `..\\contracts\\${customer}_${said}.xlsx`,
+          tooltip: `Open contract detailed report`
+        };
+
+    const contractValues = [
+      contractLink,
+      contract.city,
+      stockCity,
+      contract.response,
+      contractStatus(contract), // status 22
+      dayjs(contract.startDate, 'MMDDYY').format('MM/DD/YYYY'),
+      dayjs(contract.endDate, 'MMDDYY').format('MM/DD/YYYY')
+    ];
+
+    let systemsNoStock = 0;
+    let partRows = 0;
+    for (const system of contract.systems) {
+      const [partsBom, partsStock] = getSystemStockData(system, stockCity);
+
+      if (system.serial && !system.serial.parts) {
+        system.serial.parts = await partController.getSerialParts(
+          system.serial.id
+        );
+      }
+
+      const serialLink =
+        system.serial && system.serial.parts.length
+          ? {
+              text: `${system.serialList}`,
+              hyperlink: `https://partsurfer.hpe.com/Search.aspx?SearchText=${system.serial.serialNum}`,
+              tooltip: `Search HPE Partsurfer for the serial ${system.serial.serialNum}`
+            }
+          : system.serialList;
+
+      if (partsStock < 1) {
+        systemsNoStock++;
+      }
+
+      if (partsBom > 0 && partsStock < 1) {
+        noStock[contStatus][contType]++;
+      }
+
+      const productLink =
+        partsBom > 0
+          ? {
+              text: system.product.productNumber,
+              hyperlink: `..\\products\\${system.product.productNumber}.xlsx`,
+              tooltip: `${system.product.productNumber}`
+            }
+          : system.product.productNumber;
+
+      const rowValues = [
+        ...contractValues,
+        ...[
+          productLink,
+          system.product.description,
+          serialLink,
+          system.qty,
+          partsBom,
+          system.serial ? system.serial.parts.length : '-',
+          partsStock
+        ]
+      ];
+
+      let rowsAdded = 0;
+      const product = ProdCache.getProduct(system.product.id);
+      if (addPartRows) {
+        rowsAdded += await addBomPartRows(
+          sheet,
+          system,
+          product,
+          rowValues,
+          stockCity
+        );
+      } else {
+        sheet.addRow(rowValues);
+
+        sheet.lastRow.getCell(1).font = {
+          color: { argb: '000000ff' },
+          underline: 'single'
+        };
+      }
+
+      // merge products
+      if (rowsAdded > 1) {
+        for (let colNumber = 8; colNumber <= 14; colNumber++) {
+          const firstRow = sheet.lastRow._number - (rowsAdded - 1);
+          sheet.mergeCells(
+            firstRow,
+            colNumber,
+            sheet.lastRow._number,
+            colNumber
+          );
+
+          sheet.getCell(firstRow, colNumber).alignment = {
+            vertical: 'top',
+            horizontal: colNumber < 10 ? 'left' : 'right'
+          };
+        }
+      }
+
+      if (addPartRows) {
+        sheet.lastRow.eachCell((cell, colNumber) => {
+          if (colNumber >= 8) {
+            cell.border = { bottom: { style: 'thin' } };
+          }
+          fillCell.solid(cell, Color.WHITE);
+        });
+      }
+
+      partRows += rowsAdded > 1 ? rowsAdded - 1 : 0;
+
+      if (partsBom) {
+        sheet.lastRow.getCell(8).font = {
+          color: { argb: '000000ff' },
+          underline: 'single'
+        };
+      }
+
+      if (typeof serialLink === 'object') {
+        sheet.lastRow.getCell(10).font = {
+          color: { argb: '000000ff' },
+          underline: 'single'
+        };
+      }
+
+      sheet.lastRow.eachCell((cell, colNumber) => {
+        if (colNumber >= 8 && colNumber <= 14) {
+          const color = getContractColor(contType, partsStock > 0);
+          fillCell.solid(cell, color);
+        } else {
+          fillCell.solid(cell, Color.WHITE);
+        }
+      });
+    }
+
+    // merge contracts
+    const firstRow =
+      sheet.lastRow._number - (contract.systems.length + partRows - 1);
+    const contrColor = getContractColor(contType, systemsNoStock < 1);
+
+    if (addPartRows) {
+      if (contract.systems.length + partRows > 1) {
+        for (let colNumber = 1; colNumber <= 7; colNumber++) {
+          sheet.mergeCells(
+            firstRow,
+            colNumber,
+            sheet.lastRow._number,
+            colNumber
+          );
+
+          sheet.getCell(firstRow, colNumber).alignment = {
+            vertical: 'top',
+            horizontal: 'left'
+          };
+        }
+      }
+
+      for (let colNumber = 1; colNumber <= 7; colNumber++) {
+        fillCell.solid(sheet.getCell(firstRow, colNumber), contrColor);
+      }
+
+      // color contract entries
+    } else {
+      for (let row = firstRow; row <= sheet.lastRow._number; ++row) {
+        for (let colNumber = 1; colNumber <= 7; colNumber++) {
+          const cell = sheet.getCell(row, colNumber);
+          if (row === firstRow) {
+            if (colNumber === 1) {
+              cell.font = {
+                color: { argb: '000000ff' },
+                underline: 'single'
+              };
+            }
+          } else {
+            cell.font = {
+              color: { argb: contrColor }
+            };
+          }
+
+          fillCell.solid(cell, contrColor);
+        }
+      }
+    }
+
+    sheet.lastRow.eachCell(cell => {
+      cell.border = { bottom: { style: 'thin' } };
+    });
+
+    return Promise.resolve([status, noStock]);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+const contractColumns = [
+  new XCol(1, 'SAID', 14, []),
+  new XCol(2, 'City', 20, []),
+  new XCol(3, 'Stock City', 20, []),
+  new XCol(4, 'Response', 10, []),
+  new XCol(5, 'Status', 15, []),
+  new XCol(6, 'Start', 15, []),
+  new XCol(7, 'End', 15, []),
+  new XCol(8, 'Product', 20, []),
+  new XCol(9, 'Desciption', 40, []),
+  new XCol(10, 'Serials', 20, []),
+  new XCol(11, 'Qty', 10, []),
+  new XCol(12, 'Parts (Product)', 15, []),
+  new XCol(13, 'Parts (Serial)', 15, []),
+  new XCol(14, 'Parts Stock', 10, [])
+];
+
+// ****************************************************************
+// customer - contract file with all systems - part table
+//
+
+const createExcelContractFile = contract => {
+  const { said, customer } = contract;
+  const dir = path.join(configFilesController.getReportDir(), 'contracts');
+  const outFile = path.join(dir, `${customer}_${said}.xlsx`);
+
+  const wb = new Excel.stream.xlsx.WorkbookWriter({
+    filename: outFile,
+    useStyles: true,
+    useSharedStrings: true
+  });
+
+  return wb;
+};
+
+const createContractFile = async contract => {
+  try {
+    const wb = createExcelContractFile(contract);
+    const { said, customer } = contract;
+
+    const sheet = wb.addWorksheet('Contract Parts', {
+      views: [{ state: 'frozen', ySplit: 2 }],
+      properties: { tabColor: { argb: Color.WHITE } }
+    });
+
+    let colId = contractColumns.length + 1;
+    const xColumns = [
+      ...contractColumns,
+      ...[
+        new XCol(colId++, 'Part Number', 16, []),
+        new XCol(colId++, 'Field Equiv', 16, []),
+        new XCol(colId++, 'Part Description', 50, []),
+        new XCol(colId++, 'Source', 20, []),
+        new XCol(colId++, 'Stock Qty', 15, [])
+      ]
+    ];
+
+    addTitleRow(`Contract ${said} (${customer})`, xColumns, sheet);
+    addMainRow(xColumns, sheet);
+    const [status, noStock] = await addContractsSystemRows(
+      sheet,
+      contract,
+      true
+    );
+
+    sheet.autoFilter = {
+      from: { row: 2, column: 1 },
+      to: { row: sheet.lastRow._number, column: colNum(xColumns) }
+    };
+
+    setColWidth(xColumns, sheet);
+    await wb.commit();
+    return Promise.resolve([status, noStock]);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+// **********************************************************************
 
 const createCustomerContractFile = async (customer, dir) => {
   try {
+    const status = new Status();
+    const noStock = new Status();
+
     const outFile = path.join(dir, `${customer}.xlsx`);
 
     const wb = new Excel.stream.xlsx.WorkbookWriter({
@@ -174,9 +486,6 @@ const createCustomerContractFile = async (customer, dir) => {
       useStyles: true,
       useSharedStrings: true
     });
-
-    const systems = await systemController.findSystemsWithCustomer(customer);
-    const contracts = await groupByContract(systems);
 
     const sheet = wb.addWorksheet('Contracts', {
       views: [{ state: 'frozen', ySplit: 2 }],
@@ -190,183 +499,17 @@ const createCustomerContractFile = async (customer, dir) => {
       fillCell.solid(cell, Color.SUBTITLE);
     });
 
-    const status = new Status();
-    const noStock = new Status();
+    const contracts = await contractController.getContractsWithCutomer(
+      customer
+    );
 
-    Object.keys(contracts).forEach(c => {
-      const { contract } = contracts[c];
+    for (const contract of contracts) {
+      const [status_, nostock_] = await addContractsSystemRows(sheet, contract);
+      status.add(status_);
+      noStock.add(nostock_);
 
-      const contStatus = contractStatus(contract);
-      const contType = contractType(contract);
-      status[contStatus][contType]++;
-
-      const contractColor = getContractColor(contType, true);
-      const contractRow = sheet.addRow([
-        `'${contract.said}`,
-        contStatus,
-        contType.toUpperCase(),
-        dayjs(contract.startDate, 'MMDDYY').format('DD-MMM-YYYY'),
-        dayjs(contract.endDate, 'MMDDYY').format('DD-MMM-YYYY'),
-        'product', // 6
-        'description',
-        'qty',
-        'Serial List',
-        '',
-        '', // 11
-        '',
-        '',
-        '',
-        '',
-        '' // 16
-      ]);
-
-      contractRow.eachCell((cell, colNumber) => {
-        cell.border = { top: { style: 'thin' } };
-        if (colNumber >= 6) {
-          fillCell.solid(cell, Color.SUBTITLE);
-        } else {
-          fillCell.solid(cell, getContractColor(contType, true));
-        }
-      });
-
-      const { products } = contracts[c];
-
-      products.forEach(product => {
-        const productColor = getContractColor(contType, product.hasParts);
-        const productRow = sheet.addRow([
-          `'${contract.said}`,
-          contStatus,
-          contType.toUpperCase(),
-          dayjs(contract.startDate, 'MMDDYY').format('DD-MMM-YYYY'),
-          dayjs(contract.endDate, 'MMDDYY').format('DD-MMM-YYYY'),
-          product.productNumber, // 6
-          product.description,
-          product.qty,
-          product.serialList,
-          'Parts in product (SBOM)', // 10
-          '', // 11
-          '',
-          '',
-          '',
-          '',
-          ''
-        ]);
-
-        sheet.lastRow.eachCell((cell, colNumber) => {
-          if (colNumber < 6) {
-            fillCell.solid(cell, contractColor);
-            cell.font = { color: { argb: contractColor } };
-          } else if (colNumber < 10) {
-            fillCell.solid(cell, productColor);
-            cell.border = { top: { style: 'thin' } };
-          } else {
-            cell.font = { color: { argb: Color.WHITE } };
-            fillCell.solid(cell, Color.BLACK);
-            cell.border = { bottom: { style: 'thin' } };
-          }
-        });
-
-        sheet.getCell(sheet.lastRow._number, 10).alignment = {
-          vertical: 'middle',
-          horizontal: 'center'
-        };
-        sheet.mergeCells(
-          sheet.lastRow._number,
-          10,
-          sheet.lastRow._number,
-          colNum(contractColumns)
-        );
-
-        let partsBom = 0;
-        let partsStock = 0;
-
-        product.parts.forEach(part => {
-          partsBom++;
-          if (part.stockQty > 0) partsStock++;
-
-          sheet.addRow([
-            `'${contract.said}`,
-            contStatus,
-            contType.toUpperCase(),
-            dayjs(contract.startDate, 'MMDDYY').format('DD-MMM-YYYY'),
-            dayjs(contract.endDate, 'MMDDYY').format('DD-MMM-YYYY'),
-            '',
-            '',
-            '',
-            '',
-            part.partNumber,
-            part.descriptionShort
-              ? `${part.descriptionShort}`
-              : `${part.description} `,
-            part.stockQty || 0,
-            part.category || '',
-            part.mostUsed || '',
-            part.csr || '',
-            part.from || ''
-          ]);
-
-          sheet.lastRow.eachCell((cell, colNumber) => {
-            if (colNumber >= 10) {
-              fillCell.solid(
-                cell,
-                part.stockQty ? Color.PART_IN_STOCK : Color.WHITE
-              );
-            } else if (colNumber >= 6) {
-              fillCell.solid(cell, productColor);
-            } else {
-              fillCell.solid(cell, contractColor);
-              cell.font = { color: { argb: contractColor } };
-            }
-          });
-
-          part.feParts.forEach(fePart => {
-            if (fePart.stockQty > 0) partsStock++;
-            sheet.addRow([
-              `'${contract.said}`,
-              contStatus,
-              contType.toUpperCase(),
-              dayjs(contract.startDate, 'MMDDYY').format('DD-MMM-YYYY'),
-              dayjs(contract.endDate, 'MMDDYY').format('DD-MMM-YYYY'),
-              '',
-              '',
-              '',
-              '',
-              fePart.partNumber,
-              fePart.descriptionShort
-                ? `${fePart.descriptionShort}`
-                : `${fePart.description} `,
-              fePart.stockQty || 0,
-              fePart.category || '',
-              fePart.mostUsed || '',
-              fePart.csr || '',
-              `${part.from}_FE`
-            ]);
-
-            sheet.lastRow.eachCell((cell, colNumber) => {
-              if (colNumber >= 10) {
-                fillCell.solid(
-                  cell,
-                  fePart.stockQty ? Color.PART_IN_STOCK_FE : Color.PART_FE
-                );
-              } else if (colNumber >= 6) {
-                fillCell.solid(cell, productColor);
-              } else {
-                fillCell.solid(cell, contractColor);
-                cell.font = { color: { argb: contractColor } };
-              }
-            });
-          });
-        });
-
-        productRow.getCell(
-          10
-        ).value = `Parts   BOM: ${partsBom}  STOCK: ${partsStock}`;
-
-        if (partsStock < 1) {
-          noStock[contStatus][contType]++;
-        }
-      });
-    });
+      await createContractFile(contract);
+    }
 
     sheet.autoFilter = {
       from: { row: 2, column: 1 },
@@ -374,8 +517,6 @@ const createCustomerContractFile = async (customer, dir) => {
     };
 
     setColWidth(contractColumns, sheet);
-    productPartCache = {}; // clear cache
-    partFeCache = {}; // clear cache
     await wb.commit();
     return Promise.resolve([status, noStock]);
   } catch (error) {

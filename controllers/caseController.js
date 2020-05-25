@@ -67,6 +67,18 @@ exports.addCaseData = async casePartUsageData => {
   }
 };
 
+exports.findCasesWithProduct = async productName => {
+  try {
+    const cases = await Case.findAll({
+      where: { product: productName },
+      include: [{ model: CasePart, required: true, include: [{ model: Case }] }]
+    });
+    return Promise.resolve(cases);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
 exports.clearCaseUse = async () => {
   try {
     await CasePart.destroy({ where: {} });

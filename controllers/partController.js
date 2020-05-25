@@ -1,8 +1,10 @@
 /* eslint-disable no-restricted-syntax */
 const { ipcRenderer } = require('electron');
 const Part = require('../models/Part');
-const Product = require('../models/Product');
 const Stock = require('../models/Stock');
+const Product = require('../models/Product');
+const Serial = require('../models/Serial');
+// const Stock = require('../models/Stock');
 const PartFieldEquiv = require('../models/PartFieldEquiv');
 const browserController = require('./browserController');
 
@@ -13,35 +15,38 @@ exports.addOnePartFromStock = part => {
       defaults: {
         description: part.description,
         price: part.price,
-        stockQty: part.qty
+        stockQty: part.qty || 0
       }
     })
       .then(([partdb, partCreated]) => {
         if (!partCreated) {
-          const newQty = partdb.stockQty + part.qty;
-          partdb.update({
-            // update price for existing part
-            price: part.price,
-            stockQty: newQty
-          });
+          // eslint-disable-next-line no-param-reassign
+          partdb.stockQty += part.qty;
+          partdb.save();
+          // const newQty = partdb.stockQty + part.qty;
+          // partdb.update({
+          //   // update price for existing part
+          //   price: part.price,
+          //   stockQty: newQty
+          // });
         }
-
-        Stock.findCreateFind({
-          where: { partId: partdb.id },
-          defaults: { qty: part.qty, caseUse: 0 }
-        })
-          .then(([stock, stockCreated]) => {
-            if (!stockCreated) {
-              const newQty = stock.qty + part.qty;
-              stock
-                .update({ qty: newQty })
-                .then(() => resolve(part))
-                .catch(err => reject(err));
-            } else {
-              resolve(part);
-            }
-          })
-          .catch(err => reject(err));
+        resolve(partdb);
+        // Stock.findCreateFind({
+        //   where: { partId: partdb.id },
+        //   defaults: { qty: part.qty, caseUse: 0 }
+        // })
+        //   .then(([stock, stockCreated]) => {
+        //     if (!stockCreated) {
+        //       const newQty = stock.qty + part.qty;
+        //       stock
+        //         .update({ qty: newQty })
+        //         .then(() => resolve(part))
+        //         .catch(err => reject(err));
+        //     } else {
+        //       resolve(part);
+        //     }
+        //   })
+        //   .catch(err => reject(err));
       })
       .catch(err => {
         reject(err);
@@ -327,6 +332,38 @@ exports.findAllPartsForProductId = async productId => {
           model: Product,
           where: { id: productId, exclude: false }
         }
+      ]
+    });
+    return Promise.resolve(parts);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.getPartData = async partId => {
+  try {
+    const part = await Part.findOne({
+      where: { id: partId },
+      include: [
+        { model: Stock },
+        { model: Part, as: 'fePart', include: [{ model: Stock }] }
+      ]
+    });
+    return Promise.resolve(part);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+exports.getSerialParts = async serialId => {
+  try {
+    const parts = await Part.findAll({
+      where: { exclude: false },
+      attributes: ['id'],
+      include: [
+        { model: Serial, required: true, where: { id: serialId } } // ,
+        // { model: Stock },
+        // { model: Part, as: 'fePart', include: [{ model: Stock }] }
       ]
     });
     return Promise.resolve(parts);

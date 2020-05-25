@@ -17,7 +17,8 @@ const partController = require('../controllers/partController');
 const caseController = require('../controllers/caseController');
 const dbConnect = require('../dbConnect');
 
-const ExcludeCities = require('../models/ExcludeCities');
+// const ExcludeCities = require('../models/ExcludeCities');
+const StockMap = require('../models/StockMap');
 
 dayjs.extend(customParseFormat);
 
@@ -109,12 +110,14 @@ exports.loadFileXLSX = (file, processRowCallBack) => {
     });
 
     workbook.on('worksheet', function(worksheet) {
-      worksheet.on('row', row => {
-        promiseArray.push(processRowCallBack(file.type, row));
-        // workaround to stop reading stream
-        // workbook.zip.unpipe();
-        // workbook.zip.destroy();
-      });
+      if (worksheet.id === '1' || file.multiSheet) {
+        worksheet.on('row', row => {
+          promiseArray.push(processRowCallBack(file.type, row));
+          // workaround to stop reading stream
+          // workbook.zip.unpipe();
+          // workbook.zip.destroy();
+        });
+      }
 
       worksheet.on('close', function() {
         console.log('worksheet close');
@@ -188,17 +191,17 @@ const matchCountry = country => {
   return false;
 };
 
-const checkExcludeCity = data => {
-  if (
-    data.city &&
-    typeof data.city === 'string' &&
-    ExcludeCities[data.country].indexOf(data.city.toLowerCase()) !== -1
-  ) {
-    return true;
-  }
+// const checkExcludeCity = data => {
+//   if (
+//     data.city &&
+//     typeof data.city === 'string' &&
+//     ExcludeCities[data.country].indexOf(data.city.toLowerCase()) !== -1
+//   ) {
+//     return true;
+//   }
 
-  return false;
-};
+//   return false;
+// };
 
 const checkResponse = data => {
   // try to deduct reposnse for the systems with serial numbers from offer and package columns
@@ -255,9 +258,14 @@ exports.validateSalesData = data => {
     (data.productNumber[0] === 'H' && !data.serial) ||
     !checkResponse(data) ||
     !matchCountry(data.country) ||
-    checkExcludeCity(data) ||
+    // checkExcludeCity(data) ||
     (skipRejected && data.status && data.status === 'Fully Rejected')
   ) {
+    return false;
+  }
+
+  const stockCity = StockMap.getCityStock(data.country, data.city);
+  if (stockCity.toLowerCase() === 'ignore') {
     return false;
   }
 
@@ -393,6 +401,8 @@ const processData = async (type, data) => {
   } else if (type === 'partExcludeFile') {
     await partController.setExcludeFlags(data);
     await productController.setExcludeFlags(data);
+  } else if (type === 'stockMapFile') {
+    StockMap.importStockMaps(data);
   }
 };
 
@@ -409,6 +419,7 @@ exports.importFiles = async () => {
     // await stockController.clearStock();
     const filesToLoad = configFilesController.selectAllFilesFromConfig();
     const fileTypes = [
+      { name: 'stockMapFile' },
       { name: 'stockFile' },
       { name: 'caseUsageFile' },
       { name: 'salesDataFile' }
@@ -432,7 +443,7 @@ exports.importFiles = async () => {
   }
 };
 
-exports.setExcludeFlags = async () => {
+exports.setExcludeFlagsAndStockMap = async () => {
   try {
     const filesToLoad = configFilesController.selectAllFilesFromConfig();
     await partController.clearExcludeFlags();
@@ -440,9 +451,13 @@ exports.setExcludeFlags = async () => {
 
     for (const file of filesToLoad) {
       if (file.type === 'partExcludeFile') {
+        file.multiSheet = true;
         const data = await this.loadFile(file, this.processDataRow);
         await partController.setExcludeFlags(data);
         await productController.setExcludeFlags(data);
+      } else if (file.type === 'stockMapFile') {
+        const data = await this.loadFile(file, this.processDataRow);
+        StockMap.importStockMaps(data);
       }
     }
     return Promise.resolve();

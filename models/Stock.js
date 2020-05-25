@@ -6,7 +6,8 @@ const Stock = db.define(
   'stock',
   {
     qty: { type: sequelize.INTEGER, defaulValue: 0 },
-    caseUse: { type: sequelize.INTEGER, defaulValue: 0 }
+    location: { type: sequelize.STRING, defaulValue: 'DEFAULT' }
+    // caseUse: { type: sequelize.INTEGER, defaulValue: 0 } // not used
   },
   {
     freezeTableName: true

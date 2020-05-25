@@ -1,3 +1,5 @@
+// obsolete file
+
 const ExcludeCities = {
   LT: [
     'tallinn',

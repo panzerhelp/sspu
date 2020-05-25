@@ -1,5 +1,6 @@
 const sequelize = require('sequelize');
 const db = require('../db');
+const StockMap = require('./StockMap');
 
 const Contract = db.define('contract', {
   said: { type: sequelize.STRING, allowNull: false, unique: true },
@@ -10,6 +11,25 @@ const Contract = db.define('contract', {
   country: { type: sequelize.STRING },
   city: { type: sequelize.STRING }
 });
+
+Contract.prototype.getStockCity = function() {
+  return StockMap.getCityStock(this.country, this.city);
+};
+
+Contract.prototype.getTypeStr = function() {
+  if (this.response.toLowerCase().indexOf('ctr') !== -1) {
+    return 'CTR';
+  }
+
+  if (
+    this.response.toLowerCase().indexOf('4h') !== -1 ||
+    this.response.toLowerCase().indexOf('sd') !== -1
+  ) {
+    return 'SD';
+  }
+
+  return 'ND';
+};
 
 module.exports = Contract;
 
