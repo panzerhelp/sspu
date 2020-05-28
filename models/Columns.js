@@ -1,13 +1,19 @@
+const dayjs = require('dayjs');
+const customParseFormat = require('dayjs/plugin/customParseFormat');
+
+dayjs.extend(customParseFormat);
+
 const Columns = {
   stockFile: {
     partNumber: { names: ['part number', 'part', 'p/n'] },
     qty: { names: ['qty', 'material left', 'total stock'] },
     location: { names: ['whs', 'location'] },
     description: { names: ['description'] },
-    price: { names: ['unit price', 'price'] }
+    price: { names: ['unit price', 'price', 'net value'] },
+    postDate: { names: ['posting date'], type: 'date' }
   },
   caseUsageFile: {
-    date: { names: ['casedate'] },
+    date: { names: ['casedate'], type: 'date' },
     caseId: { names: ['sfdc case id'] },
     customer: { names: ['customer'] },
     response: { names: ['response'] },
@@ -35,8 +41,14 @@ const Columns = {
     serial: { names: ['serial nbr'] },
     said: { names: ['service agreement id', 'svc agreement id'] },
     funcLoc: { names: ['functional location'] },
-    startDate: { names: ['contract start date', 'contract start date'] },
-    endDate: { names: ['contract end date', 'contract term date'] },
+    startDate: {
+      names: ['contract start date', 'contract start date'],
+      type: 'date'
+    },
+    endDate: {
+      names: ['contract end date', 'contract term date'],
+      type: 'date'
+    },
     qty: { names: ['product quantity'] },
     status: { names: ['renewal status', 'contract status'] },
     package: { names: ['package product description'] },
@@ -83,6 +95,16 @@ const removeNonAscii = str => {
   return str.replace(/[^0-9a-zA-Z- ]/g, '');
 };
 
+const getDateFromExcel = excelDate => {
+  // JavaScript dates can be constructed by passing milliseconds
+  // since the Unix epoch (January 1, 1970) example: new Date(12312512312);
+
+  // 1. Subtract number of days between Jan 1, 1900 and Jan 1, 1970, plus 1 (Google "excel leap year bug")
+  // 2. Convert to milliseconds.
+  const d = new Date((excelDate - (25567 + 2)) * 86400 * 1000);
+  return dayjs(d).format('MMDDYY');
+};
+
 Columns.getData = (fileType, row) => {
   const obj = {};
   Object.keys(Columns[fileType]).forEach(key => {
@@ -96,9 +118,18 @@ Columns.getData = (fileType, row) => {
             value = '';
           }
         }
+
         if (typeof value === 'string' && value) {
           value = removeNonAscii(value.trim());
         }
+
+        if (
+          Columns[fileType][key].type === 'date' &&
+          typeof value === 'number'
+        ) {
+          value = getDateFromExcel(value);
+        }
+
         obj[key] = value;
       }
     }

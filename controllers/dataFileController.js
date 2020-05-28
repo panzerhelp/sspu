@@ -169,15 +169,15 @@ exports.cleanUpAfterImport = () => {
   contractsData = {};
 };
 
-const getDateFromExcel = excelDate => {
-  // JavaScript dates can be constructed by passing milliseconds
-  // since the Unix epoch (January 1, 1970) example: new Date(12312512312);
+// const getDateFromExcel = excelDate => {
+//   // JavaScript dates can be constructed by passing milliseconds
+//   // since the Unix epoch (January 1, 1970) example: new Date(12312512312);
 
-  // 1. Subtract number of days between Jan 1, 1900 and Jan 1, 1970, plus 1 (Google "excel leap year bug")
-  // 2. Convert to milliseconds.
-  const d = new Date((excelDate - (25567 + 2)) * 86400 * 1000);
-  return dayjs(d).format('MMDDYY');
-};
+//   // 1. Subtract number of days between Jan 1, 1900 and Jan 1, 1970, plus 1 (Google "excel leap year bug")
+//   // 2. Convert to milliseconds.
+//   const d = new Date((excelDate - (25567 + 2)) * 86400 * 1000);
+//   return dayjs(d).format('MMDDYY');
+// };
 
 const matchCountry = country => {
   const importCountry = configFilesController.getImportCountry();
@@ -242,6 +242,18 @@ const checkResponse = data => {
     return false;
   }
 
+  // convert to simple format
+  if (
+    data.response.trim().toLowerCase() === 'ctr6hr' ||
+    data.response.trim().toLowerCase() === 'ctr24hr'
+  ) {
+    data.response = 'CTR';
+  } else if (data.response.trim().toLowerCase() === 'ons4hr') {
+    data.response = 'SD';
+  } else if (data.response.trim().toLowerCase() === 'onsncd') {
+    data.response = 'ND';
+  }
+
   return true;
 };
 
@@ -273,13 +285,13 @@ exports.validateSalesData = data => {
     data.customer = data.customer.toLowerCase();
   }
 
-  if (typeof data.startDate === 'number') {
-    data.startDate = getDateFromExcel(data.startDate);
-  }
+  // if (typeof data.startDate === 'number') {
+  //   data.startDate = getDateFromExcel(data.startDate);
+  // }
 
-  if (typeof data.endDate === 'number') {
-    data.endDate = getDateFromExcel(data.endDate);
-  }
+  // if (typeof data.endDate === 'number') {
+  //   data.endDate = getDateFromExcel(data.endDate);
+  // }
 
   if (
     typeof data.serial === 'undefined' ||
@@ -394,6 +406,14 @@ const prepareData = async type => {
 const processData = async (type, data) => {
   // post-processing functions
   if (type === 'stockFile') {
+    // for (const d of data) {
+    //   if (d && typeof d.postDate === 'number') {
+    //     debugger;
+    //     d.postDate = getDateFromExcel(d.postDate);
+    //     debugger;
+    //   }
+    // }
+
     await stockController.addStockParts(data);
   } else if (type === 'caseUsageFile') {
     // await stockController.addStockPartCaseUsage(data);

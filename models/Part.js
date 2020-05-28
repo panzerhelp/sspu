@@ -1,6 +1,11 @@
 /* eslint-disable no-restricted-syntax */
+const dayjs = require('dayjs');
+const customParseFormat = require('dayjs/plugin/customParseFormat');
+
 const sequelize = require('sequelize');
 const db = require('../db');
+
+dayjs.extend(customParseFormat);
 
 const Part = db.define(
   'part',
@@ -34,6 +39,55 @@ Part.prototype.stockCityQty = function(stockCity) {
   }
 
   return qty;
+};
+
+Part.prototype.getWeeksOnHand = function(stock) {
+  const woh = [];
+
+  if (!stock.postDate) {
+    return ['', ''];
+  }
+
+  // let lastCaseDate = dayjs('110118', 'MMDDYY'); // default startDate 01-Nov-2018
+  let lastCaseDate = dayjs(stock.postDate, 'MMDDYY');
+
+  // if (this.stocks) {
+  //   for (const stock of this.stocks) {
+  //     if (stock.location === stockCity && stock.postDate) {
+  //       lastCaseDate = dayjs(stock.postDate, 'MMDDYY');
+  //     }
+  //   }
+  // }
+
+  if (this.caseParts && this.caseParts.length) {
+    const deliveryDates = this.caseParts
+      .filter(
+        casePart =>
+          casePart.status === 'LOCAL' &&
+          !casePart.feUsed &&
+          casePart.deliveryDate !== '-'
+      )
+      .map(casePart => ({
+        part: this.partNumber,
+        date: casePart.deliveryDate,
+        case: casePart.case.caseId
+      }))
+      .sort((a, b) => a.date - b.date);
+
+    deliveryDates.forEach(delivery => {
+      const date = dayjs(delivery.date, 'YYYYMMDD');
+      if (date.isAfter(lastCaseDate)) {
+        woh.push(date.diff(lastCaseDate, 'week'));
+        lastCaseDate = date;
+      }
+    });
+  }
+
+  woh.push(dayjs().diff(lastCaseDate, 'week'));
+
+  const wohAvg = Math.floor(woh.reduce((p, c) => p + c, 0) / woh.length);
+  const wohLast = woh[woh.length - 1];
+  return [wohAvg, wohLast];
 };
 
 module.exports = Part;

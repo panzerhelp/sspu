@@ -8,15 +8,16 @@ exports.addOneCase = async caseData => {
   try {
     const [casedb] = await Case.findCreateFind({
       where: { caseId: caseData.caseId },
-      defaults: {
-        date: caseData.date,
-        customer: caseData.customer,
-        response: caseData.response,
-        serial: caseData.serial,
-        product: caseData.product,
-        contract: caseData.contract,
-        partner: caseData.partner
-      }
+      defaults: caseData
+      // defaults: {
+      //   date: caseData.date,
+      //   customer: caseData.customer,
+      //   response: caseData.response,
+      //   serial: caseData.serial,
+      //   product: caseData.product,
+      //   contract: caseData.contract,
+      //   partner: caseData.partner
+      // }
     });
 
     const part = await Part.findOne({
@@ -27,6 +28,7 @@ exports.addOneCase = async caseData => {
       await CasePart.create({
         caseId: casedb.id,
         partId: part.id,
+        date: caseData.date,
         status: caseData.status,
         feUsed: caseData.feUsed,
         gcsn: caseData.gcsn,

@@ -6,6 +6,7 @@ const Case = require('./Case');
 const CasePart = db.define(
   'casePart',
   {
+    date: { type: sequelize.STRING },
     status: { type: sequelize.STRING },
     feUsed: { type: sequelize.STRING },
     gcsn: { type: sequelize.STRING },

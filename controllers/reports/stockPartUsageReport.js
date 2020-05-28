@@ -24,34 +24,39 @@ const createPartContractFile = require('./createPartContractFile');
 
 dayjs.extend(customParseFormat);
 
+let id = 1;
 const partUsageColumns = [
-  new XCol(1, 'Part Number', 15, []),
-  new XCol(2, 'Description', 40, []),
-  new XCol(3, 'Field Equiv', 20, []),
-  new XCol(4, 'Price', 10, []),
-  new XCol(5, 'Cases', 15, []),
-  new XCol(6, 'Stock Mis Cases', 15, []),
-  new XCol(7, 'Stock Location', 15, []),
-  new XCol(8, 'Qty', 5, []),
-  new XCol(9, 'Active', 10, [
-    new XCol(9, 'CTR+SD', 10, []),
-    new XCol(10, 'CTR', 10, []),
-    new XCol(11, 'SD', 10, []),
-    new XCol(12, 'ND', 10, [])
+  new XCol(id++, 'Part Number', 15, []),
+  new XCol(id++, 'Description', 40, []),
+  new XCol(id++, 'Field Equiv', 20, []),
+  new XCol(id++, 'Price', 10, []),
+  new XCol(id++, 'WoH Avg', 12, []),
+  new XCol(id++, 'WoH Last', 12, []),
+  new XCol(id++, 'Cases', 12, []),
+  new XCol(id++, 'Stock Mis Cases', 12, []),
+  new XCol(id++, 'Stock Location', 13, []),
+  new XCol(id++, 'Qty', 5, []),
+  new XCol(id, 'Active', 10, [
+    new XCol(id++, 'CTR+SD', 10, []),
+    new XCol(id++, 'CTR', 10, []),
+    new XCol(id++, 'SD', 10, []),
+    new XCol(id++, 'ND', 10, [])
   ]),
-  new XCol(13, 'Active 6m', 10, [
-    new XCol(13, 'CTR+SD', 10, []),
-    new XCol(14, 'CTR', 10, []),
-    new XCol(15, 'SD', 10, []),
-    new XCol(16, 'ND', 10, [])
+  new XCol(id, 'Active 6m', 10, [
+    new XCol(id++, 'CTR+SD', 10, []),
+    new XCol(id++, 'CTR', 10, []),
+    new XCol(id++, 'SD', 10, []),
+    new XCol(id++, 'ND', 10, [])
   ]),
-  new XCol(17, 'Expired', 10, [
-    new XCol(18, 'CTR+SD', 10, []),
-    new XCol(19, 'CTR', 10, []),
-    new XCol(20, 'SD', 10, []),
-    new XCol(21, 'ND', 10, [])
+  new XCol(id, 'Expired', 10, [
+    new XCol(id++, 'CTR+SD', 10, []),
+    new XCol(id++, 'CTR', 10, []),
+    new XCol(id++, 'SD', 10, []),
+    new XCol(id++, 'ND', 10, [])
   ]) // ,
 ];
+
+const PART_COL_NUM = 4; // columns which are common for the part
 
 const addStockPartRow = async (stockPart, sheet, dir) => {
   const feParts = await createPartContractFile(stockPart, dir);
@@ -65,6 +70,8 @@ const addStockPartRow = async (stockPart, sheet, dir) => {
       : '';
     const priceStr = stockPart.price ? parseFloat(stockPart.price) : '';
 
+    const [wohAvg, wohLast] = stockPart.getWeeksOnHand(stock);
+
     await sheet.addRow([
       {
         text: stockPart.partNumber,
@@ -74,8 +81,10 @@ const addStockPartRow = async (stockPart, sheet, dir) => {
       stockPart.description || stockPart.descriptionShort,
       fePartsStr,
       priceStr,
+      wohAvg, // weeks on hand avg
+      wohLast, // weeks on hand last
       stockPart.caseParts.length,
-      stockPart.getStockMiss(),
+      stockPart.getStockMiss(stock.location),
       stock.location,
       stock.qty,
       partStatus.active.ctr + partStatus.active.sd,
@@ -103,12 +112,12 @@ const addStockPartRow = async (stockPart, sheet, dir) => {
       let color = Color.WHITE;
 
       if (
-        (collNumber > 6 && partStatus.isInactive()) ||
+        (collNumber > PART_COL_NUM && partStatus.isInactive()) ||
         stockPart.partStatus.isInactive()
       ) {
         color = Color.RED_SOLID;
       } else if (
-        (collNumber > 6 && partStatus.isInactive6m()) ||
+        (collNumber > PART_COL_NUM && partStatus.isInactive6m()) ||
         stockPart.partStatus.isInactive6m()
       ) {
         color = Color.RED;
@@ -130,7 +139,7 @@ const addStockPartRow = async (stockPart, sheet, dir) => {
   }
 
   if (stockPart.stocks.length > 1) {
-    for (let colNumber = 1; colNumber <= 6; colNumber++) {
+    for (let colNumber = 1; colNumber <= PART_COL_NUM; colNumber++) {
       const firstRow = sheet.lastRow._number - (stockPart.stocks.length - 1);
       sheet.mergeCells(firstRow, colNumber, sheet.lastRow._number, colNumber);
 

@@ -80,6 +80,7 @@ class FileImport {
   addButtonHTML(file, fileType, secondary) {
     const btnClass =
       fileType === 'caseUsageFile' ||
+      fileType === 'stockMapFile' ||
       fileType === 'priceFile' ||
       fileType === 'partExcludeFile' ||
       typeof secondary !== 'undefined'
@@ -177,7 +178,7 @@ class FileImport {
       });
     }
 
-    if (stockDataFileCount && salesDataFileCount) {
+    if (1 || (stockDataFileCount && salesDataFileCount)) {
       return true;
     }
 

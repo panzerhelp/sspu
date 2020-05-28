@@ -50,19 +50,25 @@ class DatabaseStat {
   }
 
   init() {
-    ['Part', 'Stock', 'System', 'Product', 'Serial', 'Contract'].forEach(
-      item => {
-        // eslint-disable-next-line no-eval
-        // eval(item)
+    [
+      'Part',
+      'Stock',
+      'System',
+      'Product',
+      'Serial',
+      'Contract',
+      'Case'
+    ].forEach(item => {
+      // eslint-disable-next-line no-eval
+      // eval(item)
 
-        // eslint-disable-next-line import/no-dynamic-require
-        require(`../../models/${item}`)
-          .count()
-          .then(count => {
-            document.getElementById(`db${item}`).innerHTML = count.toString();
-          });
-      }
-    );
+      // eslint-disable-next-line import/no-dynamic-require
+      require(`../../models/${item}`)
+        .count()
+        .then(count => {
+          document.getElementById(`db${item}`).innerHTML = count.toString();
+        });
+    });
 
     this.showScanWindow.checked = configFilesController.getShowScanWindow();
     this.scanGeneralProductTab.checked = configFilesController.getScanGeneralProductTab();
