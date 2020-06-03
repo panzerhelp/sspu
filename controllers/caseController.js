@@ -48,7 +48,7 @@ exports.addCaseData = async casePartUsageData => {
     const tot = casePartUsageData.length;
     let cur = 1;
     for (const casePartUsage of casePartUsageData) {
-      if (casePartUsage) {
+      if (casePartUsage && casePartUsage.caseId) {
         if (casePartUsage.caseId === 'not created') {
           casePartUsage.caseId = `DUMMY-${casePartUsage.date}-${casePartUsage.serial}`;
         }

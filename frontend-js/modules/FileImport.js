@@ -178,7 +178,7 @@ class FileImport {
       });
     }
 
-    if (1 || (stockDataFileCount && salesDataFileCount)) {
+    if (stockDataFileCount && salesDataFileCount) {
       return true;
     }
 

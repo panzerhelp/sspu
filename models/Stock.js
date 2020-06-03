@@ -7,7 +7,7 @@ const Stock = db.define(
   {
     qty: { type: sequelize.INTEGER, defaulValue: 0 },
     location: { type: sequelize.STRING, defaulValue: 'DEFAULT' },
-    postDate: { type: sequelize.STRING, allowNull: false }
+    postDate: { type: sequelize.STRING }
     // caseUse: { type: sequelize.INTEGER, defaulValue: 0 } // not used
   },
   {

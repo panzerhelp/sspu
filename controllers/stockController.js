@@ -30,7 +30,7 @@ exports.addPartToStock = async (stockPart, partId) => {
       where: { partId: partId, location: stockPart.location },
       defaults: {
         qty: stockPart.qty || 0,
-        postDate: stockPart.postDate
+        postDate: stockPart.postDate || '110118'
       }
     });
 
