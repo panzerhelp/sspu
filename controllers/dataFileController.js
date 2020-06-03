@@ -276,6 +276,12 @@ exports.validateSalesData = data => {
     return false;
   }
 
+  data.city = data.city || '';
+
+  if (typeof data.city !== 'string') {
+    data.city = data.city.toString();
+  }
+
   const stockCity = StockMap.getCityStock(data.country, data.city);
   if (stockCity.toLowerCase() === 'ignore') {
     return false;
