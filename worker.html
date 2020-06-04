@@ -34,7 +34,7 @@
           await productController.getProductDataFromPartSurfer();
           await serialController.getSerialDataFromPartSurfer();
           await partController.getFieldEquivFromPartSurfer();
-          await dataFileController.setExcludeFlags();
+          await dataFileController.setExcludeFlagsAndStockMap();
           break;
         } catch (error) {
           if (++scanRestart == maxRestarts) {
