@@ -96,12 +96,20 @@ const removeNonAscii = str => {
 };
 
 const getDateFromExcel = excelDate => {
-  // JavaScript dates can be constructed by passing milliseconds
-  // since the Unix epoch (January 1, 1970) example: new Date(12312512312);
+  let d;
+  if (excelDate > 20000000) {
+    const yy = Math.floor(excelDate / 10000);
+    const mo = Math.floor((excelDate % 10000) / 100);
+    const dd = excelDate % 100;
+    d = new Date(yy, mo - 1, dd);
+  } else {
+    // JavaScript dates can be constructed by passing milliseconds
+    // since the Unix epoch (January 1, 1970) example: new Date(12312512312);
 
-  // 1. Subtract number of days between Jan 1, 1900 and Jan 1, 1970, plus 1 (Google "excel leap year bug")
-  // 2. Convert to milliseconds.
-  const d = new Date((excelDate - (25567 + 2)) * 86400 * 1000);
+    // 1. Subtract number of days between Jan 1, 1900 and Jan 1, 1970, plus 1 (Google "excel leap year bug")
+    // 2. Convert to milliseconds.
+    d = new Date((excelDate - (25567 + 2)) * 86400 * 1000);
+  }
   return dayjs(d).format('MMDDYY');
 };
 
