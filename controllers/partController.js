@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable no-restricted-syntax */
 const { ipcRenderer } = require('electron');
 const Part = require('../models/Part');
@@ -20,8 +21,10 @@ exports.addOnePartFromStock = part => {
     })
       .then(([partdb, partCreated]) => {
         if (!partCreated) {
-          // eslint-disable-next-line no-param-reassign
           partdb.stockQty += part.qty;
+          if (part.description) {
+            partdb.description = part.description;
+          }
           partdb.save();
           // const newQty = partdb.stockQty + part.qty;
           // partdb.update({

@@ -54,8 +54,9 @@ const createCasesTab = async (wb, part) => {
 
       part.caseParts.forEach(casePart => {
         const case_ = casePart.case;
+        const dateFormat = case_.date.length === 6 ? 'MMYYDD' : 'YYYYMMDD';
         sheet.addRow([
-          dayjs(case_.date, 'YYYYMMDD').format('MM/DD/YYYY'),
+          dayjs(case_.date, dateFormat).format('MM/DD/YYYY'),
           case_.getCaseId(),
           case_.customer,
           case_.response,

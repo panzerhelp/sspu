@@ -6,7 +6,7 @@ const updater = require('./updater');
 const dbConnect = require('./dbConnect');
 
 // SET ENV
-process.env.NODE_ENV = 'production';
+// process.env.NODE_ENV = 'production';
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
 let mainWindow;
@@ -171,8 +171,7 @@ ipcMain.on('set-restart', (e, curRestart, maxRestarts) => {
 
 ipcMain.on('finishedTask', () => {
   progressWindow.close(); // action window should handle worker
-  mainWindow.webContents.send('reload');
-  // mainWindow.webContents.send('rebuild-data');
+  mainWindow.webContents.reload();
 });
 
 app.on('ready', async () => {

@@ -6,7 +6,7 @@ dayjs.extend(customParseFormat);
 const Columns = {
   stockFile: {
     partNumber: { names: ['part number', 'part', 'p/n'] },
-    qty: { names: ['qty', 'material left', 'total stock'] },
+    qty: { names: ['qty', 'material left', 'total stock', 'quantity'] },
     location: { names: ['whs', 'location'] },
     description: { names: ['description'] },
     price: { names: ['unit price', 'price', 'net value'] },
@@ -90,9 +90,9 @@ Columns.setIds = (fileType, firstRow) => {
   });
 };
 
-const removeNonAscii = str => {
+const cleanString = str => {
   if (str === null || str === '') return '';
-  return str.replace(/[^0-9a-zA-Z- ]/g, '');
+  return str.trim().replace(/[|&;$%@"<>()+,]/g, '');
 };
 
 const getDateFromExcel = excelDate => {
@@ -128,7 +128,7 @@ Columns.getData = (fileType, row) => {
         }
 
         if (typeof value === 'string' && value) {
-          value = removeNonAscii(value.trim());
+          value = cleanString(value);
         }
 
         if (

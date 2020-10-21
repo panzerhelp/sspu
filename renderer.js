@@ -61,7 +61,3 @@ const clearDatabase = () => {
 if (document.getElementById('file-import-block')) {
   init();
 }
-
-ipcRenderer.on('reload', () => {
-  init();
-});

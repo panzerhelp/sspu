@@ -76,6 +76,7 @@
     });
 
     ipcRenderer.on('clear-database', async () => {
+      console.log('clear database');
       try {
         await dataFileController.clearDatabase();
       } catch (error) {
