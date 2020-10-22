@@ -29,7 +29,7 @@ const Columns = {
     stockLocation: { names: ['stock location'] },
     status: { names: ['status'] },
     feUsed: { names: ['fe used'] },
-    deliveryDate: { names: ['delivered'] }
+    deliveryDate: { names: ['delivered'], type: 'date' }
   },
   salesDataFile: {
     country: { names: ['hwst country cd', 'agg ship to ctry code iso'] },
