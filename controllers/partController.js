@@ -148,7 +148,7 @@ const getPartFielEquiv = async (part, browserId) => {
         })
       );
 
-      await PartFieldEquiv.bulkCreate(feParts);
+      await PartFieldEquiv.bulkCreate(feParts, { ignoreDuplicates: true });
       await part.update({ feScanStatus: `${feParts.length}` });
     } else {
       await part.update({ feScanStatus: `NO_FE` });

@@ -422,7 +422,6 @@ const processData = async (type, data) => {
 
     await stockController.addStockParts(data);
   } else if (type === 'caseUsageFile') {
-    // await stockController.addStockPartCaseUsage(data);
     await caseController.addCaseData(data);
   } else if (type === 'partExcludeFile') {
     await partController.setExcludeFlags(data);

@@ -1,6 +1,6 @@
 {
   "name": "sspu",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "description": "Sophela Stock Planning Utility",
   "main": "main.js",
   "scripts": {
@@ -50,7 +50,7 @@
   },
   "build": {
     "appId": "com.sophela.sspu",
-    "copyright": "Copyright 2019 Sophela.com",
+    "copyright": "Copyright 2019-2021 Sophela.com",
     "publish": {
       "provider": "github"
     },

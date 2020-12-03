@@ -118,7 +118,7 @@ const getDataFromSystemPage = async (serial, page) => {
       })
     );
 
-    await SerialPart.bulkCreate(serialParts);
+    await SerialPart.bulkCreate(serialParts, { ignoreDuplicates: true });
 
     await serial.update({ scanStatus: 'SCANNED' });
     return Promise.resolve('SCANNED');
@@ -217,10 +217,7 @@ exports.getPartsForSerial = async (serial, browserId) => {
 
     await inputSystemSerial(serial.serialNum, page);
 
-    await Promise.all([
-      page.click('#ctl00_BodyContentPlaceHolder_SearchText_btnSubmit'),
-      page.waitForNavigation({ timeout: 300000 })
-    ]);
+    await browserController.clickSubmit(page);
 
     const noData = await page.evaluate(() =>
       document.getElementById('ctl00_BodyContentPlaceHolder_lblNoDataFound')
@@ -229,12 +226,14 @@ exports.getPartsForSerial = async (serial, browserId) => {
     if (noData) {
       await serial.update({ scanStatus: 'NO_DATA' });
       await page.close();
+      this.curSerialItem++;
       return Promise.resolve('NO_DATA');
     }
 
     await processSerialPage(serial, page);
     await page.close();
     await browser.close();
+    this.curSerialItem++;
     return Promise.resolve('SCANNED');
   } catch (error) {
     return Promise.reject(error);
@@ -257,7 +256,6 @@ exports.getSerialDataFromPartSurfer = async () => {
     browserController.createBrowsers();
 
     let promiseArray = [];
-    // let curItem = 0;
     let scanList = [];
     let browserId = 0;
 
@@ -268,35 +266,30 @@ exports.getSerialDataFromPartSurfer = async () => {
 
     for (const serial of serials) {
       scanList.push(serial.serialNum);
+      promiseArray.push(
+        Promise.race([
+          this.getPartsForSerial(serial, browserId),
+          browserController.checkTimeout()
+        ])
+      );
 
-      promiseArray.push(this.getPartsForSerial(serial, browserId));
       browserId++;
-      this.curSerialItem++;
 
-      if (promiseArray.length === concurrency) {
+      if (
+        promiseArray.length === concurrency ||
+        serial === serials[serials.length - 1]
+      ) {
         ipcRenderer.send('set-progress', {
           mainItem: 'Getting parts for the serial',
           subItem: scanList.join(' '),
           curItem: this.curSerialItem,
           totalItem: this.totalSerialsToScan
         });
-
         await Promise.all(promiseArray);
         promiseArray = [];
         scanList = [];
         browserId = 0;
       }
-    }
-
-    if (promiseArray.length) {
-      ipcRenderer.send('set-progress', {
-        mainItem: 'Getting parts for the serial',
-        subItem: scanList.join(' '),
-        curItem: this.curSerialItem,
-        totalItem: this.totalSerialsToScan
-      });
-
-      await Promise.all(promiseArray);
     }
 
     browserController.closeBrowsers();

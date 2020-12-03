@@ -207,7 +207,7 @@ const processPartPage = async (product, page) => {
       where: { productId: product.id }
     });
 
-    await ProductPart.bulkCreate(productParts);
+    await ProductPart.bulkCreate(productParts, { ignoreDuplicates: true });
     await product.update({ scanStatus: 'SCANNED' });
 
     return Promise.resolve('SCANNED');
@@ -235,16 +235,10 @@ exports.getSingleProductDataFromPartSurfer = async (product, browserId) => {
     const browser = browserController.instances[browserId];
     await browser.init();
 
-    // const page = await browser.openNewPage(
-    //   `https://partsurfer.hpe.com/Search.aspx?type=PROD&SearchText=${product.productNumber}`
-    // );
-
     const page = await browser.openNewPage(`https://partsurfer.hpe.com/`);
     await inputProductNumber(product.productNumber, page);
-    await Promise.all([
-      page.click('#ctl00_BodyContentPlaceHolder_SearchText_btnSubmit'),
-      page.waitForNavigation({ timeout: 300000 })
-    ]);
+
+    await browserController.clickSubmit(page);
 
     const isValid = await page.evaluate(() =>
       document.getElementById('ctl00_BodyContentPlaceHolder_aGeneral')
@@ -259,6 +253,7 @@ exports.getSingleProductDataFromPartSurfer = async (product, browserId) => {
 
     await page.close();
     await browser.close();
+    this.curProductItem++;
     return Promise.resolve(isValid ? result : 'NOT_VALID_PRODUCT');
   } catch (error) {
     return Promise.reject(error);
@@ -314,13 +309,18 @@ exports.getProductDataFromPartSurfer = async () => {
     scanList.push(product.productNumber);
 
     promiseArray.push(
-      this.getSingleProductDataFromPartSurfer(product, browserId)
+      Promise.race([
+        this.getSingleProductDataFromPartSurfer(product, browserId),
+        browserController.checkTimeout()
+      ])
     );
-    browserId++;
-    // curItem++;
-    this.curProductItem++;
 
-    if (promiseArray.length === concurrency) {
+    browserId++;
+
+    if (
+      promiseArray.length === concurrency ||
+      product === productsToScan[productsToScan.length - 1]
+    ) {
       ipcRenderer.send('set-progress', {
         mainItem: 'Getting product data',
         subItem: scanList.join(' '),
@@ -332,17 +332,6 @@ exports.getProductDataFromPartSurfer = async () => {
       scanList = [];
       browserId = 0;
     }
-  }
-
-  if (promiseArray.length) {
-    ipcRenderer.send('set-progress', {
-      mainItem: 'Getting product data',
-      subItem: scanList.join(' '),
-      curItem: this.curProductItem,
-      totalItem: productsToScan.length
-    });
-
-    await Promise.all(promiseArray);
   }
 
   browserController.closeBrowsers();

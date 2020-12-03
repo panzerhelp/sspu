@@ -1,5 +1,7 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable no-restricted-syntax */
 const { ipcRenderer } = require('electron');
+// const { in } = require('sequelize/types/lib/operators');
 const Case = require('../models/Case');
 const CasePart = require('../models/CasePart');
 const Part = require('../models/Part');
@@ -43,15 +45,54 @@ exports.addOneCase = async caseData => {
   }
 };
 
+const setCaseDataCaseNumber = casePartUsage => {
+  if (casePartUsage.caseId === 'not created') {
+    casePartUsage.caseId = `DUMMY-${casePartUsage.date}-${casePartUsage.serial}`;
+  }
+};
+
+const setCaseDataResponse = casePartUsage => {
+  if (casePartUsage.response === 'NCD') {
+    casePartUsage.response = 'ND';
+  }
+
+  if (casePartUsage.response === '4HR') {
+    casePartUsage.response = 'SD';
+  }
+
+  if (casePartUsage.response === 'NSR') {
+    casePartUsage.response = 'CTR';
+  }
+};
+
+const setCaseDataFieldEquiv = casePartUsage => {
+  if (casePartUsage.feUsed === casePartUsage.sparePart) {
+    casePartUsage.feUsed = '';
+  }
+};
+
+const setCaseDataStatus = casePartUsage => {
+  if (casePartUsage.status === 'Central HPE stock') {
+    casePartUsage.status = 'CENTRAL';
+  } else if (casePartUsage.status === 'Local SOPHELA stock') {
+    casePartUsage.status = 'LOCAL';
+  }
+};
+
+const setCaseDataFields = casePartUsage => {
+  setCaseDataCaseNumber(casePartUsage);
+  setCaseDataResponse(casePartUsage);
+  setCaseDataFieldEquiv(casePartUsage);
+  setCaseDataStatus(casePartUsage);
+};
+
 exports.addCaseData = async casePartUsageData => {
   try {
     const tot = casePartUsageData.length;
     let cur = 1;
     for (const casePartUsage of casePartUsageData) {
-      if (casePartUsage && casePartUsage.caseId) {
-        if (casePartUsage.caseId === 'not created') {
-          casePartUsage.caseId = `DUMMY-${casePartUsage.date}-${casePartUsage.serial}`;
-        }
+      if (casePartUsage && casePartUsage.caseId && casePartUsage.product) {
+        setCaseDataFields(casePartUsage);
         ipcRenderer.send('set-progress', {
           mainItem: 'Importing case part usage',
           subItem: `${casePartUsage.caseId}`,

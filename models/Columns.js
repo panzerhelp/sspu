@@ -13,23 +13,23 @@ const Columns = {
     postDate: { names: ['posting date'], type: 'date' }
   },
   caseUsageFile: {
-    date: { names: ['casedate'], type: 'date' },
-    caseId: { names: ['sfdc case id'] },
-    customer: { names: ['customer'] },
+    date: { names: ['casedate', 'case date', 'time opened'], type: 'date' },
+    caseId: { names: ['sfdc case id', 'case number'] },
+    customer: { names: ['customer', 'account name'] },
     response: { names: ['response'] },
-    sla: { names: ['sla'] },
-    serviceLevel: { names: ['service level'] },
+    sla: { names: ['sla', 'coverage'] },
+    serviceLevel: { names: ['service level', 'repair'] },
     serial: { names: ['serial number'] },
     product: { names: ['product number'] },
     contract: { names: ['contract id'] },
     gcsn: { names: ['gcsn'] },
-    sparePart: { names: ['spare part'] },
-    qty: { names: ['qty'] },
-    partner: { names: ['hpd partner'] },
-    stockLocation: { names: ['stock location'] },
-    status: { names: ['status'] },
-    feUsed: { names: ['fe used'] },
-    deliveryDate: { names: ['delivered'], type: 'date' }
+    sparePart: { names: ['spare part', 'part number'] },
+    qty: { names: ['qty', 'quantity'] },
+    partner: { names: ['hpd partner', 'hdp partner'] },
+    stockLocation: { names: ['stock location', 'stock name'] },
+    status: { names: ['status', 'source'] },
+    feUsed: { names: ['fe used', 'confirmed part number'] },
+    deliveryDate: { names: ['delivered', 'requested date'], type: 'date' }
   },
   salesDataFile: {
     country: { names: ['hwst country cd', 'agg ship to ctry code iso'] },
@@ -113,6 +113,16 @@ const getDateFromExcel = excelDate => {
   return dayjs(d).format('MMDDYY');
 };
 
+const getDateFromString = dateString => {
+  const d = dayjs(dateString, 'DD/MM/YYYY HH:mm');
+
+  if (d.isValid()) {
+    const formattedDate = d.format('MMDDYY');
+    return formattedDate;
+  }
+  return dateString;
+};
+
 Columns.getData = (fileType, row) => {
   const obj = {};
   Object.keys(Columns[fileType]).forEach(key => {
@@ -131,11 +141,12 @@ Columns.getData = (fileType, row) => {
           value = cleanString(value);
         }
 
-        if (
-          Columns[fileType][key].type === 'date' &&
-          typeof value === 'number'
-        ) {
-          value = getDateFromExcel(value);
+        if (Columns[fileType][key].type === 'date') {
+          if (typeof value === 'number') {
+            value = getDateFromExcel(value);
+          } else if (typeof value === 'string') {
+            value = getDateFromString(value);
+          }
         }
 
         obj[key] = value;

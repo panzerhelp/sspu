@@ -63,7 +63,7 @@ const createCasesTab = async (wb, part) => {
           case_.contract,
           case_.product,
           case_.serial,
-          case_.partner,
+          case_.partner ? case_.partner : '',
           casePart.getStatus()
         ]);
 
