@@ -64,12 +64,17 @@ const customerListColumns = [
   ])
 ];
 
+const replaceIllegalChars = name => {
+  return name.replace(/[/\\?%*:|"<>]/g, '-');
+};
+
 const addCustomerRow = async (contract, sheet, dir) => {
   try {
-    const custName = contract.customer || 'NO_NAME';
+    const custName = replaceIllegalChars(contract.customer) || 'NO_NAME';
     const [status, noStock] = await createCustomerContractFile(
       contract.customer,
-      dir
+      dir,
+      custName
     );
 
     await sheet.addRow([

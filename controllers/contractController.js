@@ -11,7 +11,7 @@ const System = require('../models/System');
 
 const db = require('../db');
 
-const { Op } = sequelize;
+// const { Op } = sequelize;
 
 exports.addOneContract = contract => {
   return new Promise((resolve, reject) => {

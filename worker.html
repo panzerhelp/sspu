@@ -53,7 +53,7 @@
 
     ipcRenderer.on('generate-reports', async () => {
       try {
-        await partController.connectFieldEquivParts();
+        // await partController.connectFieldEquivParts();
         await dataFileController.setExcludeFlagsAndStockMap();
         const outFiles = await reportController.generateReports();
 

@@ -415,10 +415,17 @@ const contractColumns = [
 // customer - contract file with all systems - part table
 //
 
+const replaceIllegalChars = name => {
+  return name.replace(/[/\\?%*:|"<>]/g, '-');
+};
+
 const createExcelContractFile = contract => {
   const { said, customer } = contract;
   const dir = path.join(configFilesController.getReportDir(), 'contracts');
-  const outFile = path.join(dir, `${customer}_${said}.xlsx`);
+  const outFile = path.join(
+    dir,
+    `${replaceIllegalChars(customer)}_${said}.xlsx`
+  );
 
   const wb = new Excel.stream.xlsx.WorkbookWriter({
     filename: outFile,
@@ -474,12 +481,12 @@ const createContractFile = async contract => {
 
 // **********************************************************************
 
-const createCustomerContractFile = async (customer, dir) => {
+const createCustomerContractFile = async (customer, dir, custFileName) => {
   try {
     const status = new Status();
     const noStock = new Status();
 
-    const outFile = path.join(dir, `${customer}.xlsx`);
+    const outFile = path.join(dir, `${custFileName}.xlsx`);
 
     const wb = new Excel.stream.xlsx.WorkbookWriter({
       filename: outFile,
