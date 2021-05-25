@@ -34,6 +34,7 @@
           await productController.getProductDataFromPartSurfer();
           await serialController.getSerialDataFromPartSurfer();
           await partController.getFieldEquivFromPartSurfer();
+          await partController.connectFieldEquivParts();
           await dataFileController.setExcludeFlagsAndStockMap();
           break;
         } catch (error) {
@@ -52,6 +53,7 @@
 
     ipcRenderer.on('generate-reports', async () => {
       try {
+        await partController.connectFieldEquivParts();
         await dataFileController.setExcludeFlagsAndStockMap();
         const outFiles = await reportController.generateReports();
 

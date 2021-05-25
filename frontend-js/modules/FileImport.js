@@ -35,7 +35,10 @@ class FileImport {
     this.countryDropDown = document.querySelector('.countrySelect');
     this.flag = document.getElementById('flag');
     this.skipRejected = document.getElementById('skipFullyRejected');
-    this.skipRejected.checked = configFileController.getSkipFullyRejectedContracts();
+
+    if (this.skipRejected) {
+      this.skipRejected.checked = configFileController.getSkipFullyRejectedContracts();
+    }
 
     this.events();
   }

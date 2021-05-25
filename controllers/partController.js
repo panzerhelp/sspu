@@ -1,5 +1,8 @@
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable guard-for-in */
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-restricted-syntax */
+const { Op } = require('sequelize');
 const { ipcRenderer } = require('electron');
 const Part = require('../models/Part');
 const Stock = require('../models/Stock');
@@ -238,9 +241,77 @@ exports.getFieldEquivFromPartSurfer = async () => {
   }
 };
 
+exports.connectFieldEquivParts = async () => {
+  await PartFieldEquiv.destroy({ where: { addedByCode: true } });
+
+  let keepSearching = true;
+
+  while (keepSearching) {
+    keepSearching = false;
+    // retrieve all parts with equivivalents
+    const parts = await Part.findAll({
+      where: { feScanStatus: { [Op.not]: 'NO_FE' } }
+    });
+
+    for (const part of parts) {
+      // find all FE for the part
+      const feParts = await PartFieldEquiv.findAll({
+        where: { partId: part.id }
+      });
+
+      // scan FE of FE (next FE parts)
+      for (const fePart of feParts) {
+        const nextFeParts = await PartFieldEquiv.findAll({
+          where: { partId: fePart.fePartId }
+        });
+
+        for (const nextFePart of nextFeParts) {
+          if (
+            nextFePart.fePartId !== fePart.partId &&
+            !feParts.find(p => p.fePartId === nextFePart.fePartId)
+          ) {
+            // console.log(
+            //   `Insert new FE entry. PartId ${part.id} - FEPartId ${nextFePart.fePartId}`
+            // );
+
+            await PartFieldEquiv.findCreateFind({
+              where: { partId: part.id, fePartId: nextFePart.fePartId },
+              defaults: {
+                addedByCode: true
+              }
+            });
+
+            keepSearching = true;
+          }
+        }
+      }
+    }
+  }
+};
+
+const getFieldEquivDirect = async (partId, fePartIds = []) => {
+  const feParts = await PartFieldEquiv.findAll({
+    where: { partId: partId }
+  });
+
+  const directPartFeIds = feParts.map(p => p.fePartId);
+  const partsToScan = [];
+  for (const p of directPartFeIds) {
+    if (!fePartIds.includes(p)) {
+      fePartIds.push(p);
+      partsToScan.push(p);
+    }
+  }
+
+  for (const p of partsToScan) {
+    await getFieldEquivDirect(p, fePartIds);
+  }
+  return fePartIds;
+};
+
 exports.getPartFieldEquiv = async partId => {
   try {
-    const fePartIds = [];
+    let fePartIds = [];
 
     const isFE = await PartFieldEquiv.findAll({
       where: { fePartId: partId }
@@ -248,30 +319,13 @@ exports.getPartFieldEquiv = async partId => {
 
     isFE.forEach(i => fePartIds.push(i.partId));
 
-    const hasFE = await PartFieldEquiv.findAll({
-      where: { partId: partId }
-    });
+    // const hasFE = await PartFieldEquiv.findAll({
+    //   where: { partId: partId }
+    // });
 
-    hasFE.forEach(i => fePartIds.push(i.fePartId));
+    // hasFE.forEach(i => fePartIds.push(i.fePartId));
 
-    let feParts = [];
-    if (fePartIds) feParts = await Part.findAll({ where: { id: fePartIds } });
-
-    return Promise.resolve(feParts);
-  } catch (error) {
-    return Promise.reject(error);
-  }
-};
-
-exports.getPartFieldEquivDirect = async partId => {
-  try {
-    const fePartIds = [];
-
-    const hasFE = await PartFieldEquiv.findAll({
-      where: { partId: partId }
-    });
-
-    hasFE.forEach(i => fePartIds.push(i.fePartId));
+    fePartIds = [...fePartIds, ...(await getFieldEquivDirect(partId))];
 
     let feParts = [];
     if (fePartIds) feParts = await Part.findAll({ where: { id: fePartIds } });
@@ -282,24 +336,43 @@ exports.getPartFieldEquivDirect = async partId => {
   }
 };
 
-exports.getPartFieldEquivBack = async partId => {
-  try {
-    const fePartIds = [];
+// exports.getPartFieldEquivDirect = async partId => {
+//   try {
+//     const fePartIds = [];
 
-    const isFE = await PartFieldEquiv.findAll({
-      where: { fePartId: partId }
-    });
+//     const hasFE = await PartFieldEquiv.findAll({
+//       where: { partId: partId }
+//     });
 
-    isFE.forEach(i => fePartIds.push(i.partId));
+//     hasFE.forEach(i => fePartIds.push(i.fePartId));
 
-    let feParts = [];
-    if (fePartIds) feParts = await Part.findAll({ where: { id: fePartIds } });
+//     let feParts = [];
+//     if (fePartIds) feParts = await Part.findAll({ where: { id: fePartIds } });
 
-    return Promise.resolve(feParts);
-  } catch (error) {
-    return Promise.reject(error);
-  }
-};
+//     return Promise.resolve(feParts);
+//   } catch (error) {
+//     return Promise.reject(error);
+//   }
+// };
+
+// exports.getPartFieldEquivBack = async partId => {
+//   try {
+//     const fePartIds = [];
+
+//     const isFE = await PartFieldEquiv.findAll({
+//       where: { fePartId: partId }
+//     });
+
+//     isFE.forEach(i => fePartIds.push(i.partId));
+
+//     let feParts = [];
+//     if (fePartIds) feParts = await Part.findAll({ where: { id: fePartIds } });
+
+//     return Promise.resolve(feParts);
+//   } catch (error) {
+//     return Promise.reject(error);
+//   }
+// };
 
 exports.clearExcludeFlags = async () => {
   try {
