@@ -164,6 +164,12 @@ const getPartFielEquiv = async (part, browserId) => {
   }
 };
 
+exports.getPartFieldEquivFromPartDescription = async () => {
+  const regexp = '/w*-d{3}/g'; // find part number
+
+  // extract parts with description which contains alternative parts
+};
+
 exports.getFieldEquivFromPartSurfer = async () => {
   //   // temporary clean scan flags and product parts data
   // await PartFieldEquiv.destroy({
