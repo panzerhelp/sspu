@@ -1,4 +1,6 @@
 /* eslint-disable no-restricted-syntax */
+const { Op } = require('sequelize');
+
 const { ipcRenderer } = require('electron');
 const Product = require('../models/Product');
 const Part = require('../models/Part');
@@ -10,6 +12,7 @@ const ProductPart = require('../models/ProductPart');
 const partController = require('../controllers/partController');
 const browserController = require('./browserController');
 const configFilesController = require('../controllers/configFilesController');
+const excludeCustomer = require('../controllers/excludeCustomer');
 
 exports.addOneProduct = product => {
   return new Promise((resolve, reject) => {
@@ -385,7 +388,14 @@ exports.getProductDataById = async productId => {
           model: System,
           required: true,
           include: [
-            { model: Contract },
+            {
+              model: Contract,
+              where: {
+                customer: {
+                  [Op.notIn]: excludeCustomer.excludeCustomerList
+                }
+              }
+            },
             {
               model: Serial // ,
               // include: [

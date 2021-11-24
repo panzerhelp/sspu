@@ -15,6 +15,8 @@ const systemController = require('../controllers/systemController');
 const configFileController = require('../controllers/configFilesController');
 const partController = require('../controllers/partController');
 const caseController = require('../controllers/caseController');
+const excludeCustomers = require('../controllers/excludeCustomer');
+
 const dbConnect = require('../dbConnect');
 
 // const ExcludeCities = require('../models/ExcludeCities');
@@ -128,6 +130,7 @@ exports.loadFileXLSX = (file, processRowCallBack) => {
       });
     });
 
+    // eslint-disable-next-line prettier/prettier
     workbook.on('finished', function() {
       console.log('Finised workbook');
       Promise.all(promiseArray).then(
@@ -211,26 +214,25 @@ const checkResponse = data => {
     data.package &&
     typeof data.package === 'string' &&
     data.offer &&
-    typeof data.offer === 'string' &&
-    data.offer.indexOf('Hardware') !== -1
+    typeof data.offer === 'string' // &&
+    // data.offer.indexOf('Hardware') !== -1
   ) {
-    if (data.package.indexOf('NDB') !== -1) {
-      data.response = 'ND';
-      return true;
-    }
+    // if (data.package.indexOf('NDB') !== -1) {
+    //   data.response = 'ND';
+    //   return true;
+    // }
 
     if (data.package.indexOf('CTR') !== -1) {
       data.response = 'CTR';
-      return true;
-    }
-
-    if (
+    } else if (
       data.package.indexOf('24x7') !== -1 ||
       data.package.indexOf('4H') !== -1
     ) {
       data.response = 'SD';
-      return true;
+    } else {
+      data.response = 'ND';
     }
+    return true;
   }
 
   if (
@@ -257,6 +259,11 @@ const checkResponse = data => {
   return true;
 };
 
+const isSoftwareProduct = data => {
+  const invalidTypes = ['ES', 'HS', 'HSO', 'PS', 'SS', 'SSS', 'SW', 'SWO'];
+  return data.groupType && invalidTypes.indexOf(data.groupType) !== -1;
+};
+
 exports.validateSalesData = data => {
   const skipRejected = configFileController.getSkipFullyRejectedContracts();
 
@@ -271,7 +278,8 @@ exports.validateSalesData = data => {
     !checkResponse(data) ||
     !matchCountry(data.country) ||
     // checkExcludeCity(data) ||
-    (skipRejected && data.status && data.status === 'Fully Rejected')
+    (skipRejected && data.status && data.status === 'Fully Rejected') ||
+    isSoftwareProduct(data)
   ) {
     return false;
   }
@@ -399,6 +407,7 @@ const prepareData = async type => {
     try {
       await systemController.clearSystems();
       await contractController.clearContracts();
+      excludeCustomers.clearExcludeCustomerList();
     } catch (error) {
       console.log(error);
     }
@@ -426,6 +435,7 @@ const processData = async (type, data) => {
   } else if (type === 'partExcludeFile') {
     await partController.setExcludeFlags(data);
     await productController.setExcludeFlags(data);
+    excludeCustomers.addExcludeCustomer(data);
   } else if (type === 'stockMapFile') {
     StockMap.importStockMaps(data);
   }
@@ -473,6 +483,7 @@ exports.setExcludeFlagsAndStockMap = async () => {
     const filesToLoad = configFilesController.selectAllFilesFromConfig();
     await partController.clearExcludeFlags();
     await productController.clearExcludeFlags();
+    excludeCustomers.clearExcludeCustomerList();
 
     for (const file of filesToLoad) {
       if (file.type === 'partExcludeFile') {
@@ -480,6 +491,7 @@ exports.setExcludeFlagsAndStockMap = async () => {
         const data = await this.loadFile(file, this.processDataRow);
         await partController.setExcludeFlags(data);
         await productController.setExcludeFlags(data);
+        excludeCustomers.addExcludeCustomer(data);
       } else if (file.type === 'stockMapFile') {
         const data = await this.loadFile(file, this.processDataRow);
         StockMap.importStockMaps(data);

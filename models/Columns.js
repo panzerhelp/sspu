@@ -32,31 +32,77 @@ const Columns = {
     deliveryDate: { names: ['delivered', 'requested date'], type: 'date' }
   },
   salesDataFile: {
-    country: { names: ['hwst country cd', 'agg ship to ctry code iso'] },
-    city: { names: ['hwst city', 'site city'] },
-    customer: { names: ['hwst name', 'customer name'] },
-    productNumber: { names: ['product nbr', 'product extend'] },
-    productDesc: { names: ['product desc', 'product description'] },
-    response: { names: ['response', 'service level'] },
-    serial: { names: ['serial nbr'] },
-    said: { names: ['service agreement id', 'svc agreement id'] },
+    country: {
+      names: [
+        'hwst country cd',
+        'agg ship to ctry code iso',
+        'iso cntry code',
+        'ship to party country cd'
+      ]
+    },
+    city: {
+      names: ['hwst city', 'site city', 'city', 'ship to party city name']
+    },
+    customer: {
+      names: ['hwst name', 'customer name', 'customer', 'ship to party name']
+    },
+    productNumber: {
+      names: [
+        'product nbr',
+        'product extend',
+        'base product id',
+        'product number'
+      ]
+    },
+    productDesc: {
+      names: [
+        'product desc',
+        'product description',
+        'product description override',
+        'product name'
+      ]
+    },
+    response: { names: ['response', 'service level', 'sl', 'response time'] },
+    serial: { names: ['serial nbr', 'manufacturer serial nbr'] },
+    said: {
+      names: ['service agreement id', 'svc agreement id', 'said/carepack']
+    },
+    contractId: {
+      names: [
+        'contract doc',
+        'sales document number',
+        'contract doc / carepack'
+      ]
+    },
     funcLoc: { names: ['functional location'] },
     startDate: {
-      names: ['contract start date', 'contract start date'],
+      names: [
+        'contract start date',
+        'contract start date',
+        'start date',
+        'item start date'
+      ],
       type: 'date'
     },
     endDate: {
-      names: ['contract end date', 'contract term date'],
+      names: [
+        'contract end date',
+        'contract term date',
+        'end date',
+        'item end date'
+      ],
       type: 'date'
     },
-    qty: { names: ['product quantity'] },
+    qty: { names: ['product quantity', 'total', 'item quantity'] },
     status: { names: ['renewal status', 'contract status'] },
     package: { names: ['package product description'] },
-    offer: { names: ['offer product description'] }
+    offer: { names: ['offer product description', 'offer product'] },
+    groupType: { names: ['material group 4'] }
   },
   partExcludeFile: {
     productNumber: { names: ['product number'] },
-    partNumber: { names: ['part number'] }
+    partNumber: { names: ['part number'] },
+    customer: { names: ['exclude customer', 'customer'] }
   },
   stockMapFile: {
     contractCity: { names: ['contract site', 'contract city'] },
@@ -123,6 +169,56 @@ const getDateFromString = dateString => {
   return dateString;
 };
 
+// const getDefaultCity = country => {
+//   switch (country) {
+//     case 'BY':
+//       return 'MINSK';
+//     case 'UA':
+//       return 'KYIV';
+//     case 'LT':
+//       return 'VILNIUS';
+//     default:
+//       return '';
+//   }
+// };
+
+// const fixBlankFields = originalObj => {
+//   const obj = originalObj;
+//   Object.keys(obj).forEach(key => {
+//     if (
+//       obj[key] === 'blank' ||
+//       obj[key] === '(blank)' ||
+//       obj[key] === '' ||
+//       obj[key] === undefined
+//     ) {
+//       // if (key === 'city') {
+//       //   obj[key] = getDefaultCity(obj.country);
+//       // }
+//       if (key === 'said') {
+//         debugger;
+//         obj.said = obj.contractId;
+//       }
+//       // if (key === 'customer') {
+//       //   obj.customer = `UNKNOWN - ${obj.contractId}`;
+//       // }
+//       // if (key === 'productDesc') {
+//       //   obj.productDesc = '';
+//       // }
+//     }
+//   });
+//   return obj;
+// };
+
+const isEpmtyString = str => {
+  return (
+    str === undefined ||
+    str === 'blank' ||
+    str === '(blank)' ||
+    str === '' ||
+    str === '-'
+  );
+};
+
 Columns.getData = (fileType, row) => {
   const obj = {};
   Object.keys(Columns[fileType]).forEach(key => {
@@ -153,6 +249,14 @@ Columns.getData = (fileType, row) => {
       }
     }
   });
+
+  if (isEpmtyString(obj.said) && obj.contractId) {
+    obj.said = obj.contractId;
+  }
+
+  // if (fileType === 'salesDataFile') {
+  //   return fixBlankFields(obj);
+  // }
 
   return obj;
 };

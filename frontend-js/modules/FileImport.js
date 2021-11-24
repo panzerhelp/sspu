@@ -17,7 +17,7 @@ class FileImport {
         title: 'sales data file(s)'
       },
       partExcludeFile: {
-        title: 'exclude parts / products file'
+        title: 'exclude parts / products / customers file'
       },
       stockMapFile: {
         title: 'stock map file'

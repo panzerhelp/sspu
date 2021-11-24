@@ -5,13 +5,13 @@ const sequelize = require('sequelize');
 const Contract = require('../models/Contract');
 const Product = require('../models/Product');
 const Part = require('../models/Part');
-// const PartFieldEquiv = require('../models/PartFieldEquiv');
 const Serial = require('../models/Serial');
 const System = require('../models/System');
+const excludeCustomer = require('../controllers/excludeCustomer');
 
 const db = require('../db');
 
-// const { Op } = sequelize;
+const { Op } = sequelize;
 
 exports.addOneContract = contract => {
   return new Promise((resolve, reject) => {
@@ -91,6 +91,11 @@ exports.clearContracts = () => {
 exports.getAllContracts = async () => {
   try {
     const contracts = await Contract.findAll({
+      where: {
+        customer: {
+          [Op.notIn]: excludeCustomer.excludeCustomerList
+        }
+      },
       attributes: [
         'customer',
         [sequelize.fn('COUNT', sequelize.col('customer')), 'contractNum']
@@ -107,59 +112,12 @@ exports.getAllContracts = async () => {
 
 exports.getContractsWithParts = async partIds => {
   try {
-    // const contracts = await Contract.findAll({
-    //   include: [
-    //     {
-    //       model: System,
-    //       required: true,
-    //       include: [
-    //         {
-    //           model: Product,
-    //           required: false,
-
-    //           include: [
-    //             {
-    //               model: Part // ,
-    //               // include: [{ model: Part, as: 'fePart' }]
-    //             }
-    //           ]
-    //         },
-    //         {
-    //           model: Serial,
-    //           required: false,
-    //           include: [
-    //             {
-    //               model: Part // ,
-    //               // include: [{ model: Part, as: 'fePart' }]
-    //             }
-    //           ]
-    //         }
-    //       ]
-    //     }
-    //   ],
-    //   where: {
-    //     [Op.or]: [
-    //       {
-    //         [Op.and]: [
-    //           { '$Systems.product.exclude$': false },
-    //           { '$Systems.product.parts.exclude$': false },
-    //           { '$Systems.product.parts.id$': partIds }
-    //         ]
-    //       },
-    //       {
-    //         [Op.and]: [
-    //           { '$Systems.serial.parts.exclude$': false },
-    //           { '$Systems.serial.parts.id$': partIds }
-    //         ]
-    //       }
-    //     ]
-    //   }
-    // });
-
-    // const conctractsIds = contracts.map(c => c.id);
-
     const contracts2 = await Contract.findAll({
-      where: {},
+      where: {
+        customer: {
+          [Op.notIn]: excludeCustomer.excludeCustomerList
+        }
+      },
       include: [
         {
           model: System,
@@ -218,45 +176,6 @@ exports.getContractsWithParts = async partIds => {
         contracts2.push(c3);
       }
     }
-
-    // console.log(conctractsIds);
-    // console.log(conctractsIds2);
-    // console.log(conctractsIds3);
-
-    // if (partIds[0] === 12) {
-    //   debugger;
-    // }
-    // const systems = await System.findAll({
-    //   where: {},
-    //   include: [
-    //     {
-    //       model: Contract,
-    //       required: true
-    //     },
-    //     {
-    //       model: Product,
-    //       where: { exclude: false },
-    //       required: true,
-    //       include: [
-    //         {
-    //           model: Part,
-    //           required: true,
-    //           where: { id: partIds, exclude: false }
-    //         }
-    //       ]
-    //     },
-    //     {
-    //       model: Serial,
-    //       include: [
-    //         {
-    //           model: Part,
-    //           required: true,
-    //           where: { id: partIds, exclude: false }
-    //         }
-    //       ]
-    //     }
-    //   ]
-    // });
     return Promise.resolve(contracts2);
   } catch (error) {
     return Promise.reject(error);
@@ -273,24 +192,10 @@ exports.getContractsWithCutomer = async customer => {
           {
             model: Product,
             where: { exclude: false } // ,
-            // include: [
-            //   {
-            //     model: Part,
-            //     where: { exclude: false },
-            //     attributes: ['id']
-            //   }
-            // ]
           },
           {
             model: Serial,
             required: false // ,
-            // include: [
-            //   {
-            //     model: Part,
-            //     where: { exclude: false },
-            //     attributes: ['id']
-            //   }
-            // ]
           }
         ]
       }
