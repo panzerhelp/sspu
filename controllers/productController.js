@@ -233,6 +233,23 @@ const inputProductNumber = async (productNumber, page) => {
   }
 };
 
+const checkForProductSelection = async (product, page, browser) => {
+  const productSelector = await page.evaluate(productNumber => {
+    const selector = [...document.querySelectorAll('a')].filter(
+      a => a.innerHTML === productNumber
+    )[0];
+    if (selector) {
+      selector.click();
+    }
+    return selector;
+  }, product.productNumber);
+
+  if (productSelector) {
+    await page.waitForNavigation();
+    await browser.checkDropDown(page);
+  }
+};
+
 exports.getSingleProductDataFromPartSurfer = async (product, browserId) => {
   try {
     const browser = browserController.instances[browserId];
@@ -242,6 +259,8 @@ exports.getSingleProductDataFromPartSurfer = async (product, browserId) => {
     await inputProductNumber(product.productNumber, page);
 
     await browserController.clickSubmit(page);
+
+    await checkForProductSelection(product, page, browser);
 
     const isValid = await page.evaluate(() =>
       document.getElementById('ctl00_BodyContentPlaceHolder_aGeneral')

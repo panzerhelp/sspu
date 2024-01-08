@@ -221,6 +221,9 @@ const isEpmtyString = str => {
 
 Columns.getData = (fileType, row) => {
   const obj = {};
+  // if (fileType === 'salesDataFile') {
+  //   debugger;
+  // }
   Object.keys(Columns[fileType]).forEach(key => {
     if (Columns[fileType][key].id > 0) {
       let { value } = row.getCell(Columns[fileType][key].id);
