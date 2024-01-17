@@ -156,14 +156,15 @@ let productsData = {};
 let systemsData = {};
 let contractsData = {};
 
-const validResposes = [
+const validResponses = [
   'ctr6hr',
   'ctr24hr',
   'ons4hr',
   'onsncd',
   'ctr',
   'sd',
-  'nd'
+  'nd',
+  'mc'
 ];
 
 exports.cleanUpAfterImport = () => {
@@ -239,7 +240,7 @@ const checkResponse = data => {
     typeof data.response === 'undefined' ||
     typeof data.response !== 'string' ||
     data.response === '' ||
-    validResposes.indexOf(data.response.trim().toLowerCase()) === -1
+    validResponses.indexOf(data.response.trim().toLowerCase()) === -1
   ) {
     return false;
   }
@@ -247,7 +248,8 @@ const checkResponse = data => {
   // convert to simple format
   if (
     data.response.trim().toLowerCase() === 'ctr6hr' ||
-    data.response.trim().toLowerCase() === 'ctr24hr'
+    data.response.trim().toLowerCase() === 'ctr24hr' ||
+    data.response.trim().toLowerCase() === 'mc'
   ) {
     data.response = 'CTR';
   } else if (data.response.trim().toLowerCase() === 'ons4hr') {

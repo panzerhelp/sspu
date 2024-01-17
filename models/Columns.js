@@ -34,6 +34,7 @@ const Columns = {
   salesDataFile: {
     country: {
       names: [
+        'hpe asset location country code',
         'hwst country cd',
         'agg ship to ctry code iso',
         'iso cntry code',
@@ -41,13 +42,26 @@ const Columns = {
       ]
     },
     city: {
-      names: ['hwst city', 'site city', 'city', 'ship to party city name']
+      names: [
+        'hpe asset location city name',
+        'hwst city',
+        'site city',
+        'city',
+        'ship to party city name'
+      ]
     },
     customer: {
-      names: ['hwst name', 'customer name', 'customer', 'ship to party name']
+      names: [
+        'hpe asset location party name',
+        'hwst name',
+        'customer name',
+        'customer',
+        'ship to party name'
+      ]
     },
     productNumber: {
       names: [
+        'material id',
         'product nbr',
         'product extend',
         'base product id',
@@ -56,6 +70,7 @@ const Columns = {
     },
     productDesc: {
       names: [
+        'material desc',
         'product desc',
         'product description',
         'product description override',
@@ -63,20 +78,28 @@ const Columns = {
       ]
     },
     response: { names: ['response', 'service level', 'sl', 'response time'] },
-    serial: { names: ['serial nbr', 'manufacturer serial nbr'] },
+    serial: {
+      names: [
+        'entitlement object serial id',
+        'serial nbr',
+        'manufacturer serial nbr'
+      ]
+    },
     said: {
       names: ['service agreement id', 'svc agreement id', 'said/carepack']
     },
     contractId: {
       names: [
+        'sales order sales order id',
         'contract doc',
         'sales document number',
         'contract doc / carepack'
       ]
     },
-    funcLoc: { names: ['functional location'] },
+    funcLoc: { names: ['amp id', 'functional location'] },
     startDate: {
       names: [
+        'contract header start date',
         'contract start date',
         'contract start date',
         'start date',
@@ -86,6 +109,7 @@ const Columns = {
     },
     endDate: {
       names: [
+        'contract header end date',
         'contract end date',
         'contract term date',
         'end date',
@@ -94,8 +118,12 @@ const Columns = {
       type: 'date'
     },
     qty: { names: ['product quantity', 'total', 'item quantity'] },
-    status: { names: ['renewal status', 'contract status'] },
-    package: { names: ['package product description'] },
+    status: {
+      names: ['header reject reason code', 'renewal status', 'contract status']
+    },
+    package: {
+      names: ['package product description', 'package material material desc']
+    },
     offer: { names: ['offer product description', 'offer product'] },
     groupType: { names: ['material group 4'] }
   },
@@ -209,7 +237,7 @@ const getDateFromString = dateString => {
 //   return obj;
 // };
 
-const isEpmtyString = str => {
+const isEmptyString = str => {
   return (
     str === undefined ||
     str === 'blank' ||
@@ -253,7 +281,7 @@ Columns.getData = (fileType, row) => {
     }
   });
 
-  if (isEpmtyString(obj.said) && obj.contractId) {
+  if (isEmptyString(obj.said) && obj.contractId) {
     obj.said = obj.contractId;
   }
 
