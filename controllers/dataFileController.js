@@ -223,7 +223,10 @@ const checkResponse = data => {
     //   return true;
     // }
 
-    if (data.package.indexOf('CTR') !== -1) {
+    if (
+      data.package.indexOf('CTR') !== -1 ||
+      data.package.indexOf('Complete Care SVC') !== -1
+    ) {
       data.response = 'CTR';
     } else if (
       data.package.indexOf('24x7') !== -1 ||

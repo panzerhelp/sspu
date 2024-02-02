@@ -1,6 +1,6 @@
 {
   "name": "sspu",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Sophela Stock Planning Utility",
   "main": "main.js",
   "scripts": {
