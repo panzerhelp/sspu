@@ -82,7 +82,8 @@ const Columns = {
       names: [
         'entitlement object serial id',
         'serial nbr',
-        'manufacturer serial nbr'
+        'manufacturer serial nbr',
+        'serial number id'
       ]
     },
     said: {

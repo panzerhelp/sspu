@@ -160,6 +160,22 @@ const getPartsAdvancedTab = page => {
   });
 };
 
+const fetchProductNameFromPage = async (product, page) => {
+  const description = await page.evaluate(() => {
+    const el = document.getElementById(
+      'ctl00_BodyContentPlaceHolder_lblDescription'
+    );
+    return el ? el.textContent : '';
+  });
+
+  if (description) {
+    await product.update({ description });
+    console.log(
+      `No product description for ${product.productNumber}  in data file. Adding from PartSurfer ${description}`
+    );
+  }
+};
+
 const processPartPage = async (product, page) => {
   try {
     await page.waitForSelector('#ctl00_BodyContentPlaceHolder_aAdvanced');
@@ -181,7 +197,7 @@ const processPartPage = async (product, page) => {
 
     let partsAdded;
 
-    // check if parts from generat tab should be added
+    // check if parts from general tab should be added
     // also add if advanced tab is empty
     if (
       configFilesController.getScanGeneralProductTab() ||
@@ -261,6 +277,10 @@ exports.getSingleProductDataFromPartSurfer = async (product, browserId) => {
     await browserController.clickSubmit(page);
 
     await checkForProductSelection(product, page, browser);
+
+    if (!product.description) {
+      await fetchProductNameFromPage(product, page);
+    }
 
     const isValid = await page.evaluate(() =>
       document.getElementById('ctl00_BodyContentPlaceHolder_aGeneral')

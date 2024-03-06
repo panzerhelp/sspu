@@ -98,7 +98,7 @@ exports.addPartsFromPartSurfer = partObject => {
   });
 };
 
-const getPartFielEquiv = async (part, browserId) => {
+const getPartFieldEquiv = async (part, browserId) => {
   try {
     const browser = browserController.instances[browserId];
     await browser.init();
@@ -194,7 +194,7 @@ exports.getFieldEquivFromPartSurfer = async () => {
   // );
 
   let iteration = 0;
-  let partsToScen = await Part.findAll({ where: { feScanStatus: null } });
+  let partsToScan = await Part.findAll({ where: { feScanStatus: null } });
 
   const { concurrency } = browserController;
   browserController.closeBrowsers();
@@ -204,12 +204,12 @@ exports.getFieldEquivFromPartSurfer = async () => {
   let scanList = [];
   let browserId = 0;
 
-  while (partsToScen.length) {
+  while (partsToScan.length) {
     let curItem = 0;
-    for (const part of partsToScen) {
+    for (const part of partsToScan) {
       scanList.push(part.partNumber);
 
-      promiseArray.push(getPartFielEquiv(part, browserId));
+      promiseArray.push(getPartFieldEquiv(part, browserId));
       browserId++;
       curItem++;
 
@@ -218,7 +218,7 @@ exports.getFieldEquivFromPartSurfer = async () => {
           mainItem: `Getting field equivalent data (${iteration})`,
           subItem: scanList.join(' '),
           curItem: curItem,
-          totalItem: partsToScen.length
+          totalItem: partsToScan.length
         });
 
         await Promise.all(promiseArray);
@@ -233,7 +233,7 @@ exports.getFieldEquivFromPartSurfer = async () => {
         mainItem: `Getting field equivalent data (${iteration})`,
         subItem: scanList.join(' '),
         curItem: curItem,
-        totalItem: partsToScen.length
+        totalItem: partsToScan.length
       });
 
       await Promise.all(promiseArray);
@@ -243,7 +243,7 @@ exports.getFieldEquivFromPartSurfer = async () => {
     }
 
     iteration++;
-    partsToScen = await Part.findAll({ where: { feScanStatus: null } });
+    partsToScan = await Part.findAll({ where: { feScanStatus: null } });
   }
 };
 
